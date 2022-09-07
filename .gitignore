@@ -2,3 +2,4 @@ flare_files/*
 *.pdb
 *.flr
 *.DS_Store
+*.ipynb_checkpoints
