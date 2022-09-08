@@ -1,3 +1,4 @@
+REMARK LIGAND_NET_CHARGE -1 END_LIGAND_INFO
 ATOM      1  N   GLU A   1     -16.230  -5.653  12.548  1.00 34.44           N
 ATOM      2  CA  GLU A   1     -15.494  -4.464  12.960  1.00 32.56           C
 ATOM      3  C   GLU A   1     -16.212  -3.163  12.571  1.00 26.14           C
