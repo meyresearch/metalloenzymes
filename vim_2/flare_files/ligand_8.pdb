@@ -1,0 +1,54 @@
+HEADER                                                                          
+TITLE     6DD0 (3)                                                              
+HETATM    1  C02 P9T A 403     -34.220   3.393   8.083  1.00 30.69           C  
+HETATM    2  C03 P9T A 403     -33.874   4.740   8.102  1.00 27.72           C  
+HETATM    3  C04 P9T A 403     -34.884   5.693   8.127  1.00 23.83           C  
+HETATM    4  C05 P9T A 403     -34.646   7.058   7.483  1.00 20.13           C  
+HETATM    5  C10 P9T A 403     -36.192   5.293   8.463  1.00 29.34           C  
+HETATM    6  C11 P9T A 403     -37.204   6.225   8.768  1.00 33.81           C  
+HETATM    7  C13 P9T A 403     -38.480   5.782   9.094  1.00 33.91           C  
+HETATM    8  C14 P9T A 403     -38.759   4.419   9.121  1.00 35.18           C  
+HETATM    9  C16 P9T A 403     -37.763   3.500   8.821  1.00 33.92           C  
+HETATM   10  C17 P9T A 403     -36.469   3.947   8.490  1.00 31.84           C  
+HETATM   11  F12 P9T A 403     -36.936   7.562   8.743  1.00 34.60           F  
+HETATM   12  F15 P9T A 403     -40.013   3.986   9.441  1.00 38.44           F  
+HETATM   13  O01 P9T A 403     -33.376   2.569   7.963  1.00 31.24           O  
+HETATM   14  O07 P9T A 403     -34.636   8.347   5.043  1.00 13.29           O  
+HETATM   15  O08 P9T A 403     -33.470   6.176   5.147  1.00 14.88           O  
+HETATM   16  O09 P9T A 403     -35.934   6.255   5.179  1.00 18.29           O  
+HETATM   17  O18 P9T A 403     -35.508   3.020   8.200  1.00 31.78           O  
+HETATM   18  P06 P9T A 403     -34.673   6.954   5.625  1.00 19.30           P  
+HETATM   19  H   P9T A 403     -33.329   6.025   4.169  1.00  0.00           H  
+HETATM   20  H1  P9T A 403     -36.110   6.114   4.205  1.00  0.00           H  
+HETATM   21  H2  P9T A 403     -35.365   7.687   7.778  1.00  0.00           H  
+HETATM   22  H3  P9T A 403     -33.753   7.399   7.777  1.00  0.00           H  
+HETATM   23  H4  P9T A 403     -32.911   5.009   8.098  1.00  0.00           H  
+HETATM   24  H5  P9T A 403     -39.199   6.443   9.310  1.00  0.00           H  
+HETATM   25  H6  P9T A 403     -37.964   2.521   8.840  1.00  0.00           H  
+CONECT    1    2   13   17                                                      
+CONECT    2    1    3   23                                                      
+CONECT    3    2    4    5                                                      
+CONECT    4    3   18   21   22                                                 
+CONECT    5    3    6   10                                                      
+CONECT    6    5    7   11                                                      
+CONECT    7    6    8   24                                                      
+CONECT    8    7    9   12                                                      
+CONECT    9    8   10   25                                                      
+CONECT   10    5    9   17                                                      
+CONECT   11    6                                                                
+CONECT   12    8                                                                
+CONECT   13    1                                                                
+CONECT   14   18                                                                
+CONECT   15   18   19                                                           
+CONECT   16   18   20                                                           
+CONECT   17    1   10                                                           
+CONECT   18    4   14   15   16                                                 
+CONECT   19   15                                                                
+CONECT   20   16                                                                
+CONECT   21    4                                                                
+CONECT   22    4                                                                
+CONECT   23    2                                                                
+CONECT   24    7                                                                
+CONECT   25    9                                                                
+MASTER        0    0    0    0    0    0    0    0   25    0   25    0          
+END                                                                             
