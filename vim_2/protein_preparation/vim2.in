@@ -1,4 +1,5 @@
 
+software_version g16
 original_pdb vim2_complex_clean.pdb
 group_name vim2
 cut_off 2.8
@@ -9,3 +10,4 @@ frcmod_files P9T.frcmod
 large_opt 1
 force_field ff14SB
 gaff 2
+water_model TIP3P
