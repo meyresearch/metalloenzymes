@@ -1,6 +1,6 @@
 %Chk=vim2_small_opt.chk
-%Mem=3000MB
-%NProcShared=2
+%Mem=12000MB
+%NProcShared=8
 # B3LYP/6-31G* Geom=PrintInputOrient Integral=(Grid=UltraFine) Opt
  
 CLR
