@@ -5,3 +5,5 @@ flare_files/*
 *.ipynb_checkpoints
 *.log
 *.chk
+*.fchk
+*.com

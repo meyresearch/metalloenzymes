@@ -18,4 +18,4 @@ export g16root=/exports/applications/apps/community/chem
 export GAUSS_SCRDIR=$TMPDIR
 source $g16root/g16/bsd/g16.profile
 
-/exports/applications/apps/community/chem/g16/g16 vim2_small_opt.com 
+/exports/applications/apps/community/chem/g16/g16 vim2_large_mk.com 

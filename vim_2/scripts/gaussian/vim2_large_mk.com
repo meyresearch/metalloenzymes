@@ -1,6 +1,6 @@
 %Chk=vim2_large_mk.chk
-%Mem=3000MB
-%NProcShared=2
+%Mem=12000MB
+%NProcShared=8
 # B3LYP/6-31G* Integral=(Grid=UltraFine) Opt Pop(MK,ReadRadii)
 IOp(6/33=2,6/42=6)
  
