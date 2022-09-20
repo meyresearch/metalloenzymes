@@ -20,6 +20,8 @@ CS1 = loadmol2 CS1.mol2
 HD3 = loadmol2 HD3.mol2
 ZN1 = loadmol2 ZN1.mol2
 ZN2 = loadmol2 ZN2.mol2
+PT1 = loadmol2 PT1.mol2
+loadamberparams P9T.frcmod
 loadamberparams frcmod.ions1lm_126_tip3p
 loadamberparams vim2_mcpbpy.frcmod
 mol = loadpdb vim2_mcpbpy.pdb

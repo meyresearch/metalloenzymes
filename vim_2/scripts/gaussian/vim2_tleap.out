@@ -59,12 +59,6 @@ Loading Mol2 file: ./ZN1.mol2
 Reading MOLECULE named ZN1
 Loading Mol2 file: ./ZN2.mol2
 Reading MOLECULE named ZN2
-Loading Mol2 file: ./PT1.mol2
-Reading MOLECULE named PT1
-Loading parameters: ./P9T.frcmod
-Reading force field modification type file (frcmod)
-Reading title:
-Remark line goes here
 Loading parameters: /home/jguven/Software/miniconda3/dat/leap/parm/frcmod.ions1lm_126_tip3p
 Reading force field modification type file (frcmod)
 Reading title:
