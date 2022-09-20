@@ -105,9 +105,51 @@ One sided connection. Residue (HD3) missing connect0 atom.
 /home/jguven/Software/miniconda3/bin/teLeap: Warning!
 One sided connection. Residue (default_name) missing connect1 atom.
   total atoms in file: 3497
+Writing pdb file: vim2_dry.pdb
 
-/home/jguven/Software/miniconda3/bin/teLeap: Fatal Error!
-bond: Argument #2 is type String must be of type: [atom]
-usage:  bond <atom1> <atom2> [order]
+/home/jguven/Software/miniconda3/bin/teLeap: Warning!
+ Converting N-terminal residue name to PDB format: NGLU -> GLU
 
-Exiting LEaP: Errors = 1; Warnings = 12; Notes = 0.
+/home/jguven/Software/miniconda3/bin/teLeap: Warning!
+ Converting C-terminal residue name to PDB format: CASN -> ASN
+Checking Unit.
+
+/home/jguven/Software/miniconda3/bin/teLeap: Warning!
+The unperturbed charge of the unit (-5.375197) is not integral.
+
+/home/jguven/Software/miniconda3/bin/teLeap: Warning!
+The unperturbed charge of the unit (-5.375197) is not zero.
+
+/home/jguven/Software/miniconda3/bin/teLeap: Note.
+Ignoring the warnings from Unit Checking.
+
+Building topology.
+Building atom parameters.
+Building bond parameters.
+Building angle parameters.
+Building proper torsion parameters.
+Building improper torsion parameters.
+ total 701 improper torsions applied
+Building H-Bond parameters.
+Incorporating Non-Bonded adjustments.
+Not Marking per-residue atom chain types.
+Marking per-residue atom chain types.
+  (Residues lacking connect0/connect1 - 
+   these don't have chain types marked:
+
+	res	total affected
+
+	AP1	1
+	CASN	1
+	CS1	1
+	HD1	1
+	HD2	1
+	HD3	1
+	HE1	1
+	NGLU	1
+	WAT	26
+  )
+ (no restraints)
+	Quit
+
+Exiting LEaP: Errors = 0; Warnings = 16; Notes = 1.
