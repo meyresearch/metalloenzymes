@@ -1,0 +1,8 @@
+
+
+   NSTEP       ENERGY          RMS            GMAX         NAME    NUMBER
+    271              NaN            NaN     0.0000E+00     N           1
+
+ BOND    =           NaN  ANGLE   =   424601.8408  DIHED      =     1951.3060
+ VDWAALS =        0.0000  EEL     =        0.0000  HBOND      =        0.0000
+ 1-4 VDW =           NaN  1-4 EEL =           NaN  RESTRAINT  =        0.0000

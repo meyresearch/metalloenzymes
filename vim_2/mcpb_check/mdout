@@ -1,0 +1,44 @@
+
+          -------------------------------------------------------
+          Amber 22 SANDER                              2022
+          -------------------------------------------------------
+
+| Run on 09/21/2022 at 16:46:13
+
+|   Executable path: sander
+| Working directory: /home/jguven/projects/metalloenzymes/vim_2/mcpb_check
+|          Hostname: Unknown
+  [-O]verwriting output
+
+File Assignments:
+|  MDIN: min.in                                                                
+| MDOUT: mdout                                                                 
+|INPCRD: vim2_solv.inpcrd                                                      
+|  PARM: vim2_solv.prmtop                                                      
+|RESTRT: restrt                                                                
+|  REFC: refc                                                                  
+| MDVEL: mdvel                                                                 
+| MDFRC: mdfrc                                                                 
+|  MDEN: mden                                                                  
+| MDCRD: mdcrd                                                                 
+|MDINFO: mdinfo                                                                
+|  MTMD: mtmd                                                                  
+|INPDIP: inpdip                                                                
+|RSTDIP: rstdip                                                                
+|INPTRA: inptraj                                                               
+
+
+ Here is the input file:
+
+Minimisation with Cartesian restraints                                         
+&cntrl                                                                         
+imin=1, maxcyc=200, (imin=1: minimisation, maxcyc: maximum number of minimisation cycles)
+ntpr=5, (print out info every 5 steps)                                         
+ntr=1, (flag for restaining atoms in Cartesian space using a harmonic potential)
+&end                                                                           
+Group input for restrained atoms                                               
+100.0                                                                          
+RES 1 235                                                                      
+END                                                                            
+END                                                                            
+ error in reading namelist cntrl
