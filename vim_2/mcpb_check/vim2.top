@@ -1,5 +1,5 @@
 ; Gromacs Topology File written by Sire
-; File written 09/23/22  13:31:49
+; File written 09/23/22  14:36:07
 [ defaults ]
 ; nbfunc      comb-rule       gen-pairs      fudgeLJ     fudgeQQ
   1           2               yes            0.5         0.833333
@@ -37,7 +37,6 @@
     N3           7   14.006700    0.000000       A    0.325000    0.711280
     NA           7   14.006700    0.000000       A    0.325000    0.711280
     NB           7   14.006700    0.000000       A    0.325000    0.711280
-   Na+          11   22.989770    0.000000       A    0.262815    0.132695
      O           8   15.999400    0.000000       A    0.295992    0.878640
     O2           8   15.999400    0.000000       A    0.295992    0.878640
     OH           8   15.999400    0.000000       A    0.306647    0.880314
@@ -36374,15 +36373,6 @@ GLU  3
 
 [ moleculetype ]
 ; name  nrexcl
-Na+  3
-
-[ atoms ]
-;   nr   type  resnr residue  atom   cgnr     charge         mass
-     1    Na+      1     Na+   Na+      1   1.000000    22.990000
-
-
-[ moleculetype ]
-; name  nrexcl
 SOL  3
 
 [ atoms ]
@@ -36420,6 +36410,5 @@ SOL  3
 [ molecules ]
 ;molecule name    nr.
            GLU      1
-           Na+     10
-           SOL   7405
+           SOL     26
 
