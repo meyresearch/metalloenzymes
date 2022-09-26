@@ -6,7 +6,7 @@ User Assigned Charge
  
  
 @<TRIPOS>ATOM
-   3416 ZN1       -34.8340    9.4220    3.1390 ZN1     231 ZN       2.000000
+   3417 ZN        -31.8210    7.0980    5.2870 ZN      232 ZN       2.000000
 @<TRIPOS>BOND
 @<TRIPOS>SUBSTRUCTURE
      1 ZN          1 TEMP              0 ****  ****    0 ROOT

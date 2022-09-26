@@ -3,8 +3,8 @@ original_pdb vim2_complex.amber.pdb
 group_name vim2
 cut_off 2.3
 ion_ids 3416 3417
-ion_mol2files zn_h3.mol2 zn_dch.mol2
-naa_mol2files P9T.mol2
+ion_mol2files ZN1.mol2 ZN2.mol2
+naa_mol2files P9T.mol2 WAT.mol2
 frcmod_files P9T.frcmod
 large_opt 1
 force_field ff14SB
