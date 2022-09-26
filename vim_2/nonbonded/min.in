@@ -1,0 +1,16 @@
+Minimise
+ &cntrl
+  imin=1,	!minimisation
+  ntx=1,	!read coordinates but not velocities from rst7
+  irest=0,	!do not restart simulation
+  maxcyc=200,	!maximum minimisation cycles
+  ncyc=100,	!number of steepest descent cycles
+  ntpr=10,	!print out every 10 cycles
+  ntwx=0,	!no mdcrd file written, NA for minimisation
+  cut=8.0,	!nonbonded cutoff in angstrom
+  nmropt=1,	!use restraints
+ /
+ &wt type='DUMPFREQ', istep1=10 / 
+ &wt type='END', /
+ DISANG=harmonic.rst
+ DUMPAVE=harmonic.170
