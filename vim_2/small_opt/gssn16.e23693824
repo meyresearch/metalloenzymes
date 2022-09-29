@@ -1,0 +1,19 @@
+Error: segmentation violation
+   rax 0000000000000000, rbx ffffffffffffffff, rcx ffffffffffffffff
+   rdx 000000000003295e, rsp 00007fff7f1ae828, rbp 00007fff7f1aeda0
+   rsi 000000000000000b, rdi 000000000003295e, r8  0000000000000020
+   r9  00002b056b5fdba0, r10 00007fff7f1adc20, r11 0000000000000206
+   r12 00007fff7f1aede8, r13 0000000000000000, r14 0000000000000000
+   r15 00000000000003e6
+  /lib64/libpthread.so.0(+0xf630) [0x2b056af9b630]
+  /lib64/libc.so.6(kill+0x7) [0x2b056b4e0657]
+  /exports/applications/apps/community/chem/g16/l1.exe() [0x4f4f39]
+  /exports/applications/apps/community/chem/g16/l1.exe() [0x52b4ea]
+  /exports/applications/apps/community/chem/g16/l1.exe() [0x50e7fc]
+  /exports/applications/apps/community/chem/g16/l1.exe() [0x45fd7c]
+  /exports/applications/apps/community/chem/g16/l1.exe() [0x453a45]
+  /exports/applications/apps/community/chem/g16/l1.exe() [0x4502c9]
+  /exports/applications/apps/community/chem/g16/l1.exe() [0x44fd37]
+  /exports/applications/apps/community/chem/g16/l1.exe() [0x44fc84]
+  /lib64/libc.so.6(__libc_start_main+0xf5) [0x2b056b4cc555]
+  /exports/applications/apps/community/chem/g16/l1.exe() [0x44fb79]
