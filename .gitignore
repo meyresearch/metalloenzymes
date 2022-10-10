@@ -22,3 +22,5 @@ flare_files/*
 *.mol2
 *.xyz
 old_gaussian/*
+*.top
+*.gro
