@@ -1,12 +1,12 @@
 @<TRIPOS>MOLECULE
-ZN
+ZN2
     1     0     1     0     0
 SMALL
-User Assigned Charge
+RESP Charge
  
  
 @<TRIPOS>ATOM
-   3417 ZN        -31.8210    7.0980    5.2870 ZN      232 ZN       2.000000
+      1 ZN        -31.8210    7.0980    5.2870 M2        1 ZN2      1.107118
 @<TRIPOS>BOND
 @<TRIPOS>SUBSTRUCTURE
-     1 ZN          1 TEMP              0 ****  ****    0 ROOT
+     1 ZN2         1 TEMP              0 ****  ****    0 ROOT

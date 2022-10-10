@@ -10,3 +10,15 @@ flare_files/*
 *.rwf
 *.skr
 *.swp
+*gssn16*
+*split_pop*
+*split_opt*
+*large_opt*
+*.bk
+*.prmtop
+*.inpcrd
+*.prm7
+*.rst7
+*.mol2
+*.xyz
+old_gaussian/*
