@@ -1,0 +1,25 @@
+                      :-) GROMACS - gmx mdrun, 2022.2 (-:
+
+Executable:   /usr/local/gromacs/bin/gmx
+Data prefix:  /usr/local/gromacs
+Working dir:  /home/jguven/projects/metalloenzymes/vim_2/nvt
+Command line:
+  gmx mdrun -deffnm nvt -nb gpu
+
+Reading file nvt.tpr, VERSION 2022.2 (single precision)
+Changing nstlist from 10 to 100, rlist from 1 to 1.137
+
+On host azuma 4 GPUs selected for this run.
+Mapping of GPU IDs to the 4 GPU tasks in the 4 ranks on this node:
+  PP:0,PP:1,PP:2,PP:3
+PP tasks will do (non-perturbed) short-ranged and most bonded interactions on the GPU
+PP task will update and constrain coordinates on the CPU
+Using 4 MPI threads
+Using 5 OpenMP threads per tMPI thread
+
+
+NOTE: DLB will not turn on during the first phase of PME tuning
+starting mdrun 'Generic title'
+5000000 steps,  10000.0 ps.
+
+NOTE: DLB can now turn on, when beneficial
