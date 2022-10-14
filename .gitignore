@@ -26,3 +26,5 @@ old_gaussian/*
 *.gro
 *.trr
 *.xtc
+*.ppm
+*.dat
