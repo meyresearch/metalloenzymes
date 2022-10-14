@@ -25,3 +25,4 @@ old_gaussian/*
 *.top
 *.gro
 *.trr
+*.xtc
