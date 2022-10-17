@@ -29,3 +29,5 @@ old_gaussian/*
 *.ppm
 *.dat
 vim_2/vmd/*
+*.lock
+*.npz
