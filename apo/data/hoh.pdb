@@ -1,0 +1,28 @@
+HEADER                                                                          
+TITLE     4NQ2_P (3)                                                            
+HETATM    1  O   HOH A 601      -6.618 -14.502  -9.080  1.00 32.07           O  
+HETATM    2  H2  HOH A 601      -6.563 -15.454  -8.984  1.00  0.00           H  
+HETATM    3  H1  HOH A 601      -6.002 -14.291  -9.839  1.00  0.00           H  
+HETATM    4  O   HOH A 609      -8.731 -16.476  -6.526  1.00 23.67           O  
+HETATM    5  H2  HOH A 609      -8.898 -16.463  -5.582  1.00  0.00           H  
+HETATM    6  H1  HOH A 609      -7.938 -17.076  -6.631  1.00  0.00           H  
+HETATM    7  O   HOH A 659      -7.571 -16.870  -9.648  1.00 31.42           O  
+HETATM    8  H2  HOH A 659      -6.903 -17.466  -9.305  1.00  0.00           H  
+HETATM    9  H1  HOH A 659      -7.943 -17.345 -10.446  1.00  0.00           H  
+HETATM   10  O   HOH A 666      -6.469 -17.861  -7.362  1.00 47.26           O  
+HETATM   11  H2  HOH A 666      -5.867 -18.607  -7.333  1.00  0.00           H  
+HETATM   12  H1  HOH A 666      -5.876 -17.059  -7.293  1.00  0.00           H  
+CONECT    1    2    3                                                           
+CONECT    2    1                                                                
+CONECT    3    1                                                                
+CONECT    4    5    6                                                           
+CONECT    5    4                                                                
+CONECT    6    4                                                                
+CONECT    7    8    9                                                           
+CONECT    8    7                                                                
+CONECT    9    7                                                                
+CONECT   10   11   12                                                           
+CONECT   11   10                                                                
+CONECT   12   10                                                                
+MASTER        0    0    0    0    0    0    0    0   12    0   12    0          
+END                                                                             
