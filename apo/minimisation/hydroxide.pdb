@@ -1,0 +1,19 @@
+HEADER                                                                          
+TITLE     A PT1 233                                                             
+HETATM    1  O   PT1 A 233      25.140  32.112  36.588  1.00  0.00           O1-
+HETATM    2  O1  PT1 A 233      26.306  29.941  36.692  1.00  0.00           O1-
+HETATM    3  O2  PT1 A 233      23.842  30.020  36.724  1.00  0.00           O  
+HETATM    4 NA   PT1 A 233      12.889  36.756  33.503  1.00  0.00          NA1+
+HETATM    5  H   PT1 A 233      24.790  32.456  37.466  1.00  0.00           H  
+HETATM    6  H1  PT1 A 233      27.205  29.968  36.240  1.00  0.00           H  
+HETATM    7  H2  PT1 A 233      24.358  30.257  35.893  1.00  0.00           H  
+HETATM    8  H3  PT1 A 233      24.382  30.343  37.509  1.00  0.00           H  
+CONECT    1    5                                                                
+CONECT    2    6                                                                
+CONECT    3    7    8                                                           
+CONECT    5    1                                                                
+CONECT    6    2                                                                
+CONECT    7    3                                                                
+CONECT    8    3                                                                
+MASTER        0    0    0    0    0    0    0    0    8    0    7    0          
+END                                                                             
