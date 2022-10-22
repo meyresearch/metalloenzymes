@@ -1,0 +1,18 @@
+; ITP for OH- ion
+[ moleculetype ]
+; molname	nrexcl
+OH		  1
+
+[ atoms ]
+;   nr       type  resnr residue  atom   cgnr    charge       mass
+    1	      OH    233	   WAT     OH	  1        0 	      1.008000
+    2         OW    233    WAT     OW     2     -0.3557215   16.000000
+    3	      OH    233	   WAT     OH	  3        0 	      1.008000
+    4         OW    233    WAT     OW     4     -0.3557215   16.000000
+
+;[ bonds ]
+;   ai     aj   funct 
+;    1	   2	  1   0.09572 502416.0 0.09572        502416.0
+;    3	   4	  1   0.09572 502416.0 0.09572        502416.0
+
+

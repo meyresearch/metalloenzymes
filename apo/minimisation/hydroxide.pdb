@@ -1,18 +1,12 @@
 HEADER                                                                          
-TITLE     A PT1 233                                                             
-HETATM    1  O   PT1 A 233      25.140  32.112  36.588  1.00  0.00           O1-
-HETATM    2  O1  PT1 A 233      26.306  29.941  36.692  1.00  0.00           O1-
-HETATM    3  O2  PT1 A 233      23.842  30.020  36.724  1.00  0.00           O  
-HETATM    4  H   PT1 A 233      24.790  32.456  37.466  1.00  0.00           H  
-HETATM    5  H1  PT1 A 233      27.204  29.968  36.240  1.00  0.00           H  
-HETATM    6  H2  PT1 A 233      24.358  30.257  35.893  1.00  0.00           H  
-HETATM    7  H3  PT1 A 233      24.382  30.343  37.509  1.00  0.00           H  
+TITLE     A OH- 233                                                             
+HETATM    1  O   WAT A 233      25.140  32.112  36.588  1.00  0.00           O1-
+HETATM    2  O1  WAT A 233      26.306  29.941  36.692  1.00  0.00           O1-
+HETATM    4  H   WAT A 233      24.790  32.456  37.466  1.00  0.00           H  
+HETATM    5  H1  WAT A 233      27.204  29.968  36.240  1.00  0.00           H  
 CONECT    1    4                                                                
 CONECT    2    5                                                                
-CONECT    3    6    7                                                           
 CONECT    4    1                                                                
 CONECT    5    2                                                                
-CONECT    6    3                                                                
-CONECT    7    3                                                                
 MASTER        0    0    0    0    0    0    0    0    7    0    7    0          
 END                                                                             
