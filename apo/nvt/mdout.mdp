@@ -2,7 +2,7 @@
 ;	File 'mdout.mdp' was generated
 ;	By user: jguven (1002)
 ;	On host: azuma
-;	At date: Fri Oct 21 17:28:09 2022
+;	At date: Sun Oct 23 15:06:34 2022
 ;
 ;	Created by:
 ;	                     :-) GROMACS - gmx grompp, 2022.2 (-:
@@ -11,7 +11,7 @@
 ;	Data prefix:  /usr/local/gromacs
 ;	Working dir:  /home/jguven/projects/metalloenzymes/apo/nvt
 ;	Command line:
-;	  gmx grompp -f nvt.mdp -c ../minimisation/em.gro -r ../minimisation/em.gro -p test.top -o nvt.tpr -v
+;	  gmx grompp -f nvt.mdp -c ../minimisation/em.gro -r ../minimisation/em.gro -p test.top -o nvt.tpr
 
 ; VARIOUS PREPROCESSING OPTIONS
 ; Preprocessor information: use cpp syntax.
@@ -169,7 +169,7 @@ annealing-temp           =
 ; GENERATE VELOCITIES FOR STARTUP RUN
 gen_vel                  = yes
 gen_temp                 = 300
-gen_seed                 = -12583449
+gen_seed                 = -1242585089
 
 ; OPTIONS FOR BONDS    
 constraints              = h-bonds
