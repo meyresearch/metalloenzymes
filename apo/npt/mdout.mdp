@@ -1,15 +1,15 @@
 ;
 ;	File 'mdout.mdp' was generated
-;	By user: jguven (1002)
-;	On host: azuma
-;	At date: Mon Oct 24 09:42:04 2022
+;	By user: unknown (1656597)
+;	On host: node3a05.ecdf.ed.ac.uk
+;	At date: Mon Oct 24 09:46:13 2022
 ;
 ;	Created by:
-;	                     :-) GROMACS - gmx grompp, 2022.2 (-:
+;	                     :-) GROMACS - gmx grompp, 2021.2 (-:
 ;	
-;	Executable:   /usr/local/gromacs/bin/gmx
-;	Data prefix:  /usr/local/gromacs
-;	Working dir:  /home/jguven/projects/metalloenzymes/apo/npt
+;	Executable:   /exports/applications/apps/community/chem/Group_Codes/GROMACS-2021/gromacs-2021.2/gromacs_final/bin/gmx
+;	Data prefix:  /exports/applications/apps/community/chem/Group_Codes/GROMACS-2021/gromacs-2021.2/gromacs_final
+;	Working dir:  /exports/eddie/scratch/s1607171/npt
 ;	Command line:
 ;	  gmx grompp -f npt.mdp -c nvt.gro -r nvt.gro -p test.top -o npt.tpr
 
@@ -169,7 +169,7 @@ annealing-temp           =
 ; GENERATE VELOCITIES FOR STARTUP RUN
 gen_vel                  = no
 gen-temp                 = 300
-gen-seed                 = -1125138289
+gen-seed                 = -1
 
 ; OPTIONS FOR BONDS    
 constraints              = h-bonds
@@ -259,15 +259,11 @@ temperature-lambdas      =
 calc-lambda-neighbors    = 1
 init-lambda-weights      = 
 dhdl-print-energy        = no
-sc-function              = beutler
 sc-alpha                 = 0
 sc-power                 = 1
 sc-r-power               = 6
 sc-sigma                 = 0.3
 sc-coul                  = no
-sc-gapsys-scale-linpoint-lj = 0.85
-sc-gapsys-scale-linpoint-q = 0.3
-sc-gapsys-sigma-lj       = 0.3
 separate-dhdl-file       = yes
 dhdl-derivatives         = yes
 dh_hist_size             = 0
@@ -314,6 +310,3 @@ electric-field-z         = 0 0 0 0
 
 ; Density guided simulation
 density-guided-simulation-active = false
-
-; QM/MM with CP2K
-qmmm-cp2k-active         = false
