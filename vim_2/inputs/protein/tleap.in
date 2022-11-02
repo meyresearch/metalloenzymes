@@ -1,4 +1,5 @@
 source oldff/leaprc.ff14SB
+source leaprc.gaff2
 source leaprc.water.tip3p
 addAtomTypes {
         { "M1"  "Zn" "sp3" }
@@ -20,19 +21,15 @@ CS1 = loadmol2 CS1.mol2
 HD3 = loadmol2 HD3.mol2
 ZN1 = loadmol2 ZN1.mol2
 ZN2 = loadmol2 ZN2.mol2
-PT1 = loadmol2 PT1.mol2
-loadamberparams P9T.frcmod
 loadamberparams frcmod.ions1lm_126_tip3p
 loadamberparams vim2_mcpbpy.frcmod
-mol = loadpdb vim2_mcpbpy.pdb
+mol = loadpdb protein.pdb
 bond mol.83.NE2 mol.231.ZN
 bond mol.85.ND1 mol.231.ZN
 bond mol.87.OD2 mol.232.ZN
 bond mol.148.NE2 mol.231.ZN
 bond mol.167.SG mol.232.ZN
 bond mol.209.NE2 mol.232.ZN
-bond mol.231.ZN mol.233.O07
-bond mol.232.ZN mol.233.O08
 bond mol.82.C mol.83.N
 bond mol.83.C mol.84.N
 bond mol.84.C mol.85.N
@@ -45,12 +42,6 @@ bond mol.166.C mol.167.N
 bond mol.167.C mol.168.N
 bond mol.208.C mol.209.N
 bond mol.209.C mol.210.N
-savepdb mol vim2_dry.pdb
-saveamberparm mol vim2_dry.prmtop vim2_dry.inpcrd
-solvatebox mol TIP3PBOX 10.0
-addions mol Na+ 0
-addions mol Cl- 0
-savepdb mol vim2_solv.pdb
-saveamberparm mol vim2_solv.prmtop vim2_solv.inpcrd
+savepdb mol prot_water.pdb
+saveamberparm mol prot_water.prm7 prot_water.rst7
 quit
- 
