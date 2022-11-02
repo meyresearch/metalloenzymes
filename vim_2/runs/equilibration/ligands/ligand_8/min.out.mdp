@@ -2,7 +2,7 @@
 ;	File '/home/jguven/projects/metalloenzymes/vim_2/scripts/../runs/equilibration/ligands/ligand_8/min.out.mdp' was generated
 ;	By user: jguven (1002)
 ;	On host: azuma
-;	At date: Wed Nov  2 14:25:24 2022
+;	At date: Wed Nov  2 18:23:08 2022
 ;
 ;	Created by:
 ;	                     :-) GROMACS - gmx grompp, 2022.2 (-:
@@ -169,7 +169,7 @@ annealing-temp           =
 ; GENERATE VELOCITIES FOR STARTUP RUN
 gen-vel                  = no
 gen-temp                 = 300
-gen-seed                 = 1040055959
+gen-seed                 = 1976303599
 
 ; OPTIONS FOR BONDS    
 constraints              = none

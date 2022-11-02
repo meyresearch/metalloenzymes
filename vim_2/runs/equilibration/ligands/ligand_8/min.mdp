@@ -1,5 +1,5 @@
 nstlog = 100
-integrator = cg
+integrator = steep
 nstcgsteep = 1000
 nsteps = 2000
 pbc = xyz

@@ -1,0 +1,25 @@
+Setting the LD random seed to -46696842
+
+Generated 136 of the 136 non-bonded parameter combinations
+
+Generated 136 of the 136 1-4 parameter combinations
+
+Excluding 3 bonded neighbours molecule type 'MOL'
+
+Excluding 3 bonded neighbours molecule type 'SOL'
+
+Excluding 3 bonded neighbours molecule type 'NA'
+Analysing residue names:
+There are:     1      Other residues
+There are:   673      Water residues
+There are:     1        Ion residues
+Analysing residues not classified as Protein/DNA/RNA/Water and splitting into groups...
+Analysing residues not classified as Protein/DNA/RNA/Water and splitting into groups...
+
+The largest distance between excluded atoms is 0.407 nm
+Calculating fourier grid dimensions for X Y Z
+Using a fourier grid of 24x24x24, spacing 0.115 0.115 0.115
+
+Estimate for the relative computational load of the PME mesh part: 0.30
+
+This run will generate roughly 0 Mb of data

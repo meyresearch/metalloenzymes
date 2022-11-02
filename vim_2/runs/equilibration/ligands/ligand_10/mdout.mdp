@@ -1,17 +1,17 @@
 ;
-;	File '/home/jguven/projects/metalloenzymes/vim_2/scripts/../runs/equilibration/ligands/ligand_10/min.out.mdp' was generated
+;	File 'mdout.mdp' was generated
 ;	By user: jguven (1002)
 ;	On host: azuma
-;	At date: Wed Nov  2 18:23:08 2022
+;	At date: Wed Nov  2 18:24:51 2022
 ;
 ;	Created by:
 ;	                     :-) GROMACS - gmx grompp, 2022.2 (-:
 ;	
 ;	Executable:   /usr/local/gromacs/bin/gmx
 ;	Data prefix:  /usr/local/gromacs
-;	Working dir:  /home/jguven/projects/metalloenzymes/vim_2/scripts
+;	Working dir:  /home/jguven/projects/metalloenzymes/vim_2/runs/equilibration/ligands/ligand_10
 ;	Command line:
-;	  gmx grompp -f /home/jguven/projects/metalloenzymes/vim_2/scripts/../runs/equilibration/ligands/ligand_10/min.mdp -po /home/jguven/projects/metalloenzymes/vim_2/scripts/../runs/equilibration/ligands/ligand_10/min.out.mdp -c /home/jguven/projects/metalloenzymes/vim_2/scripts/../runs/equilibration/ligands/ligand_10/min.gro -p /home/jguven/projects/metalloenzymes/vim_2/scripts/../runs/equilibration/ligands/ligand_10/min.top -r /home/jguven/projects/metalloenzymes/vim_2/scripts/../runs/equilibration/ligands/ligand_10/min.gro -o /home/jguven/projects/metalloenzymes/vim_2/scripts/../runs/equilibration/ligands/ligand_10/min.tpr
+;	  gmx grompp -f min.mdp -c min.gro -p min.top -o min.tpr
 
 ; VARIOUS PREPROCESSING OPTIONS
 ; Preprocessor information: use cpp syntax.
@@ -21,7 +21,7 @@ include                  =
 define                   = 
 
 ; RUN CONTROL PARAMETERS
-integrator               = cg
+integrator               = steep
 ; Start time and timestep in ps
 tinit                    = 0
 dt                       = 0.001
@@ -169,7 +169,7 @@ annealing-temp           =
 ; GENERATE VELOCITIES FOR STARTUP RUN
 gen-vel                  = no
 gen-temp                 = 300
-gen-seed                 = -1225002081
+gen-seed                 = -1343226713
 
 ; OPTIONS FOR BONDS    
 constraints              = none
