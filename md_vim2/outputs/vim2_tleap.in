@@ -1,5 +1,6 @@
 source oldff/leaprc.ff14SB
 source leaprc.water.tip3p
+source leaprc.gaff2
 addAtomTypes {
         { "M1"  "Zn" "sp3" }
         { "M2"  "Zn" "sp3" }

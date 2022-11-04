@@ -1,0 +1,1120 @@
+Setting the LD random seed to -616842308
+
+Generated 136 of the 136 non-bonded parameter combinations
+
+Generated 136 of the 136 1-4 parameter combinations
+
+Excluding 3 bonded neighbours molecule type 'MOL'
+
+turning H bonds into constraints...
+
+Excluding 3 bonded neighbours molecule type 'SOL'
+
+turning H bonds into constraints...
+
+Excluding 3 bonded neighbours molecule type 'NA'
+
+turning H bonds into constraints...
+Analysing residue names:
+There are:     1      Other residues
+There are:   640      Water residues
+There are:     1        Ion residues
+Analysing residues not classified as Protein/DNA/RNA/Water and splitting into groups...
+Analysing residues not classified as Protein/DNA/RNA/Water and splitting into groups...
+
+The largest distance between excluded atoms is 0.413 nm
+
+Determining Verlet buffer for a tolerance of 0.005 kJ/mol/ps at 300 K
+
+Calculated rlist for 1x1 atom pair-list as 1.099 nm, buffer size 0.099 nm
+
+Set rlist, assuming 4x4 atom pair-list, to 1.029 nm, buffer size 0.029 nm
+
+Note that mdrun will redetermine rlist based on the actual pair-list setup
+
+Reading Coordinates, Velocities and Box size from old trajectory
+
+Will read whole trajectory
+
+Using frame at t = 50 ps
+
+Starting time for run is 0 ps
+Calculating fourier grid dimensions for X Y Z
+Using a fourier grid of 24x24x24, spacing 0.113 0.113 0.113
+
+Estimate for the relative computational load of the PME mesh part: 0.31
+
+This run will generate roughly 4 Mb of data
+                      :-) GROMACS - gmx grompp, 2022.2 (-:
+
+Executable:   /usr/local/gromacs/bin/gmx
+Data prefix:  /usr/local/gromacs
+Working dir:  /home/jguven/projects/metalloenzymes/vim_2/runs/equilibration/unbound/ligand_8/r_npt
+Command line:
+  gmx grompp -f r_npt.mdp -c ../nvt/nvt.gro -r ../nvt/nvt.gro -p r_npt.top -t ../nvt/nvt.cpt -o r_npt.tpr
+
+Ignoring obsolete mdp entry 'ns-type'
+Generating 1-4 interactions: fudge = 0.5
+Number of degrees of freedom in T-Coupling group System is 3906.00
+
+NOTE 1 [file r_npt.mdp]:
+  Removing center of mass motion in the presence of position restraints
+  might cause artifacts. When you are using position restraints to
+  equilibrate a macro-molecule, the artifacts are usually negligible.
+
+
+Last frame         -1 time   50.000   
+
+There was 1 note
+
+Back Off! I just backed up r_npt.tpr to ./#r_npt.tpr.5#
+
+GROMACS reminds you: "Not everyone is capable of madness; and of those lucky enough to be capable, not many have the courage for it." (August Strindberg)
+
+                      :-) GROMACS - gmx mdrun, 2022.2 (-:
+
+Executable:   /usr/local/gromacs/bin/gmx
+Data prefix:  /usr/local/gromacs
+Working dir:  /home/jguven/projects/metalloenzymes/vim_2/runs/equilibration/unbound/ligand_8/r_npt
+Command line:
+  gmx mdrun -v -deffnm r_npt -nt 1 -nb gpu
+
+
+Back Off! I just backed up r_npt.log to ./#r_npt.log.2#
+Reading file r_npt.tpr, VERSION 2022.2 (single precision)
+Changing nstlist from 20 to 100, rlist from 1.029 to 1.159
+
+1 GPU selected for this run.
+Mapping of GPU IDs to the 2 GPU tasks in the 1 rank on this node:
+  PP:0,PME:0
+PP tasks will do (non-perturbed) short-ranged interactions on the GPU
+PP task will update and constrain coordinates on the CPU
+PME tasks will do all aspects on the GPU
+Using 1 MPI thread
+Using 1 OpenMP thread 
+
+
+NOTE: Thread affinity was not set.
+
+Back Off! I just backed up r_npt.trr to ./#r_npt.trr.2#
+
+Back Off! I just backed up r_npt.edr to ./#r_npt.edr.2#
+starting mdrun ''
+100000 steps,    200.0 ps.
+
+step 0
+step 100, remaining wall clock time:    25 s          
+step 200, remaining wall clock time:    21 s          
+step 300, remaining wall clock time:    20 s          
+step 400, remaining wall clock time:    20 s          
+step 500, remaining wall clock time:    19 s          
+step 600, remaining wall clock time:    19 s          
+step 700, remaining wall clock time:    19 s          
+step 800, remaining wall clock time:    19 s          
+step 900, remaining wall clock time:    18 s          
+step 1000, remaining wall clock time:    18 s          
+step 1100, remaining wall clock time:    18 s          
+step 1200, remaining wall clock time:    18 s          
+step 1300, remaining wall clock time:    18 s          
+step 1400, remaining wall clock time:    18 s          
+step 1500, remaining wall clock time:    18 s          
+step 1600, remaining wall clock time:    18 s          
+step 1700, remaining wall clock time:    18 s          
+step 1800, remaining wall clock time:    18 s          
+step 1900, remaining wall clock time:    18 s          
+step 2000, remaining wall clock time:    18 s          
+step 2100, remaining wall clock time:    18 s          
+step 2200, remaining wall clock time:    18 s          
+step 2300, remaining wall clock time:    18 s          
+step 2400, remaining wall clock time:    18 s          
+step 2500, remaining wall clock time:    18 s          
+step 2600, remaining wall clock time:    18 s          
+step 2700, remaining wall clock time:    18 s          
+step 2800, remaining wall clock time:    18 s          
+step 2900, remaining wall clock time:    18 s          
+step 3000, remaining wall clock time:    17 s          
+step 3100, remaining wall clock time:    17 s          
+step 3200, remaining wall clock time:    17 s          
+step 3300, remaining wall clock time:    17 s          
+step 3400, remaining wall clock time:    17 s          
+step 3500, remaining wall clock time:    17 s          
+step 3600, remaining wall clock time:    17 s          
+step 3700, remaining wall clock time:    17 s          
+step 3800, remaining wall clock time:    17 s          
+step 3900, remaining wall clock time:    17 s          
+step 4000, remaining wall clock time:    17 s          
+step 4100, remaining wall clock time:    17 s          
+step 4200, remaining wall clock time:    17 s          
+step 4300, remaining wall clock time:    17 s          
+step 4400, remaining wall clock time:    17 s          
+step 4500, remaining wall clock time:    17 s          
+step 4600, remaining wall clock time:    17 s          
+step 4700, remaining wall clock time:    17 s          
+step 4800, remaining wall clock time:    17 s          
+step 4900, remaining wall clock time:    17 s          
+step 5000, remaining wall clock time:    17 s          
+step 5100, remaining wall clock time:    17 s          
+step 5200, remaining wall clock time:    17 s          
+step 5300, remaining wall clock time:    17 s          
+step 5400, remaining wall clock time:    17 s          
+step 5500, remaining wall clock time:    17 s          
+step 5600, remaining wall clock time:    17 s          
+step 5700, remaining wall clock time:    17 s          
+step 5800, remaining wall clock time:    17 s          
+step 5900, remaining wall clock time:    17 s          
+step 6000, remaining wall clock time:    17 s          
+step 6100, remaining wall clock time:    17 s          
+step 6200, remaining wall clock time:    17 s          
+step 6300, remaining wall clock time:    17 s          
+step 6400, remaining wall clock time:    17 s          
+step 6500, remaining wall clock time:    17 s          
+step 6600, remaining wall clock time:    17 s          
+step 6700, remaining wall clock time:    17 s          
+step 6800, remaining wall clock time:    17 s          
+step 6900, remaining wall clock time:    17 s          
+step 7000, remaining wall clock time:    17 s          
+step 7100, remaining wall clock time:    17 s          
+step 7200, remaining wall clock time:    17 s          
+step 7300, remaining wall clock time:    17 s          
+step 7400, remaining wall clock time:    17 s          
+step 7500, remaining wall clock time:    17 s          
+step 7600, remaining wall clock time:    17 s          
+step 7700, remaining wall clock time:    16 s          
+step 7800, remaining wall clock time:    16 s          
+step 7900, remaining wall clock time:    16 s          
+step 8000, remaining wall clock time:    16 s          
+step 8100, remaining wall clock time:    16 s          
+step 8200, remaining wall clock time:    16 s          
+step 8300, remaining wall clock time:    16 s          
+step 8400, remaining wall clock time:    16 s          
+step 8500, remaining wall clock time:    16 s          
+step 8600, remaining wall clock time:    16 s          
+step 8700, remaining wall clock time:    16 s          
+step 8800, remaining wall clock time:    16 s          
+step 8900, remaining wall clock time:    16 s          
+step 9000, remaining wall clock time:    16 s          
+step 9100, remaining wall clock time:    16 s          
+step 9200, remaining wall clock time:    16 s          
+step 9300, remaining wall clock time:    16 s          
+step 9400, remaining wall clock time:    16 s          
+step 9500, remaining wall clock time:    16 s          
+step 9600, remaining wall clock time:    16 s          
+step 9700, remaining wall clock time:    16 s          
+step 9800, remaining wall clock time:    16 s          
+step 9900, remaining wall clock time:    16 s          
+step 10000, remaining wall clock time:    16 s          
+step 10100, remaining wall clock time:    16 s          
+step 10200, remaining wall clock time:    16 s          
+step 10300, remaining wall clock time:    16 s          
+step 10400, remaining wall clock time:    16 s          
+step 10500, remaining wall clock time:    16 s          
+step 10600, remaining wall clock time:    16 s          
+step 10700, remaining wall clock time:    16 s          
+step 10800, remaining wall clock time:    16 s          
+step 10900, remaining wall clock time:    16 s          
+step 11000, remaining wall clock time:    16 s          
+step 11100, remaining wall clock time:    16 s          
+step 11200, remaining wall clock time:    16 s          
+step 11300, remaining wall clock time:    16 s          
+step 11400, remaining wall clock time:    16 s          
+step 11500, remaining wall clock time:    16 s          
+step 11600, remaining wall clock time:    16 s          
+step 11700, remaining wall clock time:    16 s          
+step 11800, remaining wall clock time:    16 s          
+step 11900, remaining wall clock time:    16 s          
+step 12000, remaining wall clock time:    16 s          
+step 12100, remaining wall clock time:    16 s          
+step 12200, remaining wall clock time:    16 s          
+step 12300, remaining wall clock time:    16 s          
+step 12400, remaining wall clock time:    16 s          
+step 12500, remaining wall clock time:    16 s          
+step 12600, remaining wall clock time:    16 s          
+step 12700, remaining wall clock time:    16 s          
+step 12800, remaining wall clock time:    16 s          
+step 12900, remaining wall clock time:    16 s          
+step 13000, remaining wall clock time:    16 s          
+step 13100, remaining wall clock time:    15 s          
+step 13200, remaining wall clock time:    15 s          
+step 13300, remaining wall clock time:    15 s          
+step 13400, remaining wall clock time:    15 s          
+step 13500, remaining wall clock time:    15 s          
+step 13600, remaining wall clock time:    15 s          
+step 13700, remaining wall clock time:    15 s          
+step 13800, remaining wall clock time:    15 s          
+step 13900, remaining wall clock time:    15 s          
+step 14000, remaining wall clock time:    15 s          
+step 14100, remaining wall clock time:    15 s          
+step 14200, remaining wall clock time:    15 s          
+step 14300, remaining wall clock time:    15 s          
+step 14400, remaining wall clock time:    15 s          
+step 14500, remaining wall clock time:    15 s          
+step 14600, remaining wall clock time:    15 s          
+step 14700, remaining wall clock time:    15 s          
+step 14800, remaining wall clock time:    15 s          
+step 14900, remaining wall clock time:    15 s          
+step 15000, remaining wall clock time:    15 s          
+step 15100, remaining wall clock time:    15 s          
+step 15200, remaining wall clock time:    15 s          
+step 15300, remaining wall clock time:    15 s          
+step 15400, remaining wall clock time:    15 s          
+step 15500, remaining wall clock time:    15 s          
+step 15600, remaining wall clock time:    15 s          
+step 15700, remaining wall clock time:    15 s          
+step 15800, remaining wall clock time:    15 s          
+step 15900, remaining wall clock time:    15 s          
+step 16000, remaining wall clock time:    15 s          
+step 16100, remaining wall clock time:    15 s          
+step 16200, remaining wall clock time:    15 s          
+step 16300, remaining wall clock time:    15 s          
+step 16400, remaining wall clock time:    15 s          
+step 16500, remaining wall clock time:    15 s          
+step 16600, remaining wall clock time:    15 s          
+step 16700, remaining wall clock time:    15 s          
+step 16800, remaining wall clock time:    15 s          
+step 16900, remaining wall clock time:    15 s          
+step 17000, remaining wall clock time:    15 s          
+step 17100, remaining wall clock time:    15 s          
+step 17200, remaining wall clock time:    15 s          
+step 17300, remaining wall clock time:    15 s          
+step 17400, remaining wall clock time:    15 s          
+step 17500, remaining wall clock time:    15 s          
+step 17600, remaining wall clock time:    15 s          
+step 17700, remaining wall clock time:    15 s          
+step 17800, remaining wall clock time:    15 s          
+step 17900, remaining wall clock time:    15 s          
+step 18000, remaining wall clock time:    15 s          
+step 18100, remaining wall clock time:    15 s          
+step 18200, remaining wall clock time:    15 s          
+step 18300, remaining wall clock time:    15 s          
+step 18400, remaining wall clock time:    14 s          
+step 18500, remaining wall clock time:    14 s          
+step 18600, remaining wall clock time:    14 s          
+step 18700, remaining wall clock time:    14 s          
+step 18800, remaining wall clock time:    14 s          
+step 18900, remaining wall clock time:    14 s          
+step 19000, remaining wall clock time:    14 s          
+step 19100, remaining wall clock time:    14 s          
+step 19200, remaining wall clock time:    14 s          
+step 19300, remaining wall clock time:    14 s          
+step 19400, remaining wall clock time:    14 s          
+step 19500, remaining wall clock time:    14 s          
+step 19600, remaining wall clock time:    14 s          
+step 19700, remaining wall clock time:    14 s          
+step 19800, remaining wall clock time:    14 s          
+step 19900, remaining wall clock time:    14 s          
+step 20000, remaining wall clock time:    14 s          
+step 20100, remaining wall clock time:    14 s          
+step 20200, remaining wall clock time:    14 s          
+step 20300, remaining wall clock time:    14 s          
+step 20400, remaining wall clock time:    14 s          
+step 20500, remaining wall clock time:    14 s          
+step 20600, remaining wall clock time:    14 s          
+step 20700, remaining wall clock time:    14 s          
+step 20800, remaining wall clock time:    14 s          
+step 20900, remaining wall clock time:    14 s          
+step 21000, remaining wall clock time:    14 s          
+step 21100, remaining wall clock time:    14 s          
+step 21200, remaining wall clock time:    14 s          
+step 21300, remaining wall clock time:    14 s          
+step 21400, remaining wall clock time:    14 s          
+step 21500, remaining wall clock time:    14 s          
+step 21600, remaining wall clock time:    14 s          
+step 21700, remaining wall clock time:    14 s          
+step 21800, remaining wall clock time:    14 s          
+step 21900, remaining wall clock time:    14 s          
+step 22000, remaining wall clock time:    14 s          
+step 22100, remaining wall clock time:    14 s          
+step 22200, remaining wall clock time:    14 s          
+step 22300, remaining wall clock time:    14 s          
+step 22400, remaining wall clock time:    14 s          
+step 22500, remaining wall clock time:    14 s          
+step 22600, remaining wall clock time:    14 s          
+step 22700, remaining wall clock time:    14 s          
+step 22800, remaining wall clock time:    14 s          
+step 22900, remaining wall clock time:    14 s          
+step 23000, remaining wall clock time:    14 s          
+step 23100, remaining wall clock time:    14 s          
+step 23200, remaining wall clock time:    14 s          
+step 23300, remaining wall clock time:    14 s          
+step 23400, remaining wall clock time:    14 s          
+step 23500, remaining wall clock time:    14 s          
+step 23600, remaining wall clock time:    14 s          
+step 23700, remaining wall clock time:    14 s          
+step 23800, remaining wall clock time:    13 s          
+step 23900, remaining wall clock time:    13 s          
+step 24000, remaining wall clock time:    13 s          
+step 24100, remaining wall clock time:    13 s          
+step 24200, remaining wall clock time:    13 s          
+step 24300, remaining wall clock time:    13 s          
+step 24400, remaining wall clock time:    13 s          
+step 24500, remaining wall clock time:    13 s          
+step 24600, remaining wall clock time:    13 s          
+step 24700, remaining wall clock time:    13 s          
+step 24800, remaining wall clock time:    13 s          
+step 24900, remaining wall clock time:    13 s          
+step 25000, remaining wall clock time:    13 s          
+step 25100, remaining wall clock time:    13 s          
+step 25200, remaining wall clock time:    13 s          
+step 25300, remaining wall clock time:    13 s          
+step 25400, remaining wall clock time:    13 s          
+step 25500, remaining wall clock time:    13 s          
+step 25600, remaining wall clock time:    13 s          
+step 25700, remaining wall clock time:    13 s          
+step 25800, remaining wall clock time:    13 s          
+step 25900, remaining wall clock time:    13 s          
+step 26000, remaining wall clock time:    13 s          
+step 26100, remaining wall clock time:    13 s          
+step 26200, remaining wall clock time:    13 s          
+step 26300, remaining wall clock time:    13 s          
+step 26400, remaining wall clock time:    13 s          
+step 26500, remaining wall clock time:    13 s          
+step 26600, remaining wall clock time:    13 s          
+step 26700, remaining wall clock time:    13 s          
+step 26800, remaining wall clock time:    13 s          
+step 26900, remaining wall clock time:    13 s          
+step 27000, remaining wall clock time:    13 s          
+step 27100, remaining wall clock time:    13 s          
+step 27200, remaining wall clock time:    13 s          
+step 27400: timed with pme grid 24 24 24, coulomb cutoff 1.000: 60.5 M-cycles
+
+step 27400: the box size limits the PME load balancing to a coulomb cut-off of 1.129
+
+step 27600: timed with pme grid 20 20 20, coulomb cutoff 1.129: 63.8 M-cycles
+
+step 27800: timed with pme grid 24 24 24, coulomb cutoff 1.000: 60.4 M-cycles
+
+              optimal pme grid 24 24 24, coulomb cutoff 1.000
+
+step 27900, remaining wall clock time:    13 s          
+step 28000, remaining wall clock time:    13 s          
+step 28100, remaining wall clock time:    13 s          
+step 28200, remaining wall clock time:    13 s          
+step 28300, remaining wall clock time:    13 s          
+step 28400, remaining wall clock time:    13 s          
+step 28500, remaining wall clock time:    13 s          
+step 28600, remaining wall clock time:    13 s          
+step 28700, remaining wall clock time:    13 s          
+step 28800, remaining wall clock time:    13 s          
+step 28900, remaining wall clock time:    13 s          
+step 29000, remaining wall clock time:    13 s          
+step 29100, remaining wall clock time:    13 s          
+step 29200, remaining wall clock time:    13 s          
+step 29300, remaining wall clock time:    13 s          
+step 29400, remaining wall clock time:    13 s          
+step 29500, remaining wall clock time:    13 s          
+step 29600, remaining wall clock time:    13 s          
+step 29700, remaining wall clock time:    13 s          
+step 29800, remaining wall clock time:    13 s          
+step 29900, remaining wall clock time:    13 s          
+step 30000, remaining wall clock time:    13 s          
+step 30100, remaining wall clock time:    13 s          
+step 30200, remaining wall clock time:    12 s          
+step 30300, remaining wall clock time:    12 s          
+step 30400, remaining wall clock time:    12 s          
+step 30500, remaining wall clock time:    12 s          
+step 30600, remaining wall clock time:    12 s          
+step 30700, remaining wall clock time:    12 s          
+step 30800, remaining wall clock time:    12 s          
+step 30900, remaining wall clock time:    12 s          
+step 31000, remaining wall clock time:    12 s          
+step 31100, remaining wall clock time:    12 s          
+step 31200, remaining wall clock time:    12 s          
+step 31300, remaining wall clock time:    12 s          
+step 31400, remaining wall clock time:    12 s          
+step 31500, remaining wall clock time:    12 s          
+step 31600, remaining wall clock time:    12 s          
+step 31700, remaining wall clock time:    12 s          
+step 31800, remaining wall clock time:    12 s          
+step 31900, remaining wall clock time:    12 s          
+step 32000, remaining wall clock time:    12 s          
+step 32100, remaining wall clock time:    12 s          
+step 32200, remaining wall clock time:    12 s          
+step 32300, remaining wall clock time:    12 s          
+step 32400, remaining wall clock time:    12 s          
+step 32500, remaining wall clock time:    12 s          
+step 32600, remaining wall clock time:    12 s          
+step 32700, remaining wall clock time:    12 s          
+step 32800, remaining wall clock time:    12 s          
+step 32900, remaining wall clock time:    12 s          
+step 33000, remaining wall clock time:    12 s          
+step 33100, remaining wall clock time:    12 s          
+step 33200, remaining wall clock time:    12 s          
+step 33300, remaining wall clock time:    12 s          
+step 33400, remaining wall clock time:    12 s          
+step 33500, remaining wall clock time:    12 s          
+step 33600, remaining wall clock time:    12 s          
+step 33700, remaining wall clock time:    12 s          
+step 33800, remaining wall clock time:    12 s          
+step 33900, remaining wall clock time:    12 s          
+step 34000, remaining wall clock time:    12 s          
+step 34100, remaining wall clock time:    12 s          
+step 34200, remaining wall clock time:    12 s          
+step 34300, remaining wall clock time:    12 s          
+step 34400, remaining wall clock time:    12 s          
+step 34500, remaining wall clock time:    12 s          
+step 34600, remaining wall clock time:    12 s          
+step 34700, remaining wall clock time:    12 s          
+step 34800, remaining wall clock time:    12 s          
+step 34900, remaining wall clock time:    12 s          
+step 35000, remaining wall clock time:    12 s          
+step 35100, remaining wall clock time:    12 s          
+step 35200, remaining wall clock time:    12 s          
+step 35300, remaining wall clock time:    12 s          
+step 35400, remaining wall clock time:    12 s          
+step 35500, remaining wall clock time:    11 s          
+step 35600, remaining wall clock time:    11 s          
+step 35700, remaining wall clock time:    11 s          
+step 35800, remaining wall clock time:    11 s          
+step 35900, remaining wall clock time:    11 s          
+step 36000, remaining wall clock time:    11 s          
+step 36100, remaining wall clock time:    11 s          
+step 36200, remaining wall clock time:    11 s          
+step 36300, remaining wall clock time:    11 s          
+step 36400, remaining wall clock time:    11 s          
+step 36500, remaining wall clock time:    11 s          
+step 36600, remaining wall clock time:    11 s          
+step 36700, remaining wall clock time:    11 s          
+step 36800, remaining wall clock time:    11 s          
+step 36900, remaining wall clock time:    11 s          
+step 37000, remaining wall clock time:    11 s          
+step 37100, remaining wall clock time:    11 s          
+step 37200, remaining wall clock time:    11 s          
+step 37300, remaining wall clock time:    11 s          
+step 37400, remaining wall clock time:    11 s          
+step 37500, remaining wall clock time:    11 s          
+step 37600, remaining wall clock time:    11 s          
+step 37700, remaining wall clock time:    11 s          
+step 37800, remaining wall clock time:    11 s          
+step 37900, remaining wall clock time:    11 s          
+step 38000, remaining wall clock time:    11 s          
+step 38100, remaining wall clock time:    11 s          
+step 38200, remaining wall clock time:    11 s          
+step 38300, remaining wall clock time:    11 s          
+step 38400, remaining wall clock time:    11 s          
+step 38500, remaining wall clock time:    11 s          
+step 38600, remaining wall clock time:    11 s          
+step 38700, remaining wall clock time:    11 s          
+step 38800, remaining wall clock time:    11 s          
+step 38900, remaining wall clock time:    11 s          
+step 39000, remaining wall clock time:    11 s          
+step 39100, remaining wall clock time:    11 s          
+step 39200, remaining wall clock time:    11 s          
+step 39300, remaining wall clock time:    11 s          
+step 39400, remaining wall clock time:    11 s          
+step 39500, remaining wall clock time:    11 s          
+step 39600, remaining wall clock time:    11 s          
+step 39700, remaining wall clock time:    11 s          
+step 39800, remaining wall clock time:    11 s          
+step 39900, remaining wall clock time:    11 s          
+step 40000, remaining wall clock time:    11 s          
+step 40100, remaining wall clock time:    11 s          
+step 40200, remaining wall clock time:    11 s          
+step 40300, remaining wall clock time:    11 s          
+step 40400, remaining wall clock time:    11 s          
+step 40500, remaining wall clock time:    11 s          
+step 40600, remaining wall clock time:    11 s          
+step 40700, remaining wall clock time:    11 s          
+step 40800, remaining wall clock time:    10 s          
+step 40900, remaining wall clock time:    10 s          
+step 41000, remaining wall clock time:    10 s          
+step 41100, remaining wall clock time:    10 s          
+step 41200, remaining wall clock time:    10 s          
+step 41300, remaining wall clock time:    10 s          
+step 41400, remaining wall clock time:    10 s          
+step 41500, remaining wall clock time:    10 s          
+step 41600, remaining wall clock time:    10 s          
+step 41700, remaining wall clock time:    10 s          
+step 41800, remaining wall clock time:    10 s          
+step 41900, remaining wall clock time:    10 s          
+step 42000, remaining wall clock time:    10 s          
+step 42100, remaining wall clock time:    10 s          
+step 42200, remaining wall clock time:    10 s          
+step 42300, remaining wall clock time:    10 s          
+step 42400, remaining wall clock time:    10 s          
+step 42500, remaining wall clock time:    10 s          
+step 42600, remaining wall clock time:    10 s          
+step 42700, remaining wall clock time:    10 s          
+step 42800, remaining wall clock time:    10 s          
+step 42900, remaining wall clock time:    10 s          
+step 43000, remaining wall clock time:    10 s          
+step 43100, remaining wall clock time:    10 s          
+step 43200, remaining wall clock time:    10 s          
+step 43300, remaining wall clock time:    10 s          
+step 43400, remaining wall clock time:    10 s          
+step 43500, remaining wall clock time:    10 s          
+step 43600, remaining wall clock time:    10 s          
+step 43700, remaining wall clock time:    10 s          
+step 43800, remaining wall clock time:    10 s          
+step 43900, remaining wall clock time:    10 s          
+step 44000, remaining wall clock time:    10 s          
+step 44100, remaining wall clock time:    10 s          
+step 44200, remaining wall clock time:    10 s          
+step 44300, remaining wall clock time:    10 s          
+step 44400, remaining wall clock time:    10 s          
+step 44500, remaining wall clock time:    10 s          
+step 44600, remaining wall clock time:    10 s          
+step 44700, remaining wall clock time:    10 s          
+step 44800, remaining wall clock time:    10 s          
+step 44900, remaining wall clock time:    10 s          
+step 45000, remaining wall clock time:    10 s          
+step 45100, remaining wall clock time:    10 s          
+step 45200, remaining wall clock time:    10 s          
+step 45300, remaining wall clock time:    10 s          
+step 45400, remaining wall clock time:    10 s          
+step 45500, remaining wall clock time:    10 s          
+step 45600, remaining wall clock time:    10 s          
+step 45700, remaining wall clock time:    10 s          
+step 45800, remaining wall clock time:    10 s          
+step 45900, remaining wall clock time:    10 s          
+step 46000, remaining wall clock time:    10 s          
+step 46100, remaining wall clock time:     9 s          
+step 46200, remaining wall clock time:     9 s          
+step 46300, remaining wall clock time:     9 s          
+step 46400, remaining wall clock time:     9 s          
+step 46500, remaining wall clock time:     9 s          
+step 46600, remaining wall clock time:     9 s          
+step 46700, remaining wall clock time:     9 s          
+step 46800, remaining wall clock time:     9 s          
+step 46900, remaining wall clock time:     9 s          
+step 47000, remaining wall clock time:     9 s          
+step 47100, remaining wall clock time:     9 s          
+step 47200, remaining wall clock time:     9 s          
+step 47300, remaining wall clock time:     9 s          
+step 47400, remaining wall clock time:     9 s          
+step 47500, remaining wall clock time:     9 s          
+step 47600, remaining wall clock time:     9 s          
+step 47700, remaining wall clock time:     9 s          
+step 47800, remaining wall clock time:     9 s          
+step 47900, remaining wall clock time:     9 s          
+step 48000, remaining wall clock time:     9 s          
+step 48100, remaining wall clock time:     9 s          
+step 48200, remaining wall clock time:     9 s          
+step 48300, remaining wall clock time:     9 s          
+step 48400, remaining wall clock time:     9 s          
+step 48500, remaining wall clock time:     9 s          
+step 48600, remaining wall clock time:     9 s          
+step 48700, remaining wall clock time:     9 s          
+step 48800, remaining wall clock time:     9 s          
+step 48900, remaining wall clock time:     9 s          
+step 49000, remaining wall clock time:     9 s          
+step 49100, remaining wall clock time:     9 s          
+step 49200, remaining wall clock time:     9 s          
+step 49300, remaining wall clock time:     9 s          
+step 49400, remaining wall clock time:     9 s          
+step 49500, remaining wall clock time:     9 s          
+step 49600, remaining wall clock time:     9 s          
+step 49700, remaining wall clock time:     9 s          
+step 49800, remaining wall clock time:     9 s          
+step 49900, remaining wall clock time:     9 s          
+step 50000, remaining wall clock time:     9 s          
+step 50100, remaining wall clock time:     9 s          
+step 50200, remaining wall clock time:     9 s          
+step 50300, remaining wall clock time:     9 s          
+step 50400, remaining wall clock time:     9 s          
+step 50500, remaining wall clock time:     9 s          
+step 50600, remaining wall clock time:     9 s          
+step 50700, remaining wall clock time:     9 s          
+step 50800, remaining wall clock time:     9 s          
+step 50900, remaining wall clock time:     9 s          
+step 51000, remaining wall clock time:     9 s          
+step 51100, remaining wall clock time:     9 s          
+step 51200, remaining wall clock time:     9 s          
+step 51300, remaining wall clock time:     9 s          
+step 51400, remaining wall clock time:     9 s          
+step 51500, remaining wall clock time:     8 s          
+step 51600, remaining wall clock time:     8 s          
+step 51700, remaining wall clock time:     8 s          
+step 51800, remaining wall clock time:     8 s          
+step 51900, remaining wall clock time:     8 s          
+step 52000, remaining wall clock time:     8 s          
+step 52100, remaining wall clock time:     8 s          
+step 52200, remaining wall clock time:     8 s          
+step 52300, remaining wall clock time:     8 s          
+step 52400, remaining wall clock time:     8 s          
+step 52500, remaining wall clock time:     8 s          
+step 52600, remaining wall clock time:     8 s          
+step 52700, remaining wall clock time:     8 s          
+step 52800, remaining wall clock time:     8 s          
+step 52900, remaining wall clock time:     8 s          
+step 53000, remaining wall clock time:     8 s          
+step 53100, remaining wall clock time:     8 s          
+step 53200, remaining wall clock time:     8 s          
+step 53300, remaining wall clock time:     8 s          
+step 53400, remaining wall clock time:     8 s          
+step 53500, remaining wall clock time:     8 s          
+step 53600, remaining wall clock time:     8 s          
+step 53700, remaining wall clock time:     8 s          
+step 53800, remaining wall clock time:     8 s          
+step 53900, remaining wall clock time:     8 s          
+step 54000, remaining wall clock time:     8 s          
+step 54100, remaining wall clock time:     8 s          
+step 54200, remaining wall clock time:     8 s          
+step 54300, remaining wall clock time:     8 s          
+step 54400, remaining wall clock time:     8 s          
+step 54500, remaining wall clock time:     8 s          
+step 54600, remaining wall clock time:     8 s          
+step 54700, remaining wall clock time:     8 s          
+step 54800, remaining wall clock time:     8 s          
+step 54900, remaining wall clock time:     8 s          
+step 55000, remaining wall clock time:     8 s          
+step 55100, remaining wall clock time:     8 s          
+step 55200, remaining wall clock time:     8 s          
+step 55300, remaining wall clock time:     8 s          
+step 55400, remaining wall clock time:     8 s          
+step 55500, remaining wall clock time:     8 s          
+step 55600, remaining wall clock time:     8 s          
+step 55700, remaining wall clock time:     8 s          
+step 55800, remaining wall clock time:     8 s          
+step 55900, remaining wall clock time:     8 s          
+step 56000, remaining wall clock time:     8 s          
+step 56100, remaining wall clock time:     8 s          
+step 56200, remaining wall clock time:     8 s          
+step 56300, remaining wall clock time:     8 s          
+step 56400, remaining wall clock time:     8 s          
+step 56500, remaining wall clock time:     8 s          
+step 56600, remaining wall clock time:     8 s          
+step 56700, remaining wall clock time:     8 s          
+step 56800, remaining wall clock time:     7 s          
+step 56900, remaining wall clock time:     7 s          
+step 57000, remaining wall clock time:     7 s          
+step 57100, remaining wall clock time:     7 s          
+step 57200, remaining wall clock time:     7 s          
+step 57300, remaining wall clock time:     7 s          
+step 57400, remaining wall clock time:     7 s          
+step 57500, remaining wall clock time:     7 s          
+step 57600, remaining wall clock time:     7 s          
+step 57700, remaining wall clock time:     7 s          
+step 57800, remaining wall clock time:     7 s          
+step 57900, remaining wall clock time:     7 s          
+step 58000, remaining wall clock time:     7 s          
+step 58100, remaining wall clock time:     7 s          
+step 58200, remaining wall clock time:     7 s          
+step 58300, remaining wall clock time:     7 s          
+step 58400, remaining wall clock time:     7 s          
+step 58500, remaining wall clock time:     7 s          
+step 58600, remaining wall clock time:     7 s          
+step 58700, remaining wall clock time:     7 s          
+step 58800, remaining wall clock time:     7 s          
+step 58900, remaining wall clock time:     7 s          
+step 59000, remaining wall clock time:     7 s          
+step 59100, remaining wall clock time:     7 s          
+step 59200, remaining wall clock time:     7 s          
+step 59300, remaining wall clock time:     7 s          
+step 59400, remaining wall clock time:     7 s          
+step 59500, remaining wall clock time:     7 s          
+step 59600, remaining wall clock time:     7 s          
+step 59700, remaining wall clock time:     7 s          
+step 59800, remaining wall clock time:     7 s          
+step 59900, remaining wall clock time:     7 s          
+step 60000, remaining wall clock time:     7 s          
+step 60100, remaining wall clock time:     7 s          
+step 60200, remaining wall clock time:     7 s          
+step 60300, remaining wall clock time:     7 s          
+step 60400, remaining wall clock time:     7 s          
+step 60500, remaining wall clock time:     7 s          
+step 60600, remaining wall clock time:     7 s          
+step 60700, remaining wall clock time:     7 s          
+step 60800, remaining wall clock time:     7 s          
+step 60900, remaining wall clock time:     7 s          
+step 61000, remaining wall clock time:     7 s          
+step 61100, remaining wall clock time:     7 s          
+step 61200, remaining wall clock time:     7 s          
+step 61300, remaining wall clock time:     7 s          
+step 61400, remaining wall clock time:     7 s          
+step 61500, remaining wall clock time:     7 s          
+step 61600, remaining wall clock time:     7 s          
+step 61700, remaining wall clock time:     7 s          
+step 61800, remaining wall clock time:     7 s          
+step 61900, remaining wall clock time:     7 s          
+step 62000, remaining wall clock time:     7 s          
+step 62100, remaining wall clock time:     7 s          
+step 62200, remaining wall clock time:     6 s          
+step 62300, remaining wall clock time:     6 s          
+step 62400, remaining wall clock time:     6 s          
+step 62500, remaining wall clock time:     6 s          
+step 62600, remaining wall clock time:     6 s          
+step 62700, remaining wall clock time:     6 s          
+step 62800, remaining wall clock time:     6 s          
+step 62900, remaining wall clock time:     6 s          
+step 63000, remaining wall clock time:     6 s          
+step 63100, remaining wall clock time:     6 s          
+step 63200, remaining wall clock time:     6 s          
+step 63300, remaining wall clock time:     6 s          
+step 63400, remaining wall clock time:     6 s          
+step 63500, remaining wall clock time:     6 s          
+step 63600, remaining wall clock time:     6 s          
+step 63700, remaining wall clock time:     6 s          
+step 63800, remaining wall clock time:     6 s          
+step 63900, remaining wall clock time:     6 s          
+step 64000, remaining wall clock time:     6 s          
+step 64100, remaining wall clock time:     6 s          
+step 64200, remaining wall clock time:     6 s          
+step 64300, remaining wall clock time:     6 s          
+step 64400, remaining wall clock time:     6 s          
+step 64500, remaining wall clock time:     6 s          
+step 64600, remaining wall clock time:     6 s          
+step 64700, remaining wall clock time:     6 s          
+step 64800, remaining wall clock time:     6 s          
+step 64900, remaining wall clock time:     6 s          
+step 65000, remaining wall clock time:     6 s          
+step 65100, remaining wall clock time:     6 s          
+step 65200, remaining wall clock time:     6 s          
+step 65300, remaining wall clock time:     6 s          
+step 65400, remaining wall clock time:     6 s          
+step 65500, remaining wall clock time:     6 s          
+step 65600, remaining wall clock time:     6 s          
+step 65700, remaining wall clock time:     6 s          
+step 65800, remaining wall clock time:     6 s          
+step 65900, remaining wall clock time:     6 s          
+step 66000, remaining wall clock time:     6 s          
+step 66100, remaining wall clock time:     6 s          
+step 66200, remaining wall clock time:     6 s          
+step 66300, remaining wall clock time:     6 s          
+step 66400, remaining wall clock time:     6 s          
+step 66500, remaining wall clock time:     6 s          
+step 66600, remaining wall clock time:     6 s          
+step 66700, remaining wall clock time:     6 s          
+step 66800, remaining wall clock time:     6 s          
+step 66900, remaining wall clock time:     6 s          
+step 67000, remaining wall clock time:     6 s          
+step 67100, remaining wall clock time:     6 s          
+step 67200, remaining wall clock time:     6 s          
+step 67300, remaining wall clock time:     6 s          
+step 67400, remaining wall clock time:     6 s          
+step 67500, remaining wall clock time:     6 s          
+step 67600, remaining wall clock time:     5 s          
+step 67700, remaining wall clock time:     5 s          
+step 67800, remaining wall clock time:     5 s          
+step 67900, remaining wall clock time:     5 s          
+step 68000, remaining wall clock time:     5 s          
+step 68100, remaining wall clock time:     5 s          
+step 68200, remaining wall clock time:     5 s          
+step 68300, remaining wall clock time:     5 s          
+step 68400, remaining wall clock time:     5 s          
+step 68500, remaining wall clock time:     5 s          
+step 68600, remaining wall clock time:     5 s          
+step 68700, remaining wall clock time:     5 s          
+step 68800, remaining wall clock time:     5 s          
+step 68900, remaining wall clock time:     5 s          
+step 69000, remaining wall clock time:     5 s          
+step 69100, remaining wall clock time:     5 s          
+step 69200, remaining wall clock time:     5 s          
+step 69300, remaining wall clock time:     5 s          
+step 69400, remaining wall clock time:     5 s          
+step 69500, remaining wall clock time:     5 s          
+step 69600, remaining wall clock time:     5 s          
+step 69700, remaining wall clock time:     5 s          
+step 69800, remaining wall clock time:     5 s          
+step 69900, remaining wall clock time:     5 s          
+step 70000, remaining wall clock time:     5 s          
+step 70100, remaining wall clock time:     5 s          
+step 70200, remaining wall clock time:     5 s          
+step 70300, remaining wall clock time:     5 s          
+step 70400, remaining wall clock time:     5 s          
+step 70500, remaining wall clock time:     5 s          
+step 70600, remaining wall clock time:     5 s          
+step 70700, remaining wall clock time:     5 s          
+step 70800, remaining wall clock time:     5 s          
+step 70900, remaining wall clock time:     5 s          
+step 71000, remaining wall clock time:     5 s          
+step 71100, remaining wall clock time:     5 s          
+step 71200, remaining wall clock time:     5 s          
+step 71300, remaining wall clock time:     5 s          
+step 71400, remaining wall clock time:     5 s          
+step 71500, remaining wall clock time:     5 s          
+step 71600, remaining wall clock time:     5 s          
+step 71700, remaining wall clock time:     5 s          
+step 71800, remaining wall clock time:     5 s          
+step 71900, remaining wall clock time:     5 s          
+step 72000, remaining wall clock time:     5 s          
+step 72100, remaining wall clock time:     5 s          
+step 72200, remaining wall clock time:     5 s          
+step 72300, remaining wall clock time:     5 s          
+step 72400, remaining wall clock time:     5 s          
+step 72500, remaining wall clock time:     5 s          
+step 72600, remaining wall clock time:     5 s          
+step 72700, remaining wall clock time:     5 s          
+step 72800, remaining wall clock time:     5 s          
+step 72900, remaining wall clock time:     5 s          
+step 73000, remaining wall clock time:     4 s          
+step 73100, remaining wall clock time:     4 s          
+step 73200, remaining wall clock time:     4 s          
+step 73300, remaining wall clock time:     4 s          
+step 73400, remaining wall clock time:     4 s          
+step 73500, remaining wall clock time:     4 s          
+step 73600, remaining wall clock time:     4 s          
+step 73700, remaining wall clock time:     4 s          
+step 73800, remaining wall clock time:     4 s          
+step 73900, remaining wall clock time:     4 s          
+step 74000, remaining wall clock time:     4 s          
+step 74100, remaining wall clock time:     4 s          
+step 74200, remaining wall clock time:     4 s          
+step 74300, remaining wall clock time:     4 s          
+step 74400, remaining wall clock time:     4 s          
+step 74500, remaining wall clock time:     4 s          
+step 74600, remaining wall clock time:     4 s          
+step 74700, remaining wall clock time:     4 s          
+step 74800, remaining wall clock time:     4 s          
+step 74900, remaining wall clock time:     4 s          
+step 75000, remaining wall clock time:     4 s          
+step 75100, remaining wall clock time:     4 s          
+step 75200, remaining wall clock time:     4 s          
+step 75300, remaining wall clock time:     4 s          
+step 75400, remaining wall clock time:     4 s          
+step 75500, remaining wall clock time:     4 s          
+step 75600, remaining wall clock time:     4 s          
+step 75700, remaining wall clock time:     4 s          
+step 75800, remaining wall clock time:     4 s          
+step 75900, remaining wall clock time:     4 s          
+step 76000, remaining wall clock time:     4 s          
+step 76100, remaining wall clock time:     4 s          
+step 76200, remaining wall clock time:     4 s          
+step 76300, remaining wall clock time:     4 s          
+step 76400, remaining wall clock time:     4 s          
+step 76500, remaining wall clock time:     4 s          
+step 76600, remaining wall clock time:     4 s          
+step 76700, remaining wall clock time:     4 s          
+step 76800, remaining wall clock time:     4 s          
+step 76900, remaining wall clock time:     4 s          
+step 77000, remaining wall clock time:     4 s          
+step 77100, remaining wall clock time:     4 s          
+step 77200, remaining wall clock time:     4 s          
+step 77300, remaining wall clock time:     4 s          
+step 77400, remaining wall clock time:     4 s          
+step 77500, remaining wall clock time:     4 s          
+step 77600, remaining wall clock time:     4 s          
+step 77700, remaining wall clock time:     4 s          
+step 77800, remaining wall clock time:     4 s          
+step 77900, remaining wall clock time:     4 s          
+step 78000, remaining wall clock time:     4 s          
+step 78100, remaining wall clock time:     4 s          
+step 78200, remaining wall clock time:     4 s          
+step 78300, remaining wall clock time:     4 s          
+step 78400, remaining wall clock time:     3 s          
+step 78500, remaining wall clock time:     3 s          
+step 78600, remaining wall clock time:     3 s          
+step 78700, remaining wall clock time:     3 s          
+step 78800, remaining wall clock time:     3 s          
+step 78900, remaining wall clock time:     3 s          
+step 79000, remaining wall clock time:     3 s          
+step 79100, remaining wall clock time:     3 s          
+step 79200, remaining wall clock time:     3 s          
+step 79300, remaining wall clock time:     3 s          
+step 79400, remaining wall clock time:     3 s          
+step 79500, remaining wall clock time:     3 s          
+step 79600, remaining wall clock time:     3 s          
+step 79700, remaining wall clock time:     3 s          
+step 79800, remaining wall clock time:     3 s          
+step 79900, remaining wall clock time:     3 s          
+step 80000, remaining wall clock time:     3 s          
+step 80100, remaining wall clock time:     3 s          
+step 80200, remaining wall clock time:     3 s          
+step 80300, remaining wall clock time:     3 s          
+step 80400, remaining wall clock time:     3 s          
+step 80500, remaining wall clock time:     3 s          
+step 80600, remaining wall clock time:     3 s          
+step 80700, remaining wall clock time:     3 s          
+step 80800, remaining wall clock time:     3 s          
+step 80900, remaining wall clock time:     3 s          
+step 81000, remaining wall clock time:     3 s          
+step 81100, remaining wall clock time:     3 s          
+step 81200, remaining wall clock time:     3 s          
+step 81300, remaining wall clock time:     3 s          
+step 81400, remaining wall clock time:     3 s          
+step 81500, remaining wall clock time:     3 s          
+step 81600, remaining wall clock time:     3 s          
+step 81700, remaining wall clock time:     3 s          
+step 81800, remaining wall clock time:     3 s          
+step 81900, remaining wall clock time:     3 s          
+step 82000, remaining wall clock time:     3 s          
+step 82100, remaining wall clock time:     3 s          
+step 82200, remaining wall clock time:     3 s          
+step 82300, remaining wall clock time:     3 s          
+step 82400, remaining wall clock time:     3 s          
+step 82500, remaining wall clock time:     3 s          
+step 82600, remaining wall clock time:     3 s          
+step 82700, remaining wall clock time:     3 s          
+step 82800, remaining wall clock time:     3 s          
+step 82900, remaining wall clock time:     3 s          
+step 83000, remaining wall clock time:     3 s          
+step 83100, remaining wall clock time:     3 s          
+step 83200, remaining wall clock time:     3 s          
+step 83300, remaining wall clock time:     3 s          
+step 83400, remaining wall clock time:     3 s          
+step 83500, remaining wall clock time:     3 s          
+step 83600, remaining wall clock time:     3 s          
+step 83700, remaining wall clock time:     3 s          
+step 83800, remaining wall clock time:     2 s          
+step 83900, remaining wall clock time:     2 s          
+step 84000, remaining wall clock time:     2 s          
+step 84100, remaining wall clock time:     2 s          
+step 84200, remaining wall clock time:     2 s          
+step 84300, remaining wall clock time:     2 s          
+step 84400, remaining wall clock time:     2 s          
+step 84500, remaining wall clock time:     2 s          
+step 84600, remaining wall clock time:     2 s          
+step 84700, remaining wall clock time:     2 s          
+step 84800, remaining wall clock time:     2 s          
+step 84900, remaining wall clock time:     2 s          
+step 85000, remaining wall clock time:     2 s          
+step 85100, remaining wall clock time:     2 s          
+step 85200, remaining wall clock time:     2 s          
+step 85300, remaining wall clock time:     2 s          
+step 85400, remaining wall clock time:     2 s          
+step 85500, remaining wall clock time:     2 s          
+step 85600, remaining wall clock time:     2 s          
+step 85700, remaining wall clock time:     2 s          
+step 85800, remaining wall clock time:     2 s          
+step 85900, remaining wall clock time:     2 s          
+step 86000, remaining wall clock time:     2 s          
+step 86100, remaining wall clock time:     2 s          
+step 86200, remaining wall clock time:     2 s          
+step 86300, remaining wall clock time:     2 s          
+step 86400, remaining wall clock time:     2 s          
+step 86500, remaining wall clock time:     2 s          
+step 86600, remaining wall clock time:     2 s          
+step 86700, remaining wall clock time:     2 s          
+step 86800, remaining wall clock time:     2 s          
+step 86900, remaining wall clock time:     2 s          
+step 87000, remaining wall clock time:     2 s          
+step 87100, remaining wall clock time:     2 s          
+step 87200, remaining wall clock time:     2 s          
+step 87300, remaining wall clock time:     2 s          
+step 87400, remaining wall clock time:     2 s          
+step 87500, remaining wall clock time:     2 s          
+step 87600, remaining wall clock time:     2 s          
+step 87700, remaining wall clock time:     2 s          
+step 87800, remaining wall clock time:     2 s          
+step 87900, remaining wall clock time:     2 s          
+step 88000, remaining wall clock time:     2 s          
+step 88100, remaining wall clock time:     2 s          
+step 88200, remaining wall clock time:     2 s          
+step 88300, remaining wall clock time:     2 s          
+step 88400, remaining wall clock time:     2 s          
+step 88500, remaining wall clock time:     2 s          
+step 88600, remaining wall clock time:     2 s          
+step 88700, remaining wall clock time:     2 s          
+step 88800, remaining wall clock time:     2 s          
+step 88900, remaining wall clock time:     2 s          
+step 89000, remaining wall clock time:     2 s          
+step 89100, remaining wall clock time:     2 s          
+step 89200, remaining wall clock time:     1 s          
+step 89300, remaining wall clock time:     1 s          
+step 89400, remaining wall clock time:     1 s          
+step 89500, remaining wall clock time:     1 s          
+step 89600, remaining wall clock time:     1 s          
+step 89700, remaining wall clock time:     1 s          
+step 89800, remaining wall clock time:     1 s          
+step 89900, remaining wall clock time:     1 s          
+step 90000, remaining wall clock time:     1 s          
+step 90100, remaining wall clock time:     1 s          
+step 90200, remaining wall clock time:     1 s          
+step 90300, remaining wall clock time:     1 s          
+step 90400, remaining wall clock time:     1 s          
+step 90500, remaining wall clock time:     1 s          
+step 90600, remaining wall clock time:     1 s          
+step 90700, remaining wall clock time:     1 s          
+step 90800, remaining wall clock time:     1 s          
+step 90900, remaining wall clock time:     1 s          
+step 91000, remaining wall clock time:     1 s          
+step 91100, remaining wall clock time:     1 s          
+step 91200, remaining wall clock time:     1 s          
+step 91300, remaining wall clock time:     1 s          
+step 91400, remaining wall clock time:     1 s          
+step 91500, remaining wall clock time:     1 s          
+step 91600, remaining wall clock time:     1 s          
+step 91700, remaining wall clock time:     1 s          
+step 91800, remaining wall clock time:     1 s          
+step 91900, remaining wall clock time:     1 s          
+step 92000, remaining wall clock time:     1 s          
+step 92100, remaining wall clock time:     1 s          
+step 92200, remaining wall clock time:     1 s          
+step 92300, remaining wall clock time:     1 s          
+step 92400, remaining wall clock time:     1 s          
+step 92500, remaining wall clock time:     1 s          
+step 92600, remaining wall clock time:     1 s          
+step 92700, remaining wall clock time:     1 s          
+step 92800, remaining wall clock time:     1 s          
+step 92900, remaining wall clock time:     1 s          
+step 93000, remaining wall clock time:     1 s          
+step 93100, remaining wall clock time:     1 s          
+step 93200, remaining wall clock time:     1 s          
+step 93300, remaining wall clock time:     1 s          
+step 93400, remaining wall clock time:     1 s          
+step 93500, remaining wall clock time:     1 s          
+step 93600, remaining wall clock time:     1 s          
+step 93700, remaining wall clock time:     1 s          
+step 93800, remaining wall clock time:     1 s          
+step 93900, remaining wall clock time:     1 s          
+step 94000, remaining wall clock time:     1 s          
+step 94100, remaining wall clock time:     1 s          
+step 94200, remaining wall clock time:     1 s          
+step 94300, remaining wall clock time:     1 s          
+step 94400, remaining wall clock time:     1 s          
+step 94500, remaining wall clock time:     1 s          
+step 94600, remaining wall clock time:     0 s          
+step 94700, remaining wall clock time:     0 s          
+step 94800, remaining wall clock time:     0 s          
+step 94900, remaining wall clock time:     0 s          
+step 95000, remaining wall clock time:     0 s          
+step 95100, remaining wall clock time:     0 s          
+step 95200, remaining wall clock time:     0 s          
+step 95300, remaining wall clock time:     0 s          
+step 95400, remaining wall clock time:     0 s          
+step 95500, remaining wall clock time:     0 s          
+step 95600, remaining wall clock time:     0 s          
+step 95700, remaining wall clock time:     0 s          
+step 95800, remaining wall clock time:     0 s          
+step 95900, remaining wall clock time:     0 s          
+step 96000, remaining wall clock time:     0 s          
+step 96100, remaining wall clock time:     0 s          
+step 96200, remaining wall clock time:     0 s          
+step 96300, remaining wall clock time:     0 s          
+step 96400, remaining wall clock time:     0 s          
+step 96500, remaining wall clock time:     0 s          
+step 96600, remaining wall clock time:     0 s          
+step 96700, remaining wall clock time:     0 s          
+step 96800, remaining wall clock time:     0 s          
+step 96900, remaining wall clock time:     0 s          
+step 97000, remaining wall clock time:     0 s          
+step 97100, remaining wall clock time:     0 s          
+step 97200, remaining wall clock time:     0 s          
+step 97300, remaining wall clock time:     0 s          
+step 97400, remaining wall clock time:     0 s          
+step 97500, remaining wall clock time:     0 s          
+step 97600, remaining wall clock time:     0 s          
+step 97700, remaining wall clock time:     0 s          
+step 97800, remaining wall clock time:     0 s          
+step 97900, remaining wall clock time:     0 s          
+step 98000, remaining wall clock time:     0 s          
+step 98100, remaining wall clock time:     0 s          
+step 98200, remaining wall clock time:     0 s          
+step 98300, remaining wall clock time:     0 s          
+step 98400, remaining wall clock time:     0 s          
+step 98500, remaining wall clock time:     0 s          
+step 98600, remaining wall clock time:     0 s          
+step 98700, remaining wall clock time:     0 s          
+step 98800, remaining wall clock time:     0 s          
+step 98900, remaining wall clock time:     0 s          
+step 99000, remaining wall clock time:     0 s          
+step 99100, remaining wall clock time:     0 s          
+step 99200, remaining wall clock time:     0 s          
+step 99300, remaining wall clock time:     0 s          
+step 99400, remaining wall clock time:     0 s          
+step 99500, remaining wall clock time:     0 s          
+step 99600, remaining wall clock time:     0 s          
+step 99700, remaining wall clock time:     0 s          
+step 99800, remaining wall clock time:     0 s          
+step 99900, remaining wall clock time:     0 s          
+Writing final coordinates.
+
+Back Off! I just backed up r_npt.gro to ./#r_npt.gro.3#
+
+step 100000, remaining wall clock time:     0 s          
+               Core t (s)   Wall t (s)        (%)
+       Time:       18.531       18.531      100.0
+                 (ns/day)    (hour/ns)
+Performance:      932.515        0.026
+
+GROMACS reminds you: "There are only two kinds of programming languages: those people always bitch about and those nobody uses." (Bjarne Stroustrup)
+
