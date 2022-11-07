@@ -1,0 +1,17 @@
+#ID	FileName
+0	000_docked_10.sdf
+1	001_docked_11.sdf
+2	002_docked_12.sdf
+3	003_docked_13.sdf
+4	004_docked_14.sdf
+5	005_docked_15.sdf
+6	006_docked_16.sdf
+7	007_docked_2.sdf
+8	008_docked_3.sdf
+9	009_docked_4.sdf
+10	010_docked_5.sdf
+11	011_docked_6.sdf
+12	012_docked_7.sdf
+13	013_docked_8.sdf
+14	014_docked_9.sdf
+15	015_docked_xtal_1.sdf

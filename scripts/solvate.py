@@ -5,18 +5,6 @@ import pandas as pd
 import MDAnalysis as mda
 
 
-def get_parmed_charge(parmed_file: str) -> float:
-    """
-    Get net charge of molecule from PARMED output file
-    """
-    with open(parmed_file, "r") as file:
-        lines = file.readlines()
-    mask_line = [i for i in range(len(lines)) if "mask" in lines[i]][0]
-    info = [line.split() for line in lines[mask_line:] if "mask" not in line][1:-2]
-    column_headers = [element for element in info[0] if element != "GB" and element != "LJ"]
-    df = pd.DataFrame(info[1:], columns=column_headers)
-    return df["Charge"].astype(float).sum()
-
 ligand_directory = "../inputs/ligands/"
 protein_directory = "../inputs/protein/"
 xtal_filename = ligand_directory + "ligand_8_xtal"
