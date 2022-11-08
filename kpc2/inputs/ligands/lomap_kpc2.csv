@@ -1,5 +1,6 @@
-('docked_10', 'docked_5'): 0.74082
-('docked_10', 'docked_xtal_1'): 0.81873
+('docked_1', 'docked_10'): 0.81873
+('docked_1', 'docked_5'): 0.90484
+('docked_10', 'docked_15'): 0.70469
 ('docked_11', 'docked_12'): 0.90484
 ('docked_11', 'docked_13'): 0.81873
 ('docked_11', 'docked_14'): 0.81873
@@ -12,7 +13,6 @@
 ('docked_14', 'docked_4'): 0.34994
 ('docked_14', 'docked_5'): 0.74082
 ('docked_15', 'docked_5'): 0.7788
-('docked_15', 'docked_xtal_1'): 0.70469
 ('docked_16', 'docked_4'): 0.81873
 ('docked_16', 'docked_8'): 0.74082
 ('docked_2', 'docked_6'): 0.7788
