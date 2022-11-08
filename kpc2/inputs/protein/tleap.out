@@ -41,11 +41,9 @@ Reading force field modification type file (frcmod)
 Reading title:
 Li/Merz ion parameters of divalent to tetravalent ions for TIP3P water model (12-6 normal usage set)
 Loading PDB file: ../kpc2/inputs/protein/protein_complex.pdb
-  Added missing heavy atom: .R<CGLY 270>.A<OXT 8>
-  total atoms in file: 2088
-  Leap added 2002 missing atoms according to residue templates:
-       1 Heavy
-       2001 H / lone pairs
+  total atoms in file: 4090
+  Leap added 2 missing atoms according to residue templates:
+       2 H / lone pairs
 Checking Unit.
 Building topology.
 Building atom parameters.

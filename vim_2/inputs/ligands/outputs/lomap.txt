@@ -14,3 +14,4 @@
 12	012_docked_6.sdf
 13	013_docked_7.sdf
 14	014_docked_9.sdf
+15	015_docked_xtal_8.sdf

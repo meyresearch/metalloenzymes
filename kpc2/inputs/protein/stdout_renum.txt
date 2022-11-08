@@ -43,7 +43,7 @@ ARG A    65    ARG    42
 PHE A    66    PHE    43
 PRO A    67    PRO    44
 LEU A    68    LEU    45
-CYX A    69    CYX    46
+CYS A    69    CYS    46
 SER A    70    SER    47
 SER A    71    SER    48
 PHE A    72    PHE    49
@@ -212,7 +212,7 @@ LYS A   234    LYS   211
 THR A   235    THR   212
 GLY A   236    GLY   213
 THR A   237    THR   214
-CYX A   238    CYX   215
+CYS A   238    CYS   215
 GLY A   239    GLY   216
 VAL A   240    VAL   217
 TYR A   241    TYR   218
