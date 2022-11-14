@@ -13,17 +13,17 @@ addAtomTypes {
         { "Y7"  "N" "sp3" }
         { "Y8"  "O" "sp3" }
 }
-HD1 = loadmol2 ../vim_2/inputs/protein/HD1.mol2
-HE1 = loadmol2 ../vim_2/inputs/protein/HE1.mol2
-AP1 = loadmol2 ../vim_2/inputs/protein/AP1.mol2
-HD2 = loadmol2 ../vim_2/inputs/protein/HD2.mol2
-CS1 = loadmol2 ../vim_2/inputs/protein/CS1.mol2
-HD3 = loadmol2 ../vim_2/inputs/protein/HD3.mol2
-ZN1 = loadmol2 ../vim_2/inputs/protein/ZN1.mol2
-ZN2 = loadmol2 ../vim_2/inputs/protein/ZN2.mol2
+HD1 = loadmol2 HD1.mol2
+HE1 = loadmol2 HE1.mol2
+AP1 = loadmol2 AP1.mol2
+HD2 = loadmol2 HD2.mol2
+CS1 = loadmol2 CS1.mol2
+HD3 = loadmol2 HD3.mol2
+ZN1 = loadmol2 ZN1.mol2
+ZN2 = loadmol2 ZN2.mol2
 loadamberparams frcmod.ions1lm_126_tip3p
-loadamberparams ../vim_2/inputs/protein/vim2_mcpbpy.frcmod
-mol = loadpdb ../vim_2/inputs/protein/protein_complex_fixed.pdb
+loadamberparams vim2_mcpbpy.frcmod
+mol = loadpdb protein_complex_fixed.pdb
 bond mol.83.NE2 mol.231.ZN
 bond mol.85.ND1 mol.231.ZN
 bond mol.87.OD2 mol.232.ZN
@@ -42,6 +42,6 @@ bond mol.166.C mol.167.N
 bond mol.167.C mol.168.N
 bond mol.208.C mol.209.N
 bond mol.209.C mol.210.N
-savepdb mol ../vim_2/inputs/protein/prot_water.pdb
-saveamberparm mol ../vim_2/inputs/protein/prot_water.prm7 ../vim_2/inputs/protein/prot_water.rst7
+savepdb mol prot_water.pdb
+saveamberparm mol prot_water.prm7 prot_water.rst7
 quit

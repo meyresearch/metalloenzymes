@@ -5,8 +5,6 @@ import argparse
 import os
 import sys
 import glob
-import csv
-import pandas as pd
 
 
 def create_complex(protein_path: str, protein_file: str, water_file: str, output=None) -> str:
@@ -23,7 +21,7 @@ def create_complex(protein_path: str, protein_file: str, water_file: str, output
     elif water_file is None and output == "":
         output = "protein_complex"
         protein_complex = protein
-        bss.IO.saveMolecules(output, protein_complex, fileformat="pdb")
+        bss.IO.saveMolecules(protein_path+output, protein_complex, fileformat="pdb")
     elif water_file is None and output != "":
         protein_complex = protein
         bss.IO.saveMolecules(protein_path+output, protein_complex, fileformat="pdb")
@@ -81,7 +79,6 @@ forcefield = arguments.forcefield
 solvent = arguments.solvent.lower()
 tleap_file = protein_path + "tleap.in"
 is_file(protein_path+protein_file)
-complex_file = create_complex(protein_path, protein_file, water_file, output_file)
 
 if arguments.water is not None:
     water_file = protein_path + arguments.water
@@ -89,7 +86,29 @@ if arguments.water is not None:
 else: 
     water_file = None
 
+complex_file = create_complex(protein_path, protein_file, water_file, output_file)
+is_file(protein_path+complex_file+".pdb")
+
 if forcefield.lower() == "zaff":
+    with open(protein_path+complex_file+".pdb", "r") as pdb_input:
+        lines = pdb_input.readlines()
+    n_zn = 0
+    for line in lines:
+        if "ZN" in line:
+            n_zn += 1
+    
+    protein_terminus = [i for i in range(len(lines)) if "ZN" in lines[i]][0] - 1
+    zn_line = protein_terminus+1
+    zn_terminus = protein_terminus + n_zn + 1
+    conect = [i for i in range(len(lines)) if "CONECT" in lines[i]][0] 
+    fixed_file = protein_path+complex_file+"_fixed.pdb"
+    with open(fixed_file, "w") as pdb_output:
+        pdb_output.writelines(lines[:protein_terminus])
+        pdb_output.write("TER\n")
+        pdb_output.writelines(lines[zn_line:zn_terminus])
+        pdb_output.write("TER\n")
+        pdb_output.writelines(lines[zn_terminus:conect])
+        pdb_output.write("END\n")
     try:
         tleap_command = f"tleap -s -f {tleap_file} > {protein_path}" + "tleap.out"
         os.system(tleap_command)
