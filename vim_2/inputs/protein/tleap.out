@@ -3,10 +3,10 @@
 -I: Adding /home/jguven/Software/miniconda3/dat/leap/parm to search path.
 -I: Adding /home/jguven/Software/miniconda3/dat/leap/cmd to search path.
 -s: Ignoring all leaprc startup files.
--f: Source ../vim_2/inputs/protein/tleap.in.
+-f: Source /home/jguven/projects/metalloenzymes/vim_2/inputs/protein/tleap.in.
 
 Welcome to LEaP!
-Sourcing: ../vim_2/inputs/protein/tleap.in
+Sourcing: /home/jguven/projects/metalloenzymes/vim_2/inputs/protein/tleap.in
 ----- Source: /home/jguven/Software/miniconda3/dat/leap/cmd/oldff/leaprc.ff14SB
 ----- Source of /home/jguven/Software/miniconda3/dat/leap/cmd/oldff/leaprc.ff14SB done
 Log file: ./leap.log

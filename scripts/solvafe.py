@@ -21,4 +21,3 @@ new_universe.select_atoms("all").write(ligand_directory+"fixed_ligand_8.mol2")
 
 ligand_1 = bss.IO.readMolecules(ligand_directory+"fixed_ligand_8.mol2")[0]
 
-# add hydroxide ions to the ligand to make the charge integer and then parameterise using gaff2!!!

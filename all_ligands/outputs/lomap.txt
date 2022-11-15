@@ -1,0 +1,5 @@
+#ID	FileName
+0	000_ligand_1.sdf
+1	001_ligand_2.sdf
+2	002_ligand_3.sdf
+3	003_ligand_4.sdf

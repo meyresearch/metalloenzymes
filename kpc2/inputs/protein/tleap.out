@@ -3,10 +3,10 @@
 -I: Adding /home/jguven/Software/miniconda3/dat/leap/parm to search path.
 -I: Adding /home/jguven/Software/miniconda3/dat/leap/cmd to search path.
 -s: Ignoring all leaprc startup files.
--f: Source ../kpc2/inputs/protein/tleap.in.
+-f: Source /home/jguven/projects/metalloenzymes/kpc2/inputs/protein/tleap.in.
 
 Welcome to LEaP!
-Sourcing: ../kpc2/inputs/protein/tleap.in
+Sourcing: /home/jguven/projects/metalloenzymes/kpc2/inputs/protein/tleap.in
 ----- Source: /home/jguven/Software/miniconda3/dat/leap/cmd/leaprc.protein.ff14SB
 ----- Source of /home/jguven/Software/miniconda3/dat/leap/cmd/leaprc.protein.ff14SB done
 Log file: ./leap.log
@@ -40,7 +40,7 @@ Loading parameters: /home/jguven/Software/miniconda3/dat/leap/parm/frcmod.ions23
 Reading force field modification type file (frcmod)
 Reading title:
 Li/Merz ion parameters of divalent to tetravalent ions for TIP3P water model (12-6 normal usage set)
-Loading PDB file: ../kpc2/inputs/protein/protein_complex.pdb
+Loading PDB file: /home/jguven/projects/metalloenzymes/kpc2/inputs/protein/protein_complex.pdb
   total atoms in file: 4090
   Leap added 2 missing atoms according to residue templates:
        2 H / lone pairs

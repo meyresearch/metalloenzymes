@@ -1,5 +1,5 @@
 source leaprc.protein.ff14SB
 source leaprc.water.tip3p
-complex = loadpdb ../kpc2/inputs/protein/protein_complex.pdb
-saveamberparm complex ../kpc2/inputs/protein/kpc2_tleap.prm7 ../kpc2/inputs/protein/kpc2_tleap.rst7
+complex = loadpdb /home/jguven/projects/metalloenzymes/kpc2/inputs/protein/protein_complex.pdb
+saveamberparm complex /home/jguven/projects/metalloenzymes/kpc2/inputs/protein/kpc2_tleap.prm7 /home/jguven/projects/metalloenzymes/kpc2/inputs/protein/kpc2_tleap.rst7
 quit
