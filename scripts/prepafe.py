@@ -326,7 +326,7 @@ protocol = [f"ligand forcefield = gaff2", # CHANGE SO THAT USER CAN CHANGE
             f"sampling = 2*ns", # CHANGE SO THAT USER CAN CHANGE
             f"engine = {engine}"]
 
-with open(production_directory + "production.dat", "w") as protocol_file:
+with open(production_directory + "protocol.dat", "w") as protocol_file:
     writer = csv.writer(protocol_file)
     for protocol_line in protocol:
         writer.writerow([protocol_line])
