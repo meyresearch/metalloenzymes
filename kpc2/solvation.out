@@ -1,3 +1,4 @@
+Warning: importing 'simtk.openmm' is deprecated.  Import 'openmm' instead.
 
 ==============================================================
 Sending anonymous Sire usage statistics to http://siremol.org.

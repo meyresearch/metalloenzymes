@@ -1,0 +1,25 @@
+Warning: importing 'simtk.openmm' is deprecated.  Import 'openmm' instead.
+/home/jguven/Software/miniconda3/envs/bss-d/lib/python3.9/site-packages/jupyter_client/connect.py:27: DeprecationWarning: Jupyter is migrating its paths to use standard platformdirs
+given by the platformdirs library.  To remove this warning and
+see the appropriate new directories, set the environment variable
+`JUPYTER_PLATFORM_DIRS=1` and then run `jupyter --paths`.
+The use of platformdirs will be the default in `jupyter_core` v6
+  from jupyter_core.paths import jupyter_data_dir
+
+==============================================================
+Sending anonymous Sire usage statistics to http://siremol.org.
+For more information, see http://siremol.org/analytics
+To disable, set the environment variable 'SIRE_DONT_PHONEHOME' to 1
+To see the information sent, set the environment variable 
+SIRE_VERBOSE_PHONEHOME equal to 1. To silence this message, set
+the environment variable SIRE_SILENT_PHONEHOME to 1.
+==============================================================
+
+Processing unbound stage.
+Running another minimisation for ligand 10
+There was an error with r_nvt.sh. Please check the log file for ligand 10.
+Running another minimisation for ligand 11
+There was an error with r_nvt.sh. Please check the log file for ligand 11.
+Processing bound stage.
+Running another minimisation for ligand 14
+There was an error with bb_r_nvt.sh. Please check the log file for ligand 14.

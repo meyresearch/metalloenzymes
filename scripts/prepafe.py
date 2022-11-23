@@ -9,6 +9,7 @@ import pathlib
 import csv
 import numpy as np
 import pandas as pd
+import MDAnalysis as mda
 
 
 def create_complex(protein_path: str, protein_file: str, water_file: str, output=None) -> str:
@@ -47,6 +48,11 @@ parser.add_argument("system",
 parser.add_argument("protein",
                     type=str,
                     help="protein pdb file in ../system/inputs/protein/")
+
+parser.add_argument("-a",
+                    "--active-site",
+                    type=str,
+                    help="csv file containing active site residues for the zinc site, required for --forcefiled=zaff")
 
 parser.add_argument("-w",
                     "--water",
@@ -120,7 +126,7 @@ engine = arguments.engine.upper()
 windows = arguments.n_windows
 difficult_windows = arguments.difficult
 threshold = arguments.threshold
-
+active_site_file = arguments.active_site
 # SYSTEM
 if arguments.water is not None:
     water_file = protein_path + arguments.water
@@ -131,8 +137,31 @@ else:
 complex_file = create_complex(protein_path, protein_file, water_file, output_file)
 is_file(protein_path+complex_file+".pdb")
 
-if forcefield.lower() == "zaff":
-    with open(protein_path+complex_file+".pdb", "r") as pdb_input:
+
+if forcefield.lower() == "zaff" and active_site_file is None:
+    parser.error("--forcefield=zaff requires an active site file --active-site={filename}.csv")
+
+elif forcefield.lower() == "zaff" and active_site_file:
+    try:
+        if not active_site_file.endswith(".csv"):
+            raise IOError("Active site file should be a .csv file.")
+        
+        active_site = pd.read_csv(active_site_file, header=None, names=["resname", "resid"])
+        active_site_residues = active_site["resname"].tolist()
+        active_site_residue_ids = active_site["resid"].tolist()
+        n_active_site_residues = len(active_site_residue_ids)
+        universe = mda.Universe(protein_path+complex_file+".pdb")
+        for i in range(n_active_site_residues):
+            atom_group = universe.select_atoms(f"resid {active_site_residue_ids[i]}")
+            atom_group.residues.resnames = active_site_residues[i]
+        fixed_residues = protein_path+complex_file+"_fixed_residues.pdb"
+        universe.atoms.write(fixed_residues)
+
+    except FileNotFoundError as error:
+        print(f"{error}: Running tleap with zaff requires an active site csv file")
+    except IOError as error:
+        print(error)
+    with open(fixed_residues, "r") as pdb_input:
         lines = pdb_input.readlines()
     n_zn = 0
     for line in lines:
@@ -142,7 +171,7 @@ if forcefield.lower() == "zaff":
     zn_line = protein_terminus+1
     zn_terminus = protein_terminus + n_zn + 1
     conect = [i for i in range(len(lines)) if "CONECT" in lines[i]][0] 
-    fixed_file = protein_path+complex_file+"_fixed.pdb"
+    fixed_file = protein_path + complex_file + "_fixed.pdb"
     with open(fixed_file, "w") as pdb_output:
         pdb_output.writelines(lines[:protein_terminus])
         pdb_output.write("TER\n")
@@ -150,12 +179,14 @@ if forcefield.lower() == "zaff":
         pdb_output.write("TER\n")
         pdb_output.writelines(lines[zn_terminus:conect])
         pdb_output.write("END\n")
+    
     try:
         tleap_command = f"tleap -s -f {tleap_file} > {protein_path}" + "tleap.out"
         os.system(tleap_command)
     except FileNotFoundError:
         print("tleap input file for zaff does not exist and is required with --forcefield=zaff")
         sys.exit()
+
 elif forcefield.lower() == "ff14sb":
     forcefield = "ff14SB"
     with open(tleap_file, "w") as tleap_in:

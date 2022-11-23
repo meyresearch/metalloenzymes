@@ -109,7 +109,7 @@ ligand_files = glob.glob(f"{ligand_path}*.{filetype}")
 protein = bss.IO.readMolecules([protein_file + ".rst7", protein_file + ".prm7"])[0]
 ligands = [bss.IO.readMolecules(ligand_file)[0] for ligand_file in ligand_files]
 
-for i in range(len(n_ligands)):
+for i in range(n_ligands):
 
     ligand_number = ligand_names[i].split("_")[1]
     print(f"working on ligand {ligand_number}")

@@ -1,51 +1,51 @@
--I: Adding /home/jguven/Software/miniconda3/dat/leap/prep to search path.
--I: Adding /home/jguven/Software/miniconda3/dat/leap/lib to search path.
--I: Adding /home/jguven/Software/miniconda3/dat/leap/parm to search path.
--I: Adding /home/jguven/Software/miniconda3/dat/leap/cmd to search path.
+-I: Adding /home/jguven/Software/miniconda3/envs/bss-d/dat/leap/prep to search path.
+-I: Adding /home/jguven/Software/miniconda3/envs/bss-d/dat/leap/lib to search path.
+-I: Adding /home/jguven/Software/miniconda3/envs/bss-d/dat/leap/parm to search path.
+-I: Adding /home/jguven/Software/miniconda3/envs/bss-d/dat/leap/cmd to search path.
 -s: Ignoring all leaprc startup files.
 -f: Source /home/jguven/projects/metalloenzymes/vim_2/inputs/protein/tleap.in.
 
 Welcome to LEaP!
 Sourcing: /home/jguven/projects/metalloenzymes/vim_2/inputs/protein/tleap.in
------ Source: /home/jguven/Software/miniconda3/dat/leap/cmd/oldff/leaprc.ff14SB
------ Source of /home/jguven/Software/miniconda3/dat/leap/cmd/oldff/leaprc.ff14SB done
+----- Source: /home/jguven/Software/miniconda3/envs/bss-d/dat/leap/cmd/oldff/leaprc.ff14SB
+----- Source of /home/jguven/Software/miniconda3/envs/bss-d/dat/leap/cmd/oldff/leaprc.ff14SB done
 Log file: ./leap.log
-Loading parameters: /home/jguven/Software/miniconda3/dat/leap/parm/parm10.dat
+Loading parameters: /home/jguven/Software/miniconda3/envs/bss-d/dat/leap/parm/parm10.dat
 Reading title:
 PARM99 + frcmod.ff99SB + frcmod.parmbsc0 + OL3 for RNA
-Loading parameters: /home/jguven/Software/miniconda3/dat/leap/parm/frcmod.ff14SB
+Loading parameters: /home/jguven/Software/miniconda3/envs/bss-d/dat/leap/parm/frcmod.ff14SB
 Reading force field modification type file (frcmod)
 Reading title:
 ff14SB protein backbone and sidechain parameters
-Loading library: /home/jguven/Software/miniconda3/dat/leap/lib/amino12.lib
-Loading library: /home/jguven/Software/miniconda3/dat/leap/lib/aminoct12.lib
-Loading library: /home/jguven/Software/miniconda3/dat/leap/lib/aminont12.lib
-Loading library: /home/jguven/Software/miniconda3/dat/leap/lib/nucleic12.lib
-Loading library: /home/jguven/Software/miniconda3/dat/leap/lib/atomic_ions.lib
-Loading library: /home/jguven/Software/miniconda3/dat/leap/lib/solvents.lib
------ Source: /home/jguven/Software/miniconda3/dat/leap/cmd/leaprc.gaff2
------ Source of /home/jguven/Software/miniconda3/dat/leap/cmd/leaprc.gaff2 done
+Loading library: /home/jguven/Software/miniconda3/envs/bss-d/dat/leap/lib/amino12.lib
+Loading library: /home/jguven/Software/miniconda3/envs/bss-d/dat/leap/lib/aminoct12.lib
+Loading library: /home/jguven/Software/miniconda3/envs/bss-d/dat/leap/lib/aminont12.lib
+Loading library: /home/jguven/Software/miniconda3/envs/bss-d/dat/leap/lib/nucleic12.lib
+Loading library: /home/jguven/Software/miniconda3/envs/bss-d/dat/leap/lib/atomic_ions.lib
+Loading library: /home/jguven/Software/miniconda3/envs/bss-d/dat/leap/lib/solvents.lib
+----- Source: /home/jguven/Software/miniconda3/envs/bss-d/dat/leap/cmd/leaprc.gaff2
+----- Source of /home/jguven/Software/miniconda3/envs/bss-d/dat/leap/cmd/leaprc.gaff2 done
 Log file: ./leap.log
-Loading parameters: /home/jguven/Software/miniconda3/dat/leap/parm/gaff2.dat
+Loading parameters: /home/jguven/Software/miniconda3/envs/bss-d/dat/leap/parm/gaff2.dat
 Reading title:
 AMBER General Force Field for organic molecules (Version 2.11, May 2016)
------ Source: /home/jguven/Software/miniconda3/dat/leap/cmd/leaprc.water.tip3p
------ Source of /home/jguven/Software/miniconda3/dat/leap/cmd/leaprc.water.tip3p done
-Loading library: /home/jguven/Software/miniconda3/dat/leap/lib/atomic_ions.lib
-Loading library: /home/jguven/Software/miniconda3/dat/leap/lib/solvents.lib
-Loading parameters: /home/jguven/Software/miniconda3/dat/leap/parm/frcmod.tip3p
+----- Source: /home/jguven/Software/miniconda3/envs/bss-d/dat/leap/cmd/leaprc.water.tip3p
+----- Source of /home/jguven/Software/miniconda3/envs/bss-d/dat/leap/cmd/leaprc.water.tip3p done
+Loading library: /home/jguven/Software/miniconda3/envs/bss-d/dat/leap/lib/atomic_ions.lib
+Loading library: /home/jguven/Software/miniconda3/envs/bss-d/dat/leap/lib/solvents.lib
+Loading parameters: /home/jguven/Software/miniconda3/envs/bss-d/dat/leap/parm/frcmod.tip3p
 Reading force field modification type file (frcmod)
 Reading title:
 This is the additional/replacement parameter set for TIP3P water
-Loading parameters: /home/jguven/Software/miniconda3/dat/leap/parm/frcmod.ions1lm_126_tip3p
+Loading parameters: /home/jguven/Software/miniconda3/envs/bss-d/dat/leap/parm/frcmod.ions1lm_126_tip3p
 Reading force field modification type file (frcmod)
 Reading title:
 Li/Merz ion parameters of monovalent ions for TIP3P water model (12-6 normal usage set)
-Loading parameters: /home/jguven/Software/miniconda3/dat/leap/parm/frcmod.ionsjc_tip3p
+Loading parameters: /home/jguven/Software/miniconda3/envs/bss-d/dat/leap/parm/frcmod.ionsjc_tip3p
 Reading force field modification type file (frcmod)
 Reading title:
 Monovalent ion parameters for Ewald and TIP3P water from Joung & Cheatham JPCB (2008)
-Loading parameters: /home/jguven/Software/miniconda3/dat/leap/parm/frcmod.ions234lm_126_tip3p
+Loading parameters: /home/jguven/Software/miniconda3/envs/bss-d/dat/leap/parm/frcmod.ions234lm_126_tip3p
 Reading force field modification type file (frcmod)
 Reading title:
 Li/Merz ion parameters of divalent to tetravalent ions for TIP3P water model (12-6 normal usage set)
@@ -65,7 +65,7 @@ Loading Mol2 file: ../vim_2/inputs/protein/ZN1.mol2
 Reading MOLECULE named ZN1
 Loading Mol2 file: ../vim_2/inputs/protein/ZN2.mol2
 Reading MOLECULE named ZN2
-Loading parameters: /home/jguven/Software/miniconda3/dat/leap/parm/frcmod.ions1lm_126_tip3p
+Loading parameters: /home/jguven/Software/miniconda3/envs/bss-d/dat/leap/parm/frcmod.ions1lm_126_tip3p
 Reading force field modification type file (frcmod)
 Reading title:
 Li/Merz ion parameters of monovalent ions for TIP3P water model (12-6 normal usage set)
@@ -74,167 +74,91 @@ Reading force field modification type file (frcmod)
 Reading title:
 REMARK GOES HERE, THIS FILE IS GENERATED BY MCPB.PY
 Loading PDB file: ../vim_2/inputs/protein/protein_complex_fixed.pdb
+
+/home/jguven/Software/miniconda3/envs/bss-d/bin/teLeap: Warning!
+One sided connection. Residue (HD1) missing connect0 atom.
+
+/home/jguven/Software/miniconda3/envs/bss-d/bin/teLeap: Warning!
+One sided connection. Residue (default_name) missing connect1 atom.
+
+/home/jguven/Software/miniconda3/envs/bss-d/bin/teLeap: Warning!
+One sided connection. Residue (HE1) missing connect0 atom.
+
+/home/jguven/Software/miniconda3/envs/bss-d/bin/teLeap: Warning!
+One sided connection. Residue (default_name) missing connect1 atom.
+
+/home/jguven/Software/miniconda3/envs/bss-d/bin/teLeap: Warning!
+One sided connection. Residue (AP1) missing connect0 atom.
+
+/home/jguven/Software/miniconda3/envs/bss-d/bin/teLeap: Warning!
+One sided connection. Residue (default_name) missing connect1 atom.
+
+/home/jguven/Software/miniconda3/envs/bss-d/bin/teLeap: Warning!
+One sided connection. Residue (HD2) missing connect0 atom.
+
+/home/jguven/Software/miniconda3/envs/bss-d/bin/teLeap: Warning!
+One sided connection. Residue (default_name) missing connect1 atom.
+
+/home/jguven/Software/miniconda3/envs/bss-d/bin/teLeap: Warning!
+One sided connection. Residue (CS1) missing connect0 atom.
+
+/home/jguven/Software/miniconda3/envs/bss-d/bin/teLeap: Warning!
+One sided connection. Residue (default_name) missing connect1 atom.
+
+/home/jguven/Software/miniconda3/envs/bss-d/bin/teLeap: Warning!
+One sided connection. Residue (HD3) missing connect0 atom.
+
+/home/jguven/Software/miniconda3/envs/bss-d/bin/teLeap: Warning!
+One sided connection. Residue (default_name) missing connect1 atom.
   Added missing heavy atom: .R<CASN 230>.A<OXT 15>
   total atoms in file: 3455
-  Leap added 2 missing atoms according to residue templates:
+  Leap added 1 missing atom according to residue templates:
        1 Heavy
-       1 H / lone pairs
 Writing pdb file: ../vim_2/inputs/protein/prot_water.pdb
 
-/home/jguven/Software/miniconda3/bin/teLeap: Warning!
+/home/jguven/Software/miniconda3/envs/bss-d/bin/teLeap: Warning!
  Converting N-terminal residue name to PDB format: NGLU -> GLU
 
-/home/jguven/Software/miniconda3/bin/teLeap: Warning!
+/home/jguven/Software/miniconda3/envs/bss-d/bin/teLeap: Warning!
  Converting C-terminal residue name to PDB format: CASN -> ASN
 Checking Unit.
 
-/home/jguven/Software/miniconda3/bin/teLeap: Warning!
-The unperturbed charge of the unit (-9.000000) is not zero.
+/home/jguven/Software/miniconda3/envs/bss-d/bin/teLeap: Warning!
+The unperturbed charge of the unit (-9.288557) is not integral.
 
-/home/jguven/Software/miniconda3/bin/teLeap: Note.
-Ignoring the warning from Unit Checking.
+/home/jguven/Software/miniconda3/envs/bss-d/bin/teLeap: Warning!
+The unperturbed charge of the unit (-9.288557) is not zero.
+
+/home/jguven/Software/miniconda3/envs/bss-d/bin/teLeap: Note.
+Ignoring the warnings from Unit Checking.
 
 Building topology.
 Building atom parameters.
 Building bond parameters.
-
-/home/jguven/Software/miniconda3/bin/teLeap: Error!
-Could not find bond parameter for atom types: NB - Zn2+
-        for atom NE2 at position -33.335000, 10.622000, 2.228000 
-        and atom ZN at position -34.834000, 9.422000, 3.139000.
-
-/home/jguven/Software/miniconda3/bin/teLeap: Error!
-Could not find bond parameter for atom types: NB - Zn2+
-        for atom ND1 at position -36.387000, 10.736000, 3.136000 
-        and atom ZN at position -34.834000, 9.422000, 3.139000.
-
-/home/jguven/Software/miniconda3/bin/teLeap: Error!
-Could not find bond parameter for atom types: O2 - Zn2+
-        for atom OD2 at position -31.563000, 8.537000, 6.617000 
-        and atom ZN at position -31.821000, 7.098000, 5.287000.
-
-/home/jguven/Software/miniconda3/bin/teLeap: Error!
-Could not find bond parameter for atom types: NB - Zn2+
-        for atom NE2 at position -34.896000, 7.918000, 1.754000 
-        and atom ZN at position -34.834000, 9.422000, 3.139000.
-
-/home/jguven/Software/miniconda3/bin/teLeap: Error!
-Could not find bond parameter for atom types: SH - Zn2+
-        for atom SG at position -30.645000, 7.372000, 3.409000 
-        and atom ZN at position -31.821000, 7.098000, 5.287000.
-
-/home/jguven/Software/miniconda3/bin/teLeap: Error!
-Could not find bond parameter for atom types: NB - Zn2+
-        for atom NE2 at position -31.022000, 5.626000, 6.429000 
-        and atom ZN at position -31.821000, 7.098000, 5.287000.
 Building angle parameters.
-
-/home/jguven/Software/miniconda3/bin/teLeap: Error!
-Could not find angle parameter for atom types: CV - NB - Zn2+
-        for atom CD2 at position -33.626000, 11.661000, 1.370000,
-            atom NE2 at position -33.335000, 10.622000, 2.228000,
-        and atom ZN at position -34.834000, 9.422000, 3.139000.
-
-/home/jguven/Software/miniconda3/bin/teLeap: Error!
-Could not find angle parameter for atom types: NB - Zn2+ - NB
-        for atom NE2 at position -33.335000, 10.622000, 2.228000,
-            atom ZN at position -34.834000, 9.422000, 3.139000,
-        and atom ND1 at position -36.387000, 10.736000, 3.136000.
-
-/home/jguven/Software/miniconda3/bin/teLeap: Error!
-Could not find angle parameter for atom types: NB - Zn2+ - NB
-        for atom NE2 at position -33.335000, 10.622000, 2.228000,
-            atom ZN at position -34.834000, 9.422000, 3.139000,
-        and atom NE2 at position -34.896000, 7.918000, 1.754000.
-
-/home/jguven/Software/miniconda3/bin/teLeap: Error!
-Could not find angle parameter for atom types: CR - NB - Zn2+
-        for atom CE1 at position -32.107000, 10.198000, 1.980000,
-            atom NE2 at position -33.335000, 10.622000, 2.228000,
-        and atom ZN at position -34.834000, 9.422000, 3.139000.
-
-/home/jguven/Software/miniconda3/bin/teLeap: Error!
-Could not find angle parameter for atom types: CR - NB - Zn2+
-        for atom CE1 at position -37.525000, 10.682000, 2.467000,
-            atom ND1 at position -36.387000, 10.736000, 3.136000,
-        and atom ZN at position -34.834000, 9.422000, 3.139000.
-
-/home/jguven/Software/miniconda3/bin/teLeap: Error!
-Could not find angle parameter for atom types: NB - Zn2+ - NB
-        for atom ND1 at position -36.387000, 10.736000, 3.136000,
-            atom ZN at position -34.834000, 9.422000, 3.139000,
-        and atom NE2 at position -34.896000, 7.918000, 1.754000.
-
-/home/jguven/Software/miniconda3/bin/teLeap: Error!
-Could not find angle parameter for atom types: CC - NB - Zn2+
-        for atom CG at position -36.223000, 12.003000, 3.650000,
-            atom ND1 at position -36.387000, 10.736000, 3.136000,
-        and atom ZN at position -34.834000, 9.422000, 3.139000.
-
-/home/jguven/Software/miniconda3/bin/teLeap: Error!
-Could not find angle parameter for atom types: O2 - Zn2+ - SH
-        for atom OD2 at position -31.563000, 8.537000, 6.617000,
-            atom ZN at position -31.821000, 7.098000, 5.287000,
-        and atom SG at position -30.645000, 7.372000, 3.409000.
-
-/home/jguven/Software/miniconda3/bin/teLeap: Error!
-Could not find angle parameter for atom types: O2 - Zn2+ - NB
-        for atom OD2 at position -31.563000, 8.537000, 6.617000,
-            atom ZN at position -31.821000, 7.098000, 5.287000,
-        and atom NE2 at position -31.022000, 5.626000, 6.429000.
-
-/home/jguven/Software/miniconda3/bin/teLeap: Error!
-Could not find angle parameter for atom types: CO - O2 - Zn2+
-        for atom CG at position -31.700000, 9.771000, 6.818000,
-            atom OD2 at position -31.563000, 8.537000, 6.617000,
-        and atom ZN at position -31.821000, 7.098000, 5.287000.
-
-/home/jguven/Software/miniconda3/bin/teLeap: Error!
-Could not find angle parameter for atom types: CV - NB - Zn2+
-        for atom CD2 at position -34.466000, 7.995000, 0.452000,
-            atom NE2 at position -34.896000, 7.918000, 1.754000,
-        and atom ZN at position -34.834000, 9.422000, 3.139000.
-
-/home/jguven/Software/miniconda3/bin/teLeap: Error!
-Could not find angle parameter for atom types: CR - NB - Zn2+
-        for atom CE1 at position -35.326000, 6.689000, 1.993000,
-            atom NE2 at position -34.896000, 7.918000, 1.754000,
-        and atom ZN at position -34.834000, 9.422000, 3.139000.
-
-/home/jguven/Software/miniconda3/bin/teLeap: Error!
-Could not find angle parameter for atom types: HS - SH - Zn2+
-        for atom HG at position -31.668036, 8.088225, 3.866514,
-            atom SG at position -30.645000, 7.372000, 3.409000,
-        and atom ZN at position -31.821000, 7.098000, 5.287000.
-
-/home/jguven/Software/miniconda3/bin/teLeap: Error!
-Could not find angle parameter for atom types: SH - Zn2+ - NB
-        for atom SG at position -30.645000, 7.372000, 3.409000,
-            atom ZN at position -31.821000, 7.098000, 5.287000,
-        and atom NE2 at position -31.022000, 5.626000, 6.429000.
-
-/home/jguven/Software/miniconda3/bin/teLeap: Error!
-Could not find angle parameter for atom types: 2C - SH - Zn2+
-        for atom CB at position -31.498000, 6.751000, 1.919000,
-            atom SG at position -30.645000, 7.372000, 3.409000,
-        and atom ZN at position -31.821000, 7.098000, 5.287000.
-
-/home/jguven/Software/miniconda3/bin/teLeap: Error!
-Could not find angle parameter for atom types: CV - NB - Zn2+
-        for atom CD2 at position -30.605000, 4.400000, 5.970000,
-            atom NE2 at position -31.022000, 5.626000, 6.429000,
-        and atom ZN at position -31.821000, 7.098000, 5.287000.
-
-/home/jguven/Software/miniconda3/bin/teLeap: Error!
-Could not find angle parameter for atom types: CR - NB - Zn2+
-        for atom CE1 at position -30.660000, 5.754000, 7.694000,
-            atom NE2 at position -31.022000, 5.626000, 6.429000,
-        and atom ZN at position -31.821000, 7.098000, 5.287000.
 Building proper torsion parameters.
-!FATAL ERROR----------------------------------------
-!FATAL:    In file [/home/conda/feedstock_root/build_artifacts/ambertools_1651565109468/work/AmberTools/src/leap/src/leap/unitio.c], line 1825
-!FATAL:    Message: 1-4: cannot add bond 1241 1243
-This may be caused by duplicate bond specifications;
-for example, explicit bond commands in addition to PDB conect records.
-!
-!ABORTING.
+Building improper torsion parameters.
+ total 701 improper torsions applied
+Building H-Bond parameters.
+Incorporating Non-Bonded adjustments.
+Not Marking per-residue atom chain types.
+Marking per-residue atom chain types.
+  (Residues lacking connect0/connect1 - 
+   these don't have chain types marked:
+
+	res	total affected
+
+	AP1	1
+	CASN	1
+	CS1	1
+	HD1	1
+	HD2	1
+	HD3	1
+	HE1	1
+	NGLU	1
+	WAT	13
+  )
+ (no restraints)
+	Quit
+
+Exiting LEaP: Errors = 0; Warnings = 16; Notes = 1.
