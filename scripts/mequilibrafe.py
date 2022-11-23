@@ -219,9 +219,9 @@ for i in range(n_ligands):
 
         ligand_minimisation_protocol = bss.Protocol.Minimisation(steps=minimisation_steps)
         ligand_minimisation_process = bss.Process.Gromacs(solvated_ligand,
-                                                        ligand_minimisation_protocol,
-                                                        name="min",
-                                                        work_dir=ligand_min_unbound_dir)
+                                                          ligand_minimisation_protocol,
+                                                          name="min",
+                                                          work_dir=ligand_min_unbound_dir)
         edit_mdp_options(ligand_min_unbound_dir, "min", {"emstep": 0.001})
         min_sp = sp.run(["sh", f"{ligand_min_unbound_dir}/{ligand_min_script}"], capture_output=True, text=True)
         write_log_file(ligand_min_unbound_dir, ligand_number, "min", min_sp)
@@ -239,9 +239,9 @@ for i in range(n_ligands):
             print(f"Running another minimisation for ligand {ligand_number}")
             new_protocol = bss.Protocol.Minimisation(steps=minimisation_steps*10)
             new_process = bss.Process.Gromacs(minimised_ligand, 
-                                            new_protocol,
-                                            name="min_2",
-                                            work_dir=ligand_min_unbound_dir)
+                                              new_protocol,
+                                              name="min_2",
+                                              work_dir=ligand_min_unbound_dir)
 
             edit_mdp_options(ligand_min_unbound_dir, "min_2", {"nsteps": 20000})
 
