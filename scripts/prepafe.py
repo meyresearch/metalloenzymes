@@ -1,364 +1,171 @@
 import warnings
 warnings.filterwarnings("ignore")
-import BioSimSpace as bss
 import argparse
 import os
 import sys
-import glob
-import pathlib
-import csv
-import numpy as np
 import pandas as pd
-import MDAnalysis as mda
-
-
-def create_complex(protein_path: str, protein_file: str, water_file: str, output=None) -> str:
-    protein = bss.IO.readMolecules(protein_path+protein_file)
-    if water_file is not None and output == "":
-        output = "protein_complex"
-        xtal_water = bss.IO.readMolecules(water_file)
-        protein_complex = protein + xtal_water
-        bss.IO.saveMolecules(protein_path+output, protein_complex, fileformat="pdb")
-    elif water_file is not None and output != "":
-        xtal_water = bss.IO.readMolecules(water_file)
-        protein_complex = protein + xtal_water
-        bss.IO.saveMolecules(protein_path+output, protein_complex, fileformat="pdb")
-    elif water_file is None and output == "":
-        output = "protein_complex"
-        protein_complex = protein
-        bss.IO.saveMolecules(protein_path+output, protein_complex, fileformat="pdb")
-    elif water_file is None and output != "":
-        protein_complex = protein
-        bss.IO.saveMolecules(protein_path+output, protein_complex, fileformat="pdb")
-    return output
-
-
-def is_file(file: str) -> None:
-    if not os.path.isfile(file):
-        print(f"The file {file} does not exist")
-        sys.exit()
+import glob
+import BioSimSpace as bss
+from BioSimSpace import _Exceptions
+from Sire import Base as _SireBase
 
 
 parser = argparse.ArgumentParser(description="prepare AFE calculations")
-
 parser.add_argument("system",
                      type=str,
                      help="system name; this is used to find the folder containing input files")
-
-parser.add_argument("protein",
+parser.add_argument("network",
                     type=str,
-                    help="protein pdb file in ../system/inputs/protein/")
-
-parser.add_argument("-a",
-                    "--active-site",
-                    type=str,
-                    help="csv file containing active site residues for the zinc site, required for --forcefiled=zaff")
-
-parser.add_argument("-w",
-                    "--water",
-                    type=str,
-                    help="water pdb file in ../system/inputs/protein/")
-
-parser.add_argument("-ff",
-                    "--forcefield",
-                    type=str,
-                    help="forcefield for protein",
-                    choices=["ff14SB", "zaff"],
-                    default="ff14SB")
-
-parser.add_argument("-s",
-                    "--solvent",
-                    type=str,
-                    help="solvent",
-                    default="tip3p")
-
-parser.add_argument("-o",
-                    "--output",
-                    type=str,
-                    help="output file",
-                    default="")
-
-parser.add_argument("-e",
-                    "--engine",
-                    type=str,
-                    help="MD engine for AFE",
-                    default="GROMACS")
-
-parser.add_argument("-n", 
-                    "--n-windows",
-                    type=str,
-                    help="number of lambda windows for regular transformations",
-                    choices=["3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20"],
-                    default="11")
-
-parser.add_argument("-d", 
-                    "--difficult",
-                    type=str,
-                    help="number of lambda windows for difficult transformations",
-                    choices=["4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20"],
-                    default="17")
-
-parser.add_argument("-t",
-                    "--threshold",
-                    type=str,
-                    help="lomap score threshold for defining difficult transformations", 
-                    choices=["0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9"],
-                    default="0.4")
+                    help="filename including full path to network file")
 
 arguments = parser.parse_args()
-system = arguments.system
+
+system_name = arguments.system
+network_file = arguments.network
 
 full_path = os.getcwd() + "/"
 if "scripts" in full_path:
     full_path = full_path.replace("/scripts/", "/")
 
-protein_path = full_path + system + "/inputs/protein/"
+equilibration_path = full_path + system_name + "/equilibration/"
 
-ligand_path = full_path + system + "/inputs/ligands/"
-protein_file = arguments.protein
-is_file(protein_path+protein_file)
-water_file = arguments.water
-output_file = arguments.output
-forcefield = arguments.forcefield
-solvent = arguments.solvent.lower()
-tleap_file = protein_path + "tleap.in"
-engine = arguments.engine.upper()
-windows = arguments.n_windows
-difficult_windows = arguments.difficult
-threshold = arguments.threshold
-active_site_file = arguments.active_site
-# SYSTEM
-if arguments.water is not None:
-    water_file = protein_path + arguments.water
-    is_file(water_file)
-else: 
-    water_file = None
+if not os.path.isfile(network_file):
+    print(f"The input file {network_file} does not exist")
+    sys.exit()
 
-complex_file = create_complex(protein_path, protein_file, water_file, output_file)
-is_file(protein_path+complex_file+".pdb")
+network = pd.read_csv(network_file, header=None, names=["ligand_1", 
+                                                        "ligand_2", 
+                                                        "n_windows", 
+                                                        "windows",
+                                                        "engine"])
+
+columns_to_list = lambda column: network[column].tolist()
+first_ligands = columns_to_list("ligand_1")
+second_ligands = columns_to_list("ligand_2")
+n_windows = columns_to_list("n_windows")
+windows = columns_to_list("windows")
+engines = columns_to_list("engine")
+n_transformations = len(first_ligands)
+
+lambda_values_string = [lambdas.split() for lambdas in windows]
+lambda_values = [[float(value) for value in lambda_list] for lambda_list in lambda_values_string]
+
+afe_folder_path = full_path + system_name + "/afe/"
+protocol_file = afe_folder_path + "protocol.dat"
+with open(protocol_file, "r") as file:
+    protocol = file.readlines()
+runtime = protocol[6].rstrip().replace(" ","").split("=")[-1].split("*")[0]
+
+input_runtime_unit = protocol[6].rstrip().replace(" ","").split("=")[-1].split("*")[1]
+if input_runtime_unit not in ["ns", "ps"]:
+    raise NameError("Input runtime unit not supported. Please use 'ns' or 'ps'" \
+                   +" on the seventh line of protocol.dat in the shape of (e.g.):\nsampling = 2*ns")
+
+if input_runtime_unit == "ns":
+    runtime_unit = bss.Units.Time.nanosecond
+elif input_runtime_unit == "ps":
+    runtime_unit = bss.Units.Time.picosecond
+
+try:
+    runtime = int(runtime)
+except ValueError:
+    raise NameError("Input runtime value not supported. Please use an integer" \
+                   +" on the seventh line of protocol.dat in the shape of (e.g.):\nsampling = 2*ns")
+
+for i in range(n_transformations):
+
+    get_ligand_number = lambda ligand_name: ligand_name.split("_")[-1]
+    ligand_1_number = get_ligand_number(first_ligands[i])
+    ligand_2_number = get_ligand_number(second_ligands[i])
+    unbound_path = equilibration_path + "unbound/"
+    unbound_file_1 = glob.glob(unbound_path + f"ligand_{ligand_1_number}/npt/npt.")
+
+    ligand_1_system = bss.IO.readMolecules([f"{unbound_path}/ligand_{ligand_1_number}/npt/npt.gro",
+                                                f"{unbound_path}/ligand_{ligand_1_number}/npt/npt.top"])
+    ligand_2_system = bss.IO.readMolecules([f"{unbound_path}/ligand_{ligand_2_number}/npt/npt.gro",
+                                                f"{unbound_path}/ligand_{ligand_2_number}/npt/npt.top"])
+    # ligand_1_amber = bss.IO.saveMolecules(f"{unbound_path}/ligand_{ligand_1_number}/ligand_{ligand_1_number}", ligand_1_system_gmx, ["PRM7", "RST7"])
+    # ligand_2_amber = bss.IO.saveMolecules(f"{unbound_path}/ligand_{ligand_2_number}/ligand_{ligand_2_number}", ligand_2_system_gmx, ["PRM7", "RST7"])
+    
+    # ligand_1_system = bss.IO.readMolecules([f"{unbound_path}/ligand_{ligand_1_number}/ligand_{ligand_1_number}.prm7",
+    #                                         f"{unbound_path}/ligand_{ligand_1_number}/ligand_{ligand_1_number}.rst7"])
+    # ligand_2_system = bss.IO.readMolecules([f"{unbound_path}/ligand_{ligand_2_number}/ligand_{ligand_2_number}.prm7",
+    #                                         f"{unbound_path}/ligand_{ligand_2_number}/ligand_{ligand_2_number}.rst7"])
+
+    ligand_1 = ligand_1_system.getMolecule(0)
+    ligand_2 = ligand_2_system.getMolecule(0)
+    mapping = bss.Align.matchAtoms(ligand_1, ligand_2, complete_rings_only=True)
+    inverse_mapping = {v:k for k,v in mapping.items()}
+    ligand_2_aligned = bss.Align.rmsdAlign(ligand_2, ligand_1, inverse_mapping)
+
+    merged_ligands = bss.Align.merge(ligand_1, ligand_2_aligned, mapping)
+
+    ligand_1_system.removeMolecules(ligand_1)
+    ligand_1_system.addMolecules(merged_ligands)
+    unbound_system = ligand_1_system
+
+    bound_path = equilibration_path + "bound/"
+
+    system_1 = bss.IO.readMolecules([f"{bound_path}/system_{ligand_1_number}/npt/npt.gro",
+                                         f"{bound_path}/system_{ligand_1_number}/npt/npt.top"])
+    system_2 = bss.IO.readMolecules([f"{bound_path}/system_{ligand_2_number}/npt/npt.gro",
+                                         f"{bound_path}/system_{ligand_2_number}/npt/npt.top"])
+
+    # system_1_amber = bss.IO.saveMolecules(f"{bound_path}/system_{ligand_1_number}/ligand_{ligand_1_number}", system_1_gmx, ["PRM7", "RST7"])
+    # system_2_amber = bss.IO.saveMolecules(f"{bound_path}/system_{ligand_2_number}/ligand_{ligand_2_number}", system_2_gmx, ["PRM7", "RST7"])
+    
+    # system_1 = bss.IO.readMolecules([f"{bound_path}/system_{ligand_1_number}/ligand_{ligand_1_number}.prm7",
+    #                                  f"{bound_path}/system_{ligand_1_number}/ligand_{ligand_1_number}.rst7"])
+    # system_2 = bss.IO.readMolecules([f"{bound_path}/system_{ligand_2_number}/ligand_{ligand_2_number}.prm7",
+    #                                  f"{bound_path}/system_{ligand_2_number}/ligand_{ligand_2_number}.rst7"])
 
 
-if forcefield.lower() == "zaff" and active_site_file is None:
-    parser.error("--forcefield=zaff requires an active site file --active-site={filename}.csv")
+    system_1_ligand = None
+    protein = None
+    n_residues = [molecule.nResidues() for molecule in system_1]
+    n_atoms = [molecule.nAtoms() for molecule in system_1]
+    for i, (n_residues, n_atoms) in enumerate(zip(n_residues[:20], n_atoms[:20])):
+        if n_residues == 1 and n_atoms > 5:
+            system_1_ligand = system_1.getMolecule(i)
+        elif n_residues > 1:
+            protein = system_1.getMolecule(i)
+        else:
+            pass
+    
+    system_2_ligand = None
+    n_residues = [molecule.nResidues() for molecule in system_2]
+    n_atoms = [molecule.nAtoms() for molecule in system_2]
+    for i, (n_residues, n_atoms) in enumerate(zip(n_residues[:20], n_atoms[:20])):
+        if n_residues == 1 and n_atoms > 5:
+            system_2_ligand = system_2.getMolecule(i)
+        else:
+            pass    
 
-elif forcefield.lower() == "zaff" and active_site_file:
-    try:
-        if not active_site_file.endswith(".csv"):
-            raise IOError("Active site file should be a .csv file.")
-        
-        active_site = pd.read_csv(active_site_file, header=None, names=["resname", "resid"])
-        active_site_residues = active_site["resname"].tolist()
-        active_site_residue_ids = active_site["resid"].tolist()
-        n_active_site_residues = len(active_site_residue_ids)
-        universe = mda.Universe(protein_path+complex_file+".pdb")
-        for i in range(n_active_site_residues):
-            atom_group = universe.select_atoms(f"resid {active_site_residue_ids[i]}")
-            atom_group.residues.resnames = active_site_residues[i]
-        fixed_residues = protein_path+complex_file+"_fixed_residues.pdb"
-        universe.atoms.write(fixed_residues)
+    if system_1_ligand and system_2_ligand and protein:
+        print(f"Using molecules {system_1_ligand}, {system_2_ligand}, {protein}")
+    else:
+        raise _Exceptions.AlignmentError("Could not extract ligands or protein from input systems.")
+    
+    mapping = bss.Align.matchAtoms(system_1_ligand, system_2_ligand, complete_rings_only=True)
+    inverse_mapping = {v:k for k,v in mapping.items()}
 
-    except FileNotFoundError as error:
-        print(f"{error}: Running tleap with zaff requires an active site csv file")
-    except IOError as error:
-        print(error)
-    with open(fixed_residues, "r") as pdb_input:
-        lines = pdb_input.readlines()
-    n_zn = 0
-    for line in lines:
-        if "ZN" in line:
-            n_zn += 1
-    protein_terminus = [i for i in range(len(lines)) if "ZN" in lines[i]][0] - 1
-    zn_line = protein_terminus+1
-    zn_terminus = protein_terminus + n_zn + 1
-    conect = [i for i in range(len(lines)) if "CONECT" in lines[i]][0] 
-    fixed_file = protein_path + complex_file + "_fixed.pdb"
-    with open(fixed_file, "w") as pdb_output:
-        pdb_output.writelines(lines[:protein_terminus])
-        pdb_output.write("TER\n")
-        pdb_output.writelines(lines[zn_line:zn_terminus])
-        pdb_output.write("TER\n")
-        pdb_output.writelines(lines[zn_terminus:conect])
-        pdb_output.write("END\n")
+    system_2_ligand_aligned = bss.Align.rmsdAlign(system_2_ligand, system_1_ligand, inverse_mapping)
+
+    bound_merged_ligands = bss.Align.merge(system_1_ligand, system_2_ligand_aligned, mapping)
+
+    system_1.removeMolecules(system_1_ligand)
+    system_1.addMolecules(bound_merged_ligands)
+    bound_system = system_1
     
     try:
-        tleap_command = f"tleap -s -f {tleap_file} > {protein_path}" + "tleap.out"
-        os.system(tleap_command)
-    except FileNotFoundError:
-        print("tleap input file for zaff does not exist and is required with --forcefield=zaff")
-        sys.exit()
+        n_lambdas = int(n_windows[i])
+    except ValueError as error:
+        print(f"{error}: Number of lambda windows should be an integer.")
 
-elif forcefield.lower() == "ff14sb":
-    forcefield = "ff14SB"
-    with open(tleap_file, "w") as tleap_in:
-        tleap_in.write(f"source leaprc.protein.{forcefield}\n")
-        tleap_in.write(f"source leaprc.water.{solvent}\n")
-        tleap_in.write(f"complex = loadpdb {protein_path}{complex_file}.pdb\n")
-        tleap_in.write(f"saveamberparm complex {protein_path+system}_tleap.prm7 {protein_path+system}_tleap.rst7\n")
-        tleap_in.write("quit")
-    tleap_command = f"tleap -s -f {tleap_file} > {protein_path}" + "tleap.out"
-    os.system(tleap_command)
+    free_energy_protocol = bss.Protocol.FreeEnergy(lam_vals=lambda_values[i], runtime=runtime*runtime_unit)
+    working_directory = f"{full_path}/{system_name}/outputs/{engines[i]}/lig_{ligand_1_number}~lig_{ligand_2_number}"
+    bound_system._sire_object.setProperty("water_model", _SireBase.wrap("tip3p"))
+    unbound_system._sire_object.setProperty("water_model", _SireBase.wrap("tip3p"))
+    bss.FreeEnergy.Relative(bound_system, free_energy_protocol, engine="GROMACS", work_dir=working_directory + "/bound/", setup_only=True)
+    bss.FreeEnergy.Relative(unbound_system, free_energy_protocol, engine="GROMACS", work_dir=working_directory + "/unbound/", setup_only=True)
 
-
-# LIGANDS
-ligand_files = sorted(glob.glob(f"{ligand_path}docked_*.sdf"))
-ligands = [bss.IO.readMolecules(filepath)[0] for filepath in ligand_files]
-ligand_names = [filepath.split("/")[-1].replace(".sdf","") for filepath in ligand_files]
-transformations, lomap_scores = bss.Align.generateNetwork(ligands, plot_network=True, names=ligand_names, work_dir=ligand_path)
-
-perturbation_network_dict = {}
-transformations_named = [(ligand_names[transf[0]], ligand_names[transf[1]]) for transf in transformations]
-for transformation, score in zip(transformations_named, lomap_scores):
-    perturbation_network_dict[transformation] = score
-
-with open(ligand_path+f"/lomap_{system}.csv", "w") as lomap_out:
-    for key, value in perturbation_network_dict.items():
-        lomap_out.write(f"{key}: {value}\n")
-
-print("The LOMAP-generated perturbation network is:\n")
-dataframe = pd.DataFrame.from_dict(perturbation_network_dict, "index")
-perturbation_dataframe = dataframe.reset_index().rename(columns={"index":"perturbations", 0: "score"})
-perturbation_dataframe.index.name = "index"
-print(perturbation_dataframe)
-
-adjust_network = False
-print("\nDo you want to edit this network? ([y]es/[n]o/[q]uit)")
-
-while True:
-    edit = input("> ")
-    if edit.lower().strip() == "yes" or edit.lower().strip() == "y":
-        adjust_network = True
-        break
-    elif edit.lower().strip() == "no" or edit.lower().strip() == "n":
-        adjust_network = False
-        break
-    elif edit.lower().strip() == "quit" or edit.lower().strip() == "q":
-        print("Quitting.")
-        sys.exit()
-    elif edit == "":
-        continue
-    else: 
-        print("Invalid option.")
-        continue
-
-first_index = perturbation_dataframe.first_valid_index()
-last_index = perturbation_dataframe.last_valid_index()
-options = ["\tdel: delete perturbations by index",
-           "\tadd: add perturbations in format 'add ligand_1 ligand_2 score'",
-           "\tedit: edit existing LOMAP scores in format 'edit index score'",
-           "\ts: save and continue preparing",
-           "\tq: quit"]
-edited_dataframe = perturbation_dataframe.copy()
-while adjust_network == True:
-    print("Choose an option:")
-    for option in options:
-        print(option)
-    option = input("> ").lower()
-    check_option = option.replace(",", "").split()
-    n_inputs = len(check_option)
-    if 1 < n_inputs <= 2 and check_option[0] == "del":
-        try:
-            delete_index = int(check_option[1])
-            try:
-                edited_dataframe = edited_dataframe.drop([delete_index], axis=0, inplace=False)
-                print("\nThe NEW network is:\n")
-                print(edited_dataframe)
-            except KeyError:
-                print(f"Error: delete index should be between {first_index} and {last_index}")
-            continue
-        except ValueError:
-            print("Delete index should be an integer")
-            continue
-
-    elif n_inputs > 2 and check_option[0] == "del":
-        try:
-            delete_indices = [int(check_option[i]) for i in range(1, n_inputs)]
-            try:
-                edited_dataframe = edited_dataframe.drop(delete_indices, axis=0, inplace=False)
-                print("\nThe NEW network is:\n")
-                print(edited_dataframe)
-            except KeyError:
-                print(f"Error: delete index should be between {first_index} and {last_index}")
-            continue
-        except ValueError:
-            print("Error: Delete index should be an integer")
-            continue
-
-    elif check_option[0] == "edit":
-        try: 
-            if n_inputs != 3:
-                raise ValueError
-            index = int(check_option[1])
-            score = np.float64(check_option[2])
-            edited_dataframe.at[index, "score"] = score 
-            print("\nThe NEW network is:\n")
-            print(edited_dataframe)
-        except ValueError:
-            print("edit existing LOMAP scores in format 'edit index score'")
-        continue
-    elif check_option[0] == "add":            
-        try:
-            if n_inputs != 4:
-                raise ValueError
-            transformation = tuple([check_option[1], check_option[2]])
-            score = np.float64(check_option[3])
-            added_row = pd.DataFrame([[transformation, score]], columns= ["perturbations", "score"], index=[last_index+1])
-            edited_dataframe = edited_dataframe.append(added_row, ignore_index=False)
-            print("\nThe NEW network is:\n")
-            print(edited_dataframe)
-            last_index = edited_dataframe.last_valid_index()
-        except ValueError:
-            print("Error: add perturbations in format 'add ligand_1, ligand_2, score'")
-        continue
-
-    elif option.lower() == "s":
-        edited_dataframe.to_csv(ligand_path+"adjusted_network.csv", sep=":", header=None, index=False)
-        break
-    elif n_inputs == 1 and option.lower() != "q":
-        print("Error: expected index")
-        continue
-    elif option.lower() == "q":
-        print("Quitting.")
-        sys.exit()
-    elif option == "":
-        continue
-    else:
-        print("Invalid option.")
-        continue
-
-
-adjusted_dict = dict(zip(edited_dataframe["perturbations"], edited_dataframe["score"]))
-production_directory = full_path + system + "/afe/"
-pathlib.Path(production_directory).mkdir(parents=True, exist_ok=True)
-
-with open(production_directory + "ligands.dat", "w") as ligands_file:
-    writer = csv.writer(ligands_file)
-    for ligand in ligand_names:
-        writer.writerow([ligand])
-
-with open(production_directory + "network.dat", "w") as network_file:
-    for perturbation, lomap_score in adjusted_dict.items():
-        if lomap_score == None or lomap_score < float(threshold):
-            n_windows = difficult_windows
-        else:
-            n_windows = windows
-        lambda_list_numpy = list(np.around(np.linspace(0, 1, int(n_windows)), decimals=5))
-        lambda_list = [str(item) for item in lambda_list_numpy]
-
-        lambda_array_bash = " ".join(lambda_list)
-        network_file.write(f"{perturbation[0]}, {perturbation[1]}, {len(lambda_list_numpy)}, {lambda_array_bash}, {engine}\n")
-        network_file.write(f"{perturbation[1]}, {perturbation[0]}, {len(lambda_list_numpy)}, {lambda_array_bash}, {engine}\n")
-
-protocol = [f"ligand forcefield = gaff2", # CHANGE SO THAT USER CAN CHANGE
-            f"protein forcefield = {forcefield}", 
-            f"solvent = {solvent}", 
-            f"box edges = 20*angstrom", # CHANGE SO THAT USER CAN CHANGE
-            f"box shape = orthorhombic", # CHANGE SO THAT USER CAN CHANGE
-            f"protocol = default",
-            f"sampling = 2*ns", # CHANGE SO THAT USER CAN CHANGE
-            f"engine = {engine}"]
-
-with open(production_directory + "protocol.dat", "w") as protocol_file:
-    writer = csv.writer(protocol_file)
-    for protocol_line in protocol:
-        writer.writerow([protocol_line])
- 
