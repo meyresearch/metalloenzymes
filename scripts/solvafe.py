@@ -6,30 +6,7 @@ import MDAnalysis as mda
 import argparse
 import os
 import glob
-
-
-def check_positive(input):
-    try:
-        nsteps = int(input)
-        if nsteps <= 0:
-            raise argparse.ArgumentTypeError(f"{nsteps} is an invalid integer net charge")
-    except ValueError:
-        print("Error: number of minimisation steps should be integer.")
-    except argparse.ArgumentTypeError as message:
-        print(message)
-    return nsteps
-
-
-def check_integer(input):
-    try:
-        charge_float = float(input)
-        if charge_float < 0:
-            charge = - int(abs(charge_float))
-        else:
-            charge = int(charge_float)
-    except ValueError:
-        print("Error: charge should be integer.")
-    return charge
+import functions as fn
 
 
 parser = argparse.ArgumentParser(description="solvate AFE systems")
@@ -45,7 +22,7 @@ parser.add_argument("protein",
 parser.add_argument("-c",
                     "--charge",
                     help="ligand net charge",
-                    type=check_integer,
+                    type=fn.check_integer,
                     default=0)
 
 parser.add_argument("-fi",

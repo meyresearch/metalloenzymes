@@ -10,33 +10,7 @@ import csv
 import numpy as np
 import pandas as pd
 import MDAnalysis as mda
-
-
-def create_complex(protein_path: str, protein_file: str, water_file: str, output=None) -> str:
-    protein = bss.IO.readMolecules(protein_path+protein_file)
-    if water_file is not None and output == "":
-        output = "protein_complex"
-        xtal_water = bss.IO.readMolecules(water_file)
-        protein_complex = protein + xtal_water
-        bss.IO.saveMolecules(protein_path+output, protein_complex, fileformat="pdb")
-    elif water_file is not None and output != "":
-        xtal_water = bss.IO.readMolecules(water_file)
-        protein_complex = protein + xtal_water
-        bss.IO.saveMolecules(protein_path+output, protein_complex, fileformat="pdb")
-    elif water_file is None and output == "":
-        output = "protein_complex"
-        protein_complex = protein
-        bss.IO.saveMolecules(protein_path+output, protein_complex, fileformat="pdb")
-    elif water_file is None and output != "":
-        protein_complex = protein
-        bss.IO.saveMolecules(protein_path+output, protein_complex, fileformat="pdb")
-    return output
-
-
-def is_file(file: str) -> None:
-    if not os.path.isfile(file):
-        print(f"The file {file} does not exist")
-        sys.exit()
+import functions as fn
 
 
 parser = argparse.ArgumentParser(description="setup AFE calculations with tLEAP and LOMAP")
@@ -116,7 +90,7 @@ protein_path = full_path + system + "/inputs/protein/"
 
 ligand_path = full_path + system + "/inputs/ligands/"
 protein_file = arguments.protein
-is_file(protein_path+protein_file)
+fn.is_file(protein_path+protein_file)
 water_file = arguments.water
 output_file = arguments.output
 forcefield = arguments.forcefield
@@ -130,12 +104,12 @@ active_site_file = arguments.active_site
 # SYSTEM
 if arguments.water is not None:
     water_file = protein_path + arguments.water
-    is_file(water_file)
+    fn.is_file(water_file)
 else: 
     water_file = None
 
-complex_file = create_complex(protein_path, protein_file, water_file, output_file)
-is_file(protein_path+complex_file+".pdb")
+complex_file = fn.create_complex(protein_path, protein_file, water_file, output_file)
+fn.is_file(protein_path+complex_file+".pdb")
 
 
 if forcefield.lower() == "zaff" and active_site_file is None:

@@ -42,3 +42,4 @@ nvt.e24792970
 *.sdf
 kpc2/equilibration/*
 vim_2/equilibration/*
+scripts/__pycache__/*
