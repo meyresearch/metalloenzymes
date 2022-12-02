@@ -1,6 +1,3 @@
-import warnings
-warnings.filterwarnings("ignore")
-# import BioSimSpace as bss
 import argparse
 import functions as fn
 import os
@@ -50,60 +47,39 @@ engine = settings[-1]
 gmx_output_path = full_path + system_name + "/outputs/" + engine.upper() + "/"
 
 transformation_folders = glob.glob(gmx_output_path+"*")
-n_transformations = len(transformation_folders)
+states = ["unbound", "bound"]
+get_state_mdp = lambda state, process: full_path + system_name + f"/equilibration/{state}/{process}.mdp"
 
-for i in range(n_transformations):
-    transformation_folder = transformation_folders[i]
-    unbound_directory = transformation_folder + "/unbound/"
-    bound_directory = transformation_folder + "/bound/"
-
-    unbound_windows = sorted(glob.glob(unbound_directory+"*"))
-    bound_windows = sorted(glob.glob(bound_directory+"*"))
-
-
-unbound_paths = [transformation_folder + "/unbound/" for transformation_folder in transformation_folders]
-bound_paths = [transformation_folder + "/bound/" for transformation_folder in transformation_folders]
-unbound_transformation_folders = [sorted(glob.glob(unbound_path+"*")) for unbound_path in unbound_paths]
-bound_transformation_folders = [sorted(glob.glob(bound_path+"*")) for bound_path in bound_paths]
-
-minimisation_file = full_path + system_name + "/equilibration/bound/system_1/min/min.mdp"
-nvt_file = full_path + system_name + "/equilibration/bound/system_1/nvt/nvt.mdp"
-npt_file = full_path + system_name + "/equilibration/bound/system_1/npt/npt.mdp"
-
-with open(minimisation_file) as min:
-    minimisation_lines = min.readlines()
-with open(nvt_file) as nvt:
-    nvt_lines = nvt.readlines()
-with open(npt_file) as npt:
-    npt_lines = npt.readlines()
-
-get_mdp_options = lambda index, lines: [line.split("=")[index].lstrip().rstrip().strip("\n") for line in lines]
-min_keys, min_values = get_mdp_options(0, minimisation_lines), get_mdp_options(-1, minimisation_lines)
-nvt_keys, nvt_values = get_mdp_options(0, nvt_lines), get_mdp_options(-1, nvt_lines)
-npt_keys, npt_values = get_mdp_options(0, npt_lines), get_mdp_options(-1, npt_lines)
-
-for folder in unbound_transformation_folders:
-    for window in folder:
-        minimisation_folder = window + "/min/"
-        nvt_folder = window + "/nvt/"
-        npt_folder = window + "/npt/"
-        afe_folder = window + "/afe/"
-        fn.create_dirs(minimisation_folder)
-        fn.create_dirs(nvt_folder)
-        fn.create_dirs(npt_folder)
-        fn.create_dirs(afe_folder)
-        
-        gromacs_files = glob.glob(window+"/gromacs*")
-        for file in gromacs_files:
-            try:
-                filename = file.split("/")[-1]
-                os.replace(file, afe_folder+filename)
-            except FileNotFoundError:
-                pass
-        afe_mdp_file = afe_folder+"gromacs.mdp"
-        
-        # get mdp options for minimisation, nvt and mdp from equilibration folders
-
-        # create dictionaries of each
-        # write new mdp files with fn.lambda_mdps()
-
+for state in states:
+    state_paths = [transformation_folder + "/" + state + "/" for transformation_folder in transformation_folders]
+    minimisation_file = get_state_mdp(state, "min")
+    nvt_file = get_state_mdp(state, "nvt")
+    npt_file = get_state_mdp(state, "npt")
+    window_folders_list = [sorted(glob.glob(state_path+"*")) for state_path in state_paths]
+    for path in window_folders_list:
+        for window in path:
+            minimisation_folder = window + "/min/"
+            nvt_folder = window + "/nvt/"
+            npt_folder = window + "/npt/"
+            afe_folder = window + "/afe/"
+            fn.create_dirs(minimisation_folder)
+            fn.create_dirs(nvt_folder)
+            fn.create_dirs(npt_folder)
+            fn.create_dirs(afe_folder)    
+            gromacs_files = glob.glob(window+"/gromacs*")
+            for file in gromacs_files:
+                try:
+                    filename = file.split("/")[-1]
+                    os.replace(file, afe_folder+filename)
+                except FileNotFoundError:
+                    pass
+            afe_mdp_file = afe_folder+"gromacs.mdp"
+            minimisation_options = fn.dict_from_mdp(minimisation_file)
+            minimisation_options["nsteps"] = minimisation_steps
+            nvt_options = fn.dict_from_mdp(nvt_file)
+            nvt_options["nsteps"] = nvt_steps
+            npt_options = fn.dict_from_mdp(npt_file)
+            npt_options["nsteps"] = npt_steps
+            fn.lambda_mdps(afe_mdp_file, minimisation_folder, "min", minimisation_options)   
+            fn.lambda_mdps(afe_mdp_file, nvt_folder, "nvt", nvt_options)   
+            fn.lambda_mdps(afe_mdp_file, npt_folder, "npt", npt_options)  

@@ -57,32 +57,35 @@ def change_barostat(system: bss._SireWrappers._system.System,
         with open(f"{work_directory}/{process_name}.mdp", "w") as mdp:
             mdp.write(new_lines)
 
+
+def dict_from_mdp(mdp_file: str) -> dict:
+    """
+    Open an mdp file and save into a dictionary
+    """
+    dictionary = {}
+    with open(mdp_file) as mdp:
+        for line in mdp:
+            if "fep-lambdas" in line:
+                clean_line = line.replace("\n", "").strip(" ")
+            else:
+                clean_line = line.replace(" ", "").replace("\n", "")
+            (key, value) = clean_line.split("=")
+            dictionary[key] = value
+    return dictionary
+
+
 # COMBINE THIS AND edit_mdp_options TO ONE FUNCTION IN FUTURE
-def lambda_mdps(afe_mdp_file: str, save_directory: str, process_name: str, options: dict):
-    with open(afe_mdp_file) as afe:
-        afe_lines = afe.readlines()
-    
-    get_mdp_options = lambda index: [line.split("=")[index].lstrip().rstrip().strip("\n") for line in afe_lines]
-    mdp_keys = get_mdp_options(0)
-    mdp_values = get_mdp_options(-1)
-
-    change_indices = [mdp_keys.index(key) for key in options.keys() if key in mdp_keys]
-
-    for i in change_indices:
-        for key, value in options.items():
-            if key in mdp_keys:
-                mdp_values[i] = value
-
+def lambda_mdps(mdp_file: str, save_directory: str, process_name: str, options: dict):
+    """
+    Open AFE mdp file and save the equilibration mdp file to each lambda window folder
+    """
+    dictionary = dict_from_mdp(mdp_file)
     for key, value in options.items():
-        if key not in mdp_keys:
-            formatted_key = key
-            formatted_value = str(value)
-            mdp_keys.append(formatted_key)
-            mdp_values.append(formatted_value) 
+        dictionary[key] = value
 
     with open(f"{save_directory}/{process_name}.mdp", "w") as mdp:
-        for i in range(len(mdp_keys)):
-            mdp.write(f"{mdp_keys[i]} = {mdp_values[i]}\n")
+        for key, value in dictionary.items():
+            mdp.write(f"{key} = {value}\n")
 
 
 def edit_mdp_options(work_dir: str, process_name: str, options: dict):
@@ -102,7 +105,7 @@ def edit_mdp_options(work_dir: str, process_name: str, options: dict):
         for key, value in options.items():
             if key in mdp_keys:
                 mdp_values[i] = value
-    # print(mdp_values)
+
     for key, value in options.items():
         if key not in mdp_keys:
             formatted_key = key
