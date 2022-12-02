@@ -1,0 +1,4 @@
+printBonds :HD3
+printAngles :HD3
+printDihedrals :HD3
+printDetails :HD3
