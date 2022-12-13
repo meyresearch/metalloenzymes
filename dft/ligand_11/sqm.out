@@ -1,0 +1,183 @@
+            --------------------------------------------------------
+                             AMBER SQM VERSION 19
+ 
+                                     By
+              Ross C. Walker, Michael F. Crowley, Scott Brozell,
+                         Tim Giese, Andreas W. Goetz,
+                        Tai-Sung Lee and David A. Case
+ 
+            --------------------------------------------------------
+ 
+
+--------------------------------------------------------------------------------
+  QM CALCULATION INFO
+--------------------------------------------------------------------------------
+
+| QMMM: Citation for AMBER QMMM Run:
+| QMMM: R.C. Walker, M.F. Crowley and D.A. Case, J. COMP. CHEM. 29:1019, 2008
+
+QMMM: SINGLET STATE CALCULATION
+QMMM: RHF CALCULATION, NO. OF DOUBLY OCCUPIED LEVELS = 42
+
+| QMMM: *** Selected Hamiltonian *** 
+| QMMM: AM1         
+
+| QMMM: *** Parameter sets in use ***
+| QMMM: C : M.J.S.DEWAR et al. JACS, 107, 3902, (1985)
+| QMMM: N : M.J.S.DEWAR et al. JACS, 107, 3902, (1985)
+| QMMM: O : M.J.S.DEWAR et al. JACS, 107, 3902, (1985)
+| QMMM: P : M.J.S.DEWAR et al. THEOCHEM, 187,1, (1989)
+| QMMM: H : M.J.S.DEWAR et al. JACS, 107, 3902, (1985)
+
+| QMMM: *** SCF convergence criteria ***
+| QMMM: Energy change                :  0.1D-09 kcal/mol
+| QMMM: Error matrix |FP-PF|         :  0.1D+00 au
+| QMMM: Density matrix change        :  0.5D-06
+| QMMM: Maximum number of SCF cycles :     1000
+
+| QMMM: *** Diagonalization Routine Information ***
+| QMMM: Pseudo diagonalizations are allowed.
+| QMMM: Auto diagonalization routine selection is in use.
+| QMMM:
+| QMMM: Timing diagonalization routines:
+| QMMM:                              norbs =       73
+| QMMM:    diag iterations used for timing =       15
+| QMMM:
+| QMMM:              Internal diag routine = 0.013736 seconds
+| QMMM:                 Dspev diag routine = 0.049776 seconds
+| QMMM:                Dspevd diag routine = 0.026141 seconds
+| QMMM:                Dspevx diag routine = 0.046383 seconds
+| QMMM:                 Dsyev diag routine = 0.034955 seconds
+| QMMM:                Dsyevd diag routine = 0.146220 seconds
+| QMMM:                Dsyevr diag routine = 0.270432 seconds
+| QMMM:
+| QMMM:                Pseudo diag routine = 0.005669 seconds
+| QMMM:
+| QMMM: Using internal diagonalization routine (diag_routine=1).
+
+  QMMM: QM Region Cartesian Coordinates (*=link atom) 
+  QMMM: QM_NO.   MM_NO.  ATOM         X         Y         Z
+  QMMM:     1        1      C      -34.7370    2.8320    8.5960
+  QMMM:     2        2      C      -35.9790    3.3890    8.7230
+  QMMM:     3        3      C      -36.1910    4.7110    8.3520
+  QMMM:     4        4      C      -37.7390    6.5360    8.1010
+  QMMM:     5        5      C      -36.6740    7.3480    7.5770
+  QMMM:     6        6      C      -35.4140    6.8640    7.4720
+  QMMM:     7        7      C      -34.3260    7.7460    6.8970
+  QMMM:     8        8      C      -35.1420    5.4760    7.8550
+  QMMM:     9        9      C      -33.8830    4.8860    7.7290
+  QMMM:    10       10      C      -33.6850    3.5850    8.0950
+  QMMM:    11       11      N      -37.4510    5.2760    8.4670
+  QMMM:    12       12      O      -33.4080    8.9190    4.5940
+  QMMM:    13       13      O      -35.8170    8.0830    4.5940
+  QMMM:    14       14      O      -33.8850    6.4140    4.5690
+  QMMM:    15       15      P      -34.3930    7.8690    5.0580
+  QMMM:    16       16      O      -38.8600    7.0340    8.1880
+  QMMM:    17       17      H      -34.5870    1.8810    8.8650
+  QMMM:    18       18      H      -36.7360    2.8430    9.0840
+  QMMM:    19       19      H      -36.8670    8.2850    7.2850
+  QMMM:    20       20      H      -33.4370    7.3720    7.1610
+  QMMM:    21       21      H      -34.4640    8.6670    7.2610
+  QMMM:    22       22      H      -33.1190    5.4200    7.3670
+  QMMM:    23       23      H      -32.7780    3.1740    8.0010
+  QMMM:    24       24      H      -38.1040    4.7840    8.7960
+  QMMM:    25       25      H      -34.1270    5.7030    5.2380
+
+--------------------------------------------------------------------------------
+  RESULTS
+--------------------------------------------------------------------------------
+
+      iter         sqm energy              rms gradient
+      ----    -------------------    -----------------------
+xmin    10     -235.5768 kcal/mol        1.5683 kcal/(mol*A)
+xmin    20     -236.6593 kcal/mol        0.3975 kcal/(mol*A)
+xmin    30     -236.8267 kcal/mol        0.1835 kcal/(mol*A)
+xmin    40     -236.8764 kcal/mol        0.0875 kcal/(mol*A)
+xmin    50     -236.8816 kcal/mol        0.0258 kcal/(mol*A)
+xmin    60     -236.8819 kcal/mol        0.0030 kcal/(mol*A)
+xmin    70     -236.8819 kcal/mol        0.0006 kcal/(mol*A)
+xmin    70     -236.8819 kcal/mol        0.0005 kcal/(mol*A)
+  ... geometry converged !
+ 
+ Final MO eigenvalues (eV):
+ -38.4878  -36.0102  -33.4643  -32.8203  -31.7989  -28.9449  -28.7627  -28.3869
+ -27.4855  -25.8387  -21.6528  -21.1726  -19.7415  -16.6782  -16.2853  -15.4130
+ -14.6656  -13.5142  -13.2037  -13.1298  -12.8092  -12.3664  -12.1375  -11.6017
+ -11.2273  -11.0129  -10.8744  -10.5276   -9.9654   -9.6186   -9.2781   -9.1873
+  -8.9389   -8.3888   -8.2098   -7.9344   -6.8668   -6.4975   -6.2458   -6.1304
+  -6.0845   -5.9687    2.2095    2.7223    3.5424    4.4770    4.7237    5.5679
+   5.9522    5.9804    6.2748    6.4070    6.5160    6.6448    6.7796    6.9872
+   7.0716    7.2747    7.3969    7.5237    7.5724    7.7547    7.8972    8.1123
+   8.2069    8.2925    8.3501    8.7148    9.1474    9.6975   10.4395   11.3155
+  12.7128
+
+ Heat of formation   =       -236.88187254 kcal/mol  (      -10.27196880 eV)
+
+ Total SCF energy    =     -69763.80010197 kcal/mol  (    -3025.18538233 eV)
+ Electronic energy   =    -381941.27567923 kcal/mol  (   -16562.21654218 eV)
+ Core-core repulsion =     312177.47557726 kcal/mol  (    13537.03115985 eV)
+ 
+    Atomic Charges for Step       1 :
+  Atom    Element       Mulliken Charge
+     1      C                 -0.093
+     2      C                 -0.207
+     3      C                  0.101
+     4      C                  0.347
+     5      C                 -0.258
+     6      C                  0.117
+     7      C                 -0.790
+     8      C                 -0.098
+     9      C                 -0.058
+    10      C                 -0.188
+    11      N                 -0.307
+    12      O                 -1.161
+    13      O                 -1.177
+    14      O                 -0.836
+    15      P                  2.609
+    16      O                 -0.404
+    17      H                  0.117
+    18      H                  0.121
+    19      H                  0.161
+    20      H                  0.123
+    21      H                  0.127
+    22      H                  0.174
+    23      H                  0.126
+    24      H                  0.229
+    25      H                  0.224
+ Total Mulliken Charge =      -1.000
+ 
+                  X        Y        Z     TOTAL  
+  QM DIPOLE   169.553  -39.018  -24.386  175.686
+ 
+ Final Structure
+
+  QMMM: QM Region Cartesian Coordinates (*=link atom) 
+  QMMM: QM_NO.   MM_NO.  ATOM         X         Y         Z
+  QMMM:     1        1      C      -34.8032    2.8283    8.5356
+  QMMM:     2        2      C      -36.0369    3.4063    8.7740
+  QMMM:     3        3      C      -36.2757    4.7567    8.4063
+  QMMM:     4        4      C      -37.7987    6.6615    8.3170
+  QMMM:     5        5      C      -36.7269    7.4319    7.7005
+  QMMM:     6        6      C      -35.4996    6.9038    7.4246
+  QMMM:     7        7      C      -34.4500    7.7451    6.8440
+  QMMM:     8        8      C      -35.2356    5.5155    7.7910
+  QMMM:     9        9      C      -34.0011    4.8856    7.5581
+  QMMM:    10       10      C      -33.7833    3.5661    7.9271
+  QMMM:    11       11      N      -37.5131    5.3327    8.6604
+  QMMM:    12       12      O      -33.7103    9.0418    4.7463
+  QMMM:    13       13      O      -35.4330    7.1015    4.4235
+  QMMM:    14       14      O      -33.1333    6.5664    4.9727
+  QMMM:    15       15      P      -34.2909    7.7343    5.1164
+  QMMM:    16       16      O      -38.9393    7.0959    8.5899
+  QMMM:    17       17      H      -34.6261    1.7812    8.8217
+  QMMM:    18       18      H      -36.8366    2.8164    9.2445
+  QMMM:    19       19      H      -36.9872    8.4692    7.4455
+  QMMM:    20       20      H      -33.4496    7.4725    7.2654
+  QMMM:    21       21      H      -34.6264    8.8162    7.1275
+  QMMM:    22       22      H      -33.1877    5.4356    7.0510
+  QMMM:    23       23      H      -32.8094    3.0964    7.7309
+  QMMM:    24       24      H      -38.2334    4.7717    9.0531
+  QMMM:    25       25      H      -33.4158    5.8643    4.3983
+
+           --------- Calculation Completed ----------
+
