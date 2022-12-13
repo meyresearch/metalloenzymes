@@ -7,28 +7,28 @@ import subprocess as sp
 import sys
 
 
-def check_positive(input):
+def check_positive_float(input):
     try:
-        nsteps = int(input)
-        if nsteps <= 0:
-            raise argparse.ArgumentTypeError(f"{nsteps} is an invalid integer value")
+        value = float(input)
+        if value <= 0:
+            raise argparse.ArgumentTypeError(f"{input} is an invalid positive float value")
+    except ValueError:
+        print(f"Error: input value {input} should be a number")
+    except argparse.ArgumentTypeError as message:
+        print(message)
+    return value
+
+
+def check_positive_integer(input):
+    try:
+        value = int(input)
+        if value <= 0:
+            raise argparse.ArgumentTypeError(f"{input} is an invalid positive integer value")
     except ValueError:
         print("Error: number of minimisation steps and/or runtime should be integer.")
     except argparse.ArgumentTypeError as message:
         print(message)
-    return nsteps
-
-
-def check_integer(input):
-    try:
-        charge_float = float(input)
-        if charge_float < 0:
-            charge = - int(abs(charge_float))
-        else:
-            charge = int(charge_float)
-    except ValueError:
-        print("Error: charge should be integer.")
-    return charge
+    return value
 
 # DEPRECATED
 def change_barostat(system: bss._SireWrappers._system.System,
@@ -65,7 +65,7 @@ def dict_from_mdp(mdp_file: str) -> dict:
     dictionary = {}
     with open(mdp_file) as mdp:
         for line in mdp:
-            if "fep-lambdas" in line:
+            if "fep-lambdas" in line or "annealing-time" in line or "annealing-temp" in line:
                 clean_line = line.replace("\n", "").strip(" ")
             else:
                 clean_line = line.replace(" ", "").replace("\n", "")

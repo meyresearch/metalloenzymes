@@ -43,3 +43,9 @@ nvt.e24792970
 kpc2/equilibration/*
 vim_2/equilibration/*
 scripts/__pycache__/*
+*.tpr
+*.mdp
+*.xvg
+*.edr
+*.cpt
+kpc2/outputs/GROMACS/lig_2~lig_4.zip
