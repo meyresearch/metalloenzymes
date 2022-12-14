@@ -8,6 +8,7 @@ do
 	cd ligand_$i
 	cp ligand_$i.pdb LIG.pdb
 	sed -i "s/TWB/LIG/g" LIG.pdb
+	sed -i "s/MOL/LIG/g" LIG.pdb
 	sed -i "s/\*/\ /g" LIG.pdb
 	antechamber -fi pdb -fo mol2 -i LIG.pdb -o LIG.mol2 -at gaff2 -c bcc -pf y -nc -1
 	parmchk2 -i LIG.mol2 -o LIG.frcmod -f mol2

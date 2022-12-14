@@ -230,7 +230,7 @@ THR     229    THR   229
 ASN     230    ASN   230
  ZN     231     ZN   231
  ZN     232     ZN   232
-LIG       0    LIG   233
+LIG       1    LIG   233
 WAT       1    WAT   234
 WAT       2    WAT   235
 WAT       3    WAT   236
