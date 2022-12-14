@@ -112,13 +112,20 @@ for state in states:
 
 # bb restrained nvt for bound
 bound_paths = [transformation_folder + "/" + "bound" + "/" for transformation_folder in transformation_folders]
+min2_file = get_state_mdp("bound", "min")
 bb_r_nvt_file = get_state_mdp("bound", "bb_r_nvt")
 window_folders_list = [sorted(glob.glob(bound_path+"*")) for bound_path in bound_paths]
 for path in window_folders_list:
     for window in path:
         afe_folder = window + "/afe/"
         afe_mdp_file = afe_folder+"gromacs.mdp"
+        min2_folder = window + "/min_2/"
         bb_r_nvt_folder = window + "/bb_r_nvt/"
+        fn.create_dirs(min2_folder)
         fn.create_dirs(bb_r_nvt_folder)
+        min2_options = fn.dict_from_mdp(min2_file)
+        min2_options["nsteps"] = 20000
+        min2_options["emstep"] = em_step 
         bb_r_nvt_options = fn.dict_from_mdp(bb_r_nvt_file)
         fn.lambda_mdps(afe_mdp_file, bb_r_nvt_folder, "bb_r_nvt", bb_r_nvt_options)   
+        fn.lambda_mdps(afe_mdp_file, min2_folder, "min_2", min2_options)

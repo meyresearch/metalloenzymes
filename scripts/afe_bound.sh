@@ -7,15 +7,27 @@ do
 	cd $bound_transformation
 	# MINIMISATION
 	echo "Starting minimisation..."
-       	cd min
+	cd min
 
 	gmx grompp -f min.mdp -c min.gro -p min.top -o min.tpr
-	gmx mdrun -v -deffnm min -gpu_id $gpu -c ../r_nvt/r_nvt.gro
+	gmx mdrun -v -deffnm min -gpu_id $gpu -c ../min_2/min_2.gro
 	
 	sleep 10
-	cp min.top ../r_nvt/r_nvt.top
+	cp min.top ../min_2/min_2.top	
 	cd ../
 	echo "Minimisation complete."
+
+	echo "Starting second minimisation..."
+    	cd min_2
+
+	gmx grompp -f min_2.mdp -c min_2.gro -p min_2.top -o min_2.tpr
+	gmx mdrun -v -deffnm min_2 -gpu_id $gpu -c ../r_nvt/r_nvt.gro
+	
+	sleep 10
+
+	cp min_2.top ../r_nvt/r_nvt.top
+	cd ../
+	echo "Second minimisation complete."
 	
 	# Restrained NVT
 	echo "Starting restrained NVT equilibration..."
@@ -67,7 +79,7 @@ do
 	gmx grompp -f gromacs.mdp -c gromacs.gro -p gromacs.top -t ../npt/npt.cpt -o gromacs.tpr
 	gmx mdrun -v -deffnm gromacs -gpu_id $gpu 
 
-#	echo "$PWD"
+	echo "$PWD"
 	cd 	
 
 done < "$bound_data"
