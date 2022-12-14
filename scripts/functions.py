@@ -7,28 +7,28 @@ import subprocess as sp
 import sys
 
 
-def check_positive(input):
+def check_positive_float(input):
     try:
-        nsteps = int(input)
-        if nsteps <= 0:
-            raise argparse.ArgumentTypeError(f"{nsteps} is an invalid integer value")
+        value = float(input)
+        if value <= 0:
+            raise argparse.ArgumentTypeError(f"{input} is an invalid positive float value")
+    except ValueError:
+        print(f"Error: input value {input} should be a number")
+    except argparse.ArgumentTypeError as message:
+        print(message)
+    return value
+
+
+def check_positive_integer(input):
+    try:
+        value = int(input)
+        if value <= 0:
+            raise argparse.ArgumentTypeError(f"{input} is an invalid positive integer value")
     except ValueError:
         print("Error: number of minimisation steps and/or runtime should be integer.")
     except argparse.ArgumentTypeError as message:
         print(message)
-    return nsteps
-
-
-def check_integer(input):
-    try:
-        charge_float = float(input)
-        if charge_float < 0:
-            charge = - int(abs(charge_float))
-        else:
-            charge = int(charge_float)
-    except ValueError:
-        print("Error: charge should be integer.")
-    return charge
+    return value
 
 # DEPRECATED
 def change_barostat(system: bss._SireWrappers._system.System,
@@ -57,32 +57,35 @@ def change_barostat(system: bss._SireWrappers._system.System,
         with open(f"{work_directory}/{process_name}.mdp", "w") as mdp:
             mdp.write(new_lines)
 
+
+def dict_from_mdp(mdp_file: str) -> dict:
+    """
+    Open an mdp file and save into a dictionary
+    """
+    dictionary = {}
+    with open(mdp_file) as mdp:
+        for line in mdp:
+            if "fep-lambdas" in line or "annealing-time" in line or "annealing-temp" in line:
+                clean_line = line.replace("\n", "").strip(" ")
+            else:
+                clean_line = line.replace(" ", "").replace("\n", "")
+            (key, value) = clean_line.split("=")
+            dictionary[key] = value
+    return dictionary
+
+
 # COMBINE THIS AND edit_mdp_options TO ONE FUNCTION IN FUTURE
-def lambda_mdps(afe_mdp_file: str, save_directory: str, process_name: str, options: dict):
-    with open(afe_mdp_file) as afe:
-        afe_lines = afe.readlines()
-    
-    get_mdp_options = lambda index: [line.split("=")[index].lstrip().rstrip().strip("\n") for line in afe_lines]
-    mdp_keys = get_mdp_options(0)
-    mdp_values = get_mdp_options(-1)
-
-    change_indices = [mdp_keys.index(key) for key in options.keys() if key in mdp_keys]
-
-    for i in change_indices:
-        for key, value in options.items():
-            if key in mdp_keys:
-                mdp_values[i] = value
-
+def lambda_mdps(mdp_file: str, save_directory: str, process_name: str, options: dict):
+    """
+    Open AFE mdp file and save the equilibration mdp file to each lambda window folder
+    """
+    dictionary = dict_from_mdp(mdp_file)
     for key, value in options.items():
-        if key not in mdp_keys:
-            formatted_key = key
-            formatted_value = str(value)
-            mdp_keys.append(formatted_key)
-            mdp_values.append(formatted_value) 
+        dictionary[key] = value
 
     with open(f"{save_directory}/{process_name}.mdp", "w") as mdp:
-        for i in range(len(mdp_keys)):
-            mdp.write(f"{mdp_keys[i]} = {mdp_values[i]}\n")
+        for key, value in dictionary.items():
+            mdp.write(f"{key} = {value}\n")
 
 
 def edit_mdp_options(work_dir: str, process_name: str, options: dict):
@@ -102,7 +105,7 @@ def edit_mdp_options(work_dir: str, process_name: str, options: dict):
         for key, value in options.items():
             if key in mdp_keys:
                 mdp_values[i] = value
-    # print(mdp_values)
+
     for key, value in options.items():
         if key not in mdp_keys:
             formatted_key = key
