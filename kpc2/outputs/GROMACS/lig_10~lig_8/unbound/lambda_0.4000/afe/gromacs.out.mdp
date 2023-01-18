@@ -2,7 +2,7 @@
 ;	File '/home/jguven/projects/metalloenzymes//kpc2/outputs/GROMACS/lig_10~lig_8/unbound//lambda_0.4000/gromacs.out.mdp' was generated
 ;	By user: jguven (1002)
 ;	On host: azuma
-;	At date: Tue Dec 13 11:33:17 2022
+;	At date: Tue Jan 10 11:19:57 2023
 ;
 ;	Created by:
 ;	                     :-) GROMACS - gmx grompp, 2022.2 (-:
@@ -169,7 +169,7 @@ annealing-temp           =
 ; GENERATE VELOCITIES FOR STARTUP RUN
 gen-vel                  = no
 gen-temp                 = 300
-gen-seed                 = -4194309
+gen-seed                 = -71320592
 
 ; OPTIONS FOR BONDS    
 constraints              = h-bonds

@@ -8,7 +8,7 @@ do
 	for j in */
 	do	
 		cd $j
-		cp -r afe/* .
+		cp -r afe/gromacs.xvg .
 		echo $PWD
 	       	cd ../
 	done
@@ -17,7 +17,7 @@ do
 	for j in */
 	do	
 		cd $j
-		cp -r afe/* .
+		cp -r afe/gromacs.xvg .
 		echo $PWD
 	       	cd ../
 	done

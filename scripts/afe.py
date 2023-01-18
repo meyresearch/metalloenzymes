@@ -41,27 +41,15 @@ bound_path = [transformation_folder + "/bound/" for transformation_folder in tra
 unbound_windows = [sorted(glob.glob(state_path+"*")) for state_path in unbound_path]
 bound_windows = [sorted(glob.glob(state_path+"*")) for state_path in bound_path]
 
-# for i in range(len(unbound_windows)):
-    # print(unbound_windows[i])
-    
-
-afe_runs = afe_folder_path + "run.dat"
+afe_runs = afe_folder_path + "run_unbound.dat"
 with open(afe_runs, "w") as file:
     for i in range(len(unbound_windows)):
         for unbound_line in unbound_windows[i]:
             file.write(unbound_line+"\n")
+
+
+afe_runs = afe_folder_path + "run_bound.dat"
+with open(afe_runs, "w") as file:
+    for i in range(len(bound_windows)):
         for bound_line in bound_windows[i]:
             file.write(bound_line+"\n")
-
-
-# network = pd.read_csv(network_file, header=None, names=["ligand_1", 
-#                                                         "ligand_2", 
-#                                                         "n_windows", 
-#                                                         "windows",
-#                                                         "engine"])
-
-# windows = network["windows"].tolist()
-# windows_file = afe_folder_path + "windows.dat"
-# with open(windows_file, "w") as file:
-#     for line in windows:
-#         file.write(line+"\n")

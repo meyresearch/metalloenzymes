@@ -16,10 +16,9 @@ the environment variable SIRE_SILENT_PHONEHOME to 1.
 ==============================================================
 
 Processing unbound stage.
-Running another minimisation for ligand 10
-There was an error with r_nvt.sh. Please check the log file for ligand 10.
-Running another minimisation for ligand 11
-There was an error with r_nvt.sh. Please check the log file for ligand 11.
+There was an error with r_nvt.sh. Please check the log file for ligand 3.
+There was an error with r_npt.sh. Please check the log file for ligand 7.
+There was an error with npt.sh. Please check the log file for ligand 7.
+There was an error with min.sh. Please check the log file for ligand 8.
 Processing bound stage.
-Running another minimisation for ligand 14
-There was an error with bb_r_nvt.sh. Please check the log file for ligand 14.
+There was an error with min.sh. Please check the log file for ligand 10.

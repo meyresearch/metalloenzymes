@@ -21,6 +21,12 @@ parser.add_argument("-e",
                     type=fn.check_positive_float,
                     default=0.01)
 
+parser.add_argument("-f",
+                    "--f-max",
+                    help="maximum force, emtol in mdp options",
+                    type=fn.check_positive_float,
+                    default=1000)
+
 parser.add_argument("-nvt",
                     "--nvt-steps",
                     type=fn.check_positive_integer,
@@ -45,6 +51,7 @@ minimisation_steps = arguments.minimisation_steps
 nvt_steps = arguments.nvt_steps
 dt = arguments.time_step
 em_step = arguments.em_step
+em_tolerance = arguments.f_max
 npt_steps = arguments.npt_steps
 
 full_path = os.getcwd() + "/"
@@ -98,7 +105,8 @@ for state in states:
             afe_mdp_file = afe_folder+"gromacs.mdp"
             minimisation_options = fn.dict_from_mdp(minimisation_file)
             minimisation_options["nsteps"] = minimisation_steps
-            minimisation_options["emstep"] = em_step   
+            minimisation_options["emstep"] = em_step 
+            minimisation_options["emtol"] = em_tolerance  
             r_nvt_options = fn.dict_from_mdp(r_nvt_file)
             r_nvt_options["dt"] = dt
             nvt_options = fn.dict_from_mdp(nvt_file)
@@ -112,20 +120,20 @@ for state in states:
 
 # bb restrained nvt for bound
 bound_paths = [transformation_folder + "/" + "bound" + "/" for transformation_folder in transformation_folders]
-min2_file = get_state_mdp("bound", "min")
+# min2_file = get_state_mdp("bound", "min")
 bb_r_nvt_file = get_state_mdp("bound", "bb_r_nvt")
 window_folders_list = [sorted(glob.glob(bound_path+"*")) for bound_path in bound_paths]
 for path in window_folders_list:
     for window in path:
         afe_folder = window + "/afe/"
         afe_mdp_file = afe_folder+"gromacs.mdp"
-        min2_folder = window + "/min_2/"
+        # min2_folder = window + "/min_2/"
         bb_r_nvt_folder = window + "/bb_r_nvt/"
-        fn.create_dirs(min2_folder)
+        # fn.create_dirs(min2_folder)    
         fn.create_dirs(bb_r_nvt_folder)
-        min2_options = fn.dict_from_mdp(min2_file)
-        min2_options["nsteps"] = 20000
-        min2_options["emstep"] = em_step 
+        # min2_options = fn.dict_from_mdp(min2_file)
+        # min2_options["nsteps"] = 20000
+        # min2_options["emstep"] = em_step 
         bb_r_nvt_options = fn.dict_from_mdp(bb_r_nvt_file)
         fn.lambda_mdps(afe_mdp_file, bb_r_nvt_folder, "bb_r_nvt", bb_r_nvt_options)   
-        fn.lambda_mdps(afe_mdp_file, min2_folder, "min_2", min2_options)
+        # fn.lambda_mdps(afe_mdp_file, min2_folder, "min_2", min2_options)

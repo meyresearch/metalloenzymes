@@ -16,9 +16,9 @@ parser.add_argument("system",
                      type=str,
                      help="system name; this is used to find the folder containing input files")
 
-parser.add_argument("ligand_number",
-                    type=str,
-                    help="number of ligand to minimise&equilibrate for AFE")
+# parser.add_argument("ligand_number",
+#                     type=str,
+#                     help="number of ligand to minimise&equilibrate for AFE")
 
 parser.add_argument("-g",
                     "--gpu-id",
@@ -29,24 +29,24 @@ parser.add_argument("-g",
 
 parser.add_argument("-m",
                     "--minimisation-steps",
-                    type=fn.check_positive,
+                    type=fn.check_positive_integer,
                     default=250)
 
 parser.add_argument("-s",
                     "--short-nvt-runtime",
                     help="runtime (in ps) for short NVT equilibration",
-                    type=fn.check_positive,
+                    type=fn.check_positive_float,
                     default=5)
 
 parser.add_argument("-nvt",
                     "--nvt-runtime",
-                    type=fn.check_positive,
+                    type=fn.check_positive_float,
                     help="runtime (in ps) for NVT equilibration",
                     default=50)
 
 parser.add_argument("-npt",
                     "--npt-runtime",
-                    type=fn.check_positive,
+                    type=fn.check_positive_float,
                     help="runtime (in ps) for NPT equilibration",
                     default=200)
 
@@ -109,7 +109,7 @@ for i in range(n_ligands):
                                                         ligand_minimisation_protocol,
                                                         name="min",
                                                         work_dir=ligand_min_unbound_dir)
-    fn.edit_mdp_options(ligand_min_unbound_dir, "min", {"emstep": 0.001})
+    fn.edit_mdp_options(ligand_min_unbound_dir, "min", {"emstep": 0.001, "emtol": 1000})
     min_sp = sp.run(["sh", f"{ligand_min_unbound_dir}/{ligand_min_script}"], capture_output=True, text=True)
     fn.write_log_file(ligand_min_unbound_dir, ligand_number, "min", min_sp)
 
@@ -119,27 +119,27 @@ for i in range(n_ligands):
     with open(f"{ligand_min_unbound_dir}/min.log", "r") as file:
         min_log_lines = file.readlines()
 
-    max_force_line = [line for line in min_log_lines if "Maximum force" in line][0]
-    max_force = float(max_force_line.split()[3])
-    max_force_magnitude = math.floor(math.log10(max_force))
-    if max_force_magnitude >= 5:
-        print(f"Running another minimisation for ligand {ligand_number}")
-        new_directory = fn.create_dirs(f"{ligand_work_dir}/min_2")
-        new_protocol = bss.Protocol.Minimisation(steps=minimisation_steps*10)
-        new_process = bss.Process.Gromacs(minimised_ligand, 
-                                        new_protocol,
-                                        name="min_2",
-                                        work_dir=new_directory)
+    # max_force_line = [line for line in min_log_lines if "Maximum force" in line][0]
+    # max_force = float(max_force_line.split()[3])
+    # max_force_magnitude = math.floor(math.log10(max_force))
+    # if max_force_magnitude >= 5:
+    #     print(f"Running another minimisation for ligand {ligand_number}")
+    #     new_directory = fn.create_dirs(f"{ligand_work_dir}/min_2")
+    #     new_protocol = bss.Protocol.Minimisation(steps=minimisation_steps*10)
+    #     new_process = bss.Process.Gromacs(minimised_ligand, 
+    #                                     new_protocol,
+    #                                     name="min_2",
+    #                                     work_dir=new_directory)
 
-        fn.edit_mdp_options(new_directory, "min_2", {"nsteps": 20000})
+    #     fn.edit_mdp_options(new_directory, "min_2", {"nsteps": 20000})
 
-        new_script = fn.write_script(new_directory, "min_2", gpu_id="2")
-        new_min_sp = sp.run(["sh", f"{new_directory}/{new_script}"], capture_output=True, text=True)
-        fn.write_log_file(new_directory, ligand_number, "min_2", new_min_sp)
+    #     new_script = fn.write_script(new_directory, "min_2", gpu_id="2")
+    #     new_min_sp = sp.run(["sh", f"{new_directory}/{new_script}"], capture_output=True, text=True)
+    #     fn.write_log_file(new_directory, ligand_number, "min_2", new_min_sp)
 
-        minimised_ligand = bss.IO.readMolecules([f"{new_directory}/min_2.gro",
-                                                f"{ligand_min_unbound_dir}/min.top"])          
-        ligand_r_nvt_script = fn.write_script(ligand_r_nvt_unbound_dir, "r_nvt", gpu_id, restrained=True, previous="min_2")
+    #     minimised_ligand = bss.IO.readMolecules([f"{new_directory}/min_2.gro",
+    #                                             f"{ligand_min_unbound_dir}/min.top"])          
+    #     ligand_r_nvt_script = fn.write_script(ligand_r_nvt_unbound_dir, "r_nvt", gpu_id, restrained=True, previous="min_2")
                                                 
     ligand_r_nvt_protocol = bss.Protocol.Equilibration(runtime=runtime_short_nvt,
                                                     temperature_start=0*kelvin,
@@ -220,7 +220,7 @@ for i in range(n_ligands):
                                                         system_minimisation_protocol,
                                                         name="min",
                                                         work_dir=system_min_bound_dir)
-    fn.edit_mdp_options(system_min_bound_dir, "min", {"emstep": 0.001})
+    fn.edit_mdp_options(system_min_bound_dir, "min", {"emstep": 0.001, "emtol": 1000})
     min_sp = sp.run(["sh", f"{system_min_bound_dir}/{system_min_script}"], capture_output=True, text=True)
     fn.write_log_file(system_min_bound_dir, ligand_number, "min", min_sp)
 

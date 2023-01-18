@@ -1,0 +1,12 @@
+software_version g16
+original_pdb vim2_complex.amber.pdb
+group_name vim2
+cut_off 2.4
+ion_ids 3416 3417
+ion_mol2files ZN1.mol2 ZN2.mol2
+naa_mol2files LIG.mol2 WAT.mol2
+frcmod_files LIG.frcmod
+large_opt 1
+force_field ff14SB
+gaff 2
+water_model TIP3P

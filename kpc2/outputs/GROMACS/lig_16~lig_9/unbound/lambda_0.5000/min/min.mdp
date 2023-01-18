@@ -34,3 +34,4 @@ nstcalcenergy = 250
 nstdhdl = 250
 refcoord-scaling = all
 emstep = 0.001
+emtol = 1000

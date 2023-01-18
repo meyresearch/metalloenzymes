@@ -1,19 +1,24 @@
 #!/bin/bash
 
-cd ../kpc2/outputs/GROMACS/lig_2~lig_4/
+cd ../kpc2/outputs/GROMACS/
 
-for i in */ 
+for transformation in */ 
 do
-	cd unbound/
-	for j in */
-	do	
-		rm -r $j	
+	cd $transformation
+	echo $transformation
+        for stage in */
+	do
+		cd $stage
+		for lambda in */
+		do
+			cd $lambda
+			for dir in */
+			do
+				rm -r $dir/*			
+			done
+			cd ../
+		done
+		cd ../
 	done
-	cd ../
-	cd bound/
-	for j in */
-	do	
-		rm -r $j
-	done
-	cd ../
+	cd ../	
 done

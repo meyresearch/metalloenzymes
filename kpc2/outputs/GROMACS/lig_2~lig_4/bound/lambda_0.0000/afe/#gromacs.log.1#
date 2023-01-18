@@ -38,9 +38,9 @@ GROMACS:      gmx mdrun, version 2022.2
 Executable:   /usr/local/gromacs/bin/gmx
 Data prefix:  /usr/local/gromacs
 Working dir:  /home/jguven/projects/metalloenzymes/kpc2/outputs/GROMACS/lig_2~lig_4/bound/lambda_0.0000/afe
-Process ID:   1566145
+Process ID:   2061196
 Command line:
-  gmx mdrun -v -deffnm gromacs -gpu_id 1
+  gmx mdrun -v -deffnm gromacs -gpu_id 2
 
 GROMACS version:    2022.2
 Precision:          mixed
@@ -157,7 +157,7 @@ Input Parameters:
    comm-mode                      = Linear
    nstcomm                        = 100
    bd-fric                        = 0
-   ld-seed                        = -9307529
+   ld-seed                        = -1166559239
    emtol                          = 10
    emstep                         = 0.01
    niter                          = 20
@@ -366,7 +366,7 @@ When checking whether update groups are usable:
   At least one moleculetype does not conform to the requirements for using update groups
 1 GPU selected for this run.
 Mapping of GPU IDs to the 2 GPU tasks in the 1 rank on this node:
-  PP:1,PME:1
+  PP:2,PME:2
 PP tasks will do (non-perturbed) short-ranged interactions on the GPU
 PP task will update and constrain coordinates on the CPU
 PME tasks will do all aspects on the GPU
@@ -403,7 +403,7 @@ Using a dual 8x8 pair-list setup updated with dynamic, rolling pruning:
   inner list: updated every  12 steps, buffer 0.003 nm, rlist 1.203 nm
 At tolerance 0.005 kJ/mol/ps per atom, equivalent classical 1x1 list would be:
   outer list: updated every 100 steps, buffer 0.294 nm, rlist 1.494 nm
-  inner list: updated every  12 steps, buffer 0.052 nm, rlist 1.252 nm
+  inner list: updated every  12 steps, buffer 0.053 nm, rlist 1.253 nm
 
 Using Lorentz-Berthelot Lennard-Jones combination rule
 There are 28 atoms and 28 charges for free energy perturbation
@@ -450,249 +450,41 @@ Constraining the coordinates at t0-dt (step 0)
 Center of mass motion removal mode is Linear
 We have the following groups for center of mass motion removal:
   0:  rest
-RMS relative constraint deviation after constraining: 2.83e-06
-Initial temperature: 298.387 K
+RMS relative constraint deviation after constraining: 4.25e-03
+Initial temperature: 566.85 K
 
-Started mdrun on rank 0 Tue Dec 13 13:26:40 2022
+Started mdrun on rank 0 Tue Jan 10 11:30:43 2023
 
            Step           Time
               0        0.00000
 
    Energies (kJ/mol)
            Bond          Angle    Proper Dih.          LJ-14     Coulomb-14
-    3.10393e+03    7.94987e+03    1.37991e+04    3.93029e+03    4.22268e+04
+    3.27946e+03    8.42559e+03    1.38852e+04    3.99658e+03    4.20861e+04
         LJ (SR)  Disper. corr.   Coulomb (SR)   Coul. recip.      Potential
-    9.33312e+04   -4.08268e+03   -8.66270e+05    2.64562e+03   -7.03366e+05
+    9.42052e+04   -4.09791e+03   -8.67964e+05    2.65808e+03   -7.03525e+05
     Kinetic En.   Total Energy    Temperature Pres. DC (bar) Pressure (bar)
-    1.37839e+05   -5.65526e+05    2.98654e+02   -1.24112e+02   -1.49157e+02
+    2.61484e+05   -4.42041e+05    5.66553e+02   -1.25039e+02    2.54818e+03
     dVremain/dl   Constr. rmsd
-    2.49973e+02    2.88972e-06
-
-step 2100: timed with pme grid 72 72 72, coulomb cutoff 1.200: 834.3 M-cycles
-step 2300: timed with pme grid 60 60 60, coulomb cutoff 1.363: 838.6 M-cycles
-step 2500: timed with pme grid 52 52 52, coulomb cutoff 1.572: 983.0 M-cycles
-step 2700: timed with pme grid 56 56 56, coulomb cutoff 1.460: 895.3 M-cycles
-step 2900: timed with pme grid 60 60 60, coulomb cutoff 1.363: 832.7 M-cycles
-step 3100: timed with pme grid 64 64 64, coulomb cutoff 1.278: 848.6 M-cycles
-step 3300: timed with pme grid 72 72 72, coulomb cutoff 1.200: 1026.5 M-cycles
-              optimal pme grid 60 60 60, coulomb cutoff 1.363
-Writing checkpoint, step 62800 at Tue Dec 13 13:41:41 2022
-
-
-Writing checkpoint, step 118800 at Tue Dec 13 13:56:41 2022
-
-
-Writing checkpoint, step 191400 at Tue Dec 13 14:11:42 2022
-
-
-           Step           Time
-         200000      400.00000
-
-   Energies (kJ/mol)
-           Bond          Angle    Proper Dih.          LJ-14     Coulomb-14
-    3.13621e+03    8.58075e+03    1.36830e+04    3.87549e+03    4.16700e+04
-        LJ (SR)  Disper. corr.   Coulomb (SR)   Coul. recip.      Potential
-    9.45290e+04   -4.08669e+03   -8.66530e+05    1.81012e+03   -7.03332e+05
-    Kinetic En.   Total Energy    Temperature Pres. DC (bar) Pressure (bar)
-    1.38551e+05   -5.64780e+05    3.00196e+02   -1.24356e+02    7.12605e+01
-    dVremain/dl   Constr. rmsd
-    6.01743e+02    2.89865e-06
-
-Writing checkpoint, step 246400 at Tue Dec 13 14:26:42 2022
-
-
-Writing checkpoint, step 319200 at Tue Dec 13 14:41:41 2022
-
-
-Writing checkpoint, step 374300 at Tue Dec 13 14:56:42 2022
-
-
-           Step           Time
-         400000      800.00000
-
-   Energies (kJ/mol)
-           Bond          Angle    Proper Dih.          LJ-14     Coulomb-14
-    3.04806e+03    8.00912e+03    1.38625e+04    3.96792e+03    4.21552e+04
-        LJ (SR)  Disper. corr.   Coulomb (SR)   Coul. recip.      Potential
-    9.55921e+04   -4.10000e+03   -8.68896e+05    1.78093e+03   -7.04580e+05
-    Kinetic En.   Total Energy    Temperature Pres. DC (bar) Pressure (bar)
-    1.37636e+05   -5.66944e+05    2.98213e+02   -1.25166e+02    2.72557e+02
-    dVremain/dl   Constr. rmsd
-    1.12973e+03    2.93938e-06
-
-Writing checkpoint, step 446000 at Tue Dec 13 15:11:41 2022
-
-
-Writing checkpoint, step 500100 at Tue Dec 13 15:26:42 2022
-
-
-Writing checkpoint, step 571900 at Tue Dec 13 15:41:42 2022
-
-
-           Step           Time
-         600000     1200.00000
-
-   Energies (kJ/mol)
-           Bond          Angle    Proper Dih.          LJ-14     Coulomb-14
-    3.15589e+03    8.34899e+03    1.37285e+04    3.99723e+03    4.17635e+04
-        LJ (SR)  Disper. corr.   Coulomb (SR)   Coul. recip.      Potential
-    9.37819e+04   -4.09589e+03   -8.65416e+05    1.69436e+03   -7.03042e+05
-    Kinetic En.   Total Energy    Temperature Pres. DC (bar) Pressure (bar)
-    1.39120e+05   -5.63922e+05    3.01428e+02   -1.24915e+02    9.12879e+01
-    dVremain/dl   Constr. rmsd
-    3.99640e+02    2.91181e-06
-
-Writing checkpoint, step 627600 at Tue Dec 13 15:56:41 2022
-
-
-Writing checkpoint, step 690200 at Tue Dec 13 16:11:42 2022
-
-
-Writing checkpoint, step 752700 at Tue Dec 13 16:26:40 2022
-
-
-           Step           Time
-         800000     1600.00000
-
-   Energies (kJ/mol)
-           Bond          Angle    Proper Dih.          LJ-14     Coulomb-14
-    3.10972e+03    8.07751e+03    1.37566e+04    3.94741e+03    4.21150e+04
-        LJ (SR)  Disper. corr.   Coulomb (SR)   Coul. recip.      Potential
-    9.38607e+04   -4.08751e+03   -8.67064e+05    1.74897e+03   -7.04536e+05
-    Kinetic En.   Total Energy    Temperature Pres. DC (bar) Pressure (bar)
-    1.39580e+05   -5.64955e+05    3.02426e+02   -1.24405e+02   -5.17688e+01
-    dVremain/dl   Constr. rmsd
-    3.80269e+02    3.15941e-06
-
-Writing checkpoint, step 803000 at Tue Dec 13 16:41:44 2022
-
-
-Writing checkpoint, step 865400 at Tue Dec 13 16:56:46 2022
-
-
-Writing checkpoint, step 896700 at Tue Dec 13 17:11:46 2022
-
-
-Writing checkpoint, step 941300 at Tue Dec 13 17:26:41 2022
-
-
-           Step           Time
-        1000000     2000.00000
-
-Writing checkpoint, step 1000000 at Tue Dec 13 17:38:07 2022
-
-
-   Energies (kJ/mol)
-           Bond          Angle    Proper Dih.          LJ-14     Coulomb-14
-    2.98859e+03    8.21863e+03    1.37085e+04    3.91836e+03    4.19825e+04
-        LJ (SR)  Disper. corr.   Coulomb (SR)   Coul. recip.      Potential
-    9.39551e+04   -4.08045e+03   -8.66740e+05    1.70594e+03   -7.04342e+05
-    Kinetic En.   Total Energy    Temperature Pres. DC (bar) Pressure (bar)
-    1.38665e+05   -5.65677e+05    3.00442e+02   -1.23977e+02   -1.48380e+02
-    dVremain/dl   Constr. rmsd
-    6.42908e+02    3.14762e-06
-
-
-	<======  ###############  ==>
-	<====  A V E R A G E S  ====>
-	<==  ###############  ======>
-
-	Statistics over 1000001 steps using 4001 frames
-
-   Energies (kJ/mol)
-           Bond          Angle    Proper Dih.          LJ-14     Coulomb-14
-    3.14228e+03    8.21819e+03    1.37661e+04    3.95901e+03    4.20141e+04
-        LJ (SR)  Disper. corr.   Coulomb (SR)   Coul. recip.      Potential
-    9.38859e+04   -4.08784e+03   -8.66930e+05    1.73984e+03   -7.04292e+05
-    Kinetic En.   Total Energy    Temperature Pres. DC (bar) Pressure (bar)
-    1.38497e+05   -5.65795e+05    3.00079e+02   -1.24426e+02    1.35620e+00
-    dVremain/dl   Constr. rmsd
-    6.84465e+02    0.00000e+00
-
-          Box-X          Box-Y          Box-Z
-    8.17294e+00    8.17294e+00    8.17294e+00
-
-   Total Virial (kJ/mol)
-    4.60966e+04   -4.02590e+01   -3.59235e+01
-   -4.00158e+01    4.61501e+04    7.15859e+01
-   -3.59664e+01    7.11492e+01    4.61877e+04
-
-   Pressure (bar)
-    1.99248e+00    9.82293e-01    1.98584e+00
-    9.67497e-01    3.83711e+00   -2.65048e+00
-    1.98845e+00   -2.62391e+00   -1.76099e+00
-
-
-       P P   -   P M E   L O A D   B A L A N C I N G
-
- PP/PME load balancing changed the cut-off and PME settings:
-           particle-particle                    PME
-            rcoulomb  rlist            grid      spacing   1/beta
-   initial  1.200 nm  1.203 nm      72  72  72   0.114 nm  0.384 nm
-   final    1.363 nm  1.366 nm      60  60  60   0.136 nm  0.436 nm
- cost-ratio           1.46             0.58
- (note that these numbers concern only part of the total PP and PME load)
-
-
-	M E G A - F L O P S   A C C O U N T I N G
-
- NB=Group-cutoff nonbonded kernels    NxN=N-by-N cluster Verlet kernels
- RF=Reaction-Field  VdW=Van der Waals  QSTab=quadratic-spline table
- W3=SPC/TIP3p  W4=TIP4p (single or pairs)
- V&F=Potential and force  V=Potential only  F=Force only
-
- Computing:                               M-Number         M-Flops  % Flops
------------------------------------------------------------------------------
- NB Free energy kernel              7536085.062150     7536085.062     0.1
- Pair Search distance check           74210.915872      667898.243     0.0
- NxN Ewald Elec. + LJ [F]          91219447.570688  6020483539.665    98.9
- NxN Ewald Elec. + LJ [V&F]          366393.058624    39204057.273     0.6
- 1,4 nonbonded interactions           10615.450974      955390.588     0.0
- Shift-X                                544.994494        3269.967     0.0
- Bonds                                 2076.146112      122492.621     0.0
- Angles                                7383.535515     1240433.967     0.0
- Propers                              13722.397818     3142429.100     0.1
- Virial                                5453.954539       98171.182     0.0
- Update                               54494.054494     1689315.689     0.0
- Stop-CM                                545.048988        5450.490     0.0
- P-Coupling                            5449.454494       32696.727     0.0
- Calc-Ekin                            10898.908988      294270.543     0.0
- Lincs                                 4028.008056      241680.483     0.0
- Lincs-Mat                            21768.043536       87072.174     0.0
- Constraint-V                        108946.163419      980515.471     0.0
- Constraint-Vir                        5245.952459      125902.859     0.0
- Settle                               33630.067260    12443124.886     0.2
------------------------------------------------------------------------------
- Total                                              6089353796.989   100.0
------------------------------------------------------------------------------
-
-
-     R E A L   C Y C L E   A N D   T I M E   A C C O U N T I N G
-
-On 1 MPI rank, each using 10 OpenMP threads
-
- Computing:          Num   Num      Call    Wall time         Giga-Cycles
-                     Ranks Threads  Count      (s)         total sum    %
------------------------------------------------------------------------------
- Neighbor search        1   10      10001     312.340      10344.801   2.1
- Launch GPU ops.        1   10    1000001     399.226      13222.498   2.6
- Force                  1   10    1000001    2853.750      94517.028  18.9
- Wait PME GPU gather    1   10    1000001    1108.912      36727.505   7.3
- Reduce GPU PME F       1   10    1000001    1903.745      63052.600  12.6
- Wait GPU NB local                            853.371      28263.912   5.7
- NB X/F buffer ops.     1   10    1990001    2699.246      89399.821  17.9
- Write traj.            1   10         67       2.565         84.968   0.0
- Update                 1   10    2000002    2307.498      76425.002  15.3
- Constraints            1   10    2000004    2117.470      70131.216  14.0
- Rest                                         529.258      17529.177   3.5
------------------------------------------------------------------------------
- Total                                      15087.382     499698.528 100.0
------------------------------------------------------------------------------
-
-               Core t (s)   Wall t (s)        (%)
-       Time:   150873.821    15087.382     1000.0
-                         4h11:27
-                 (ns/day)    (hour/ns)
-Performance:       11.453        2.095
-Finished mdrun on rank 0 Tue Dec 13 17:38:08 2022
-
+    4.77899e+04    5.01717e-03
+
+Constraint error in algorithm Lincs at step 1
+Wrote pdb files with previous and current coordinates
+Constraint error in algorithm Lincs at step 1
+Wrote pdb files with previous and current coordinates
+
+-------------------------------------------------------
+Program:     gmx mdrun, version 2022.2
+Source file: src/gromacs/gmxlib/nonbonded/nb_free_energy.cpp (line 1149)
+
+Fatal error:
+There are perturbed non-bonded pair interactions beyond the pair-list cutoff
+of 1.341 nm, which is not supported. This can happen because the system is
+unstable or because intra-molecular interactions at long distances are
+excluded. If the latter is the case, you can try to increase nstlist or rlist
+to avoid this.The error is likely triggered by the use of couple-intramol=no
+and the maximal distance in the decoupled molecule exceeding rlist.
+
+For more information and tips for troubleshooting, please check the GROMACS
+website at http://www.gromacs.org/Documentation/Errors
+-------------------------------------------------------
