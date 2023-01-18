@@ -1,0 +1,50 @@
+
+          -------------------------------------------------------
+          Amber 22 SANDER                              2022
+          -------------------------------------------------------
+
+| Run on 09/22/2022 at 11:02:33
+
+|   Executable path: sander
+| Working directory: /home/jguven/projects/metalloenzymes/vim_2/mcpb_check
+|          Hostname: Unknown
+  [-O]verwriting output
+
+File Assignments:
+|  MDIN: test.in                                                               
+| MDOUT: vim2_solv.out                                                         
+|INPCRD: vim2_solv.rst7                                                        
+|  PARM: parm7                                                                 
+|RESTRT: restrt                                                                
+|  REFC: refc                                                                  
+| MDVEL: mdvel                                                                 
+| MDFRC: mdfrc                                                                 
+|  MDEN: mden                                                                  
+| MDCRD: mdcrd                                                                 
+|MDINFO: mdinfo                                                                
+|  MTMD: mtmd                                                                  
+|INPDIP: inpdip                                                                
+|RSTDIP: rstdip                                                                
+|INPTRA: inptraj                                                               
+
+
+ Here is the input file:
+
+Minimize                                                                       
+ &cntrl                                                                        
+  imin=1,                                                                      
+  ntx=1,                                                                       
+  irest=0,                                                                     
+  maxcyc=200,                                                                  
+  ncyc=100,                                                                    
+  ntpr=10,                                                                     
+  ntwx=0,                                                                      
+  cut=8.0,                                                                     
+ /                                                                             
+
+--------------------------------------------------------------------------------
+   1.  RESOURCE   USE: 
+--------------------------------------------------------------------------------
+
+| Flags:                                                                        
+ getting box info from netcdf restart file
