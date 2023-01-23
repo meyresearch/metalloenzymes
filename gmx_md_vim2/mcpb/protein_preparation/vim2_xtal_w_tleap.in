@@ -1,0 +1,47 @@
+source oldff/leaprc.ff14SB
+source leaprc.water.tip3p
+addAtomTypes {
+        { "M1"  "Zn" "sp3" }
+        { "M2"  "Zn" "sp3" }
+        { "Y1"  "N" "sp3" }
+        { "Y2"  "N" "sp3" }
+        { "Y3"  "N" "sp3" }
+        { "Y4"  "O" "sp3" }
+        { "Y5"  "O" "sp3" }
+        { "Y6"  "S" "sp3" }
+        { "Y7"  "N" "sp3" }
+        { "Y8"  "O" "sp3" }
+}
+HD1 = loadmol2 /home/jguven/projects/metalloenzymes/vim_2/scripts/gaussian/HD1.mol2
+HE1 = loadmol2 /home/jguven/projects/metalloenzymes/vim_2/scripts/gaussian/HE1.mol2
+AP1 = loadmol2 /home/jguven/projects/metalloenzymes/vim_2/scripts/gaussian/AP1.mol2
+HD2 = loadmol2 /home/jguven/projects/metalloenzymes/vim_2/scripts/gaussian/HD2.mol2
+CS1 = loadmol2 /home/jguven/projects/metalloenzymes/vim_2/scripts/gaussian/CS1.mol2
+HD3 = loadmol2 /home/jguven/projects/metalloenzymes/vim_2/scripts/gaussian/HD3.mol2
+ZN1 = loadmol2 /home/jguven/projects/metalloenzymes/vim_2/scripts/gaussian/ZN1.mol2
+ZN2 = loadmol2 /home/jguven/projects/metalloenzymes/vim_2/scripts/gaussian/ZN2.mol2
+loadamberparams frcmod.ions1lm_126_tip3p
+loadamberparams /home/jguven/projects/metalloenzymes/vim_2/scripts/gaussian/vim2_mcpbpy.frcmod
+complex = loadpdb /home/jguven/projects/metalloenzymes/vim_2/inputs/protein/protein.pdb
+bond complex.83.NE2 complex.231.ZN
+bond complex.85.ND1 complex.231.ZN
+bond complex.87.OD2 complex.232.ZN
+bond complex.148.NE2 complex.231.ZN
+bond complex.167.SG complex.232.ZN
+bond complex.209.NE2 complex.232.ZN
+bond complex.82.C complex.83.N
+bond complex.83.C complex.84.N
+bond complex.84.C complex.85.N
+bond complex.85.C complex.86.N
+bond complex.86.C complex.87.N
+bond complex.87.C complex.88.N
+bond complex.147.C complex.148.N
+bond complex.148.C complex.149.N
+bond complex.166.C complex.167.N
+bond complex.167.C complex.168.N
+bond complex.208.C complex.209.N
+bond complex.209.C complex.210.N
+savepdb complex protein_xtal_w_system.pdb
+saveamberparm complex protein_water.prm7 protein_water.rst7
+quit
+
