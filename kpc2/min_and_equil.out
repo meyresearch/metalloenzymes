@@ -47,3 +47,15 @@ see the appropriate new directories, set the environment variable
 `JUPYTER_PLATFORM_DIRS=1` and then run `jupyter --paths`.
 The use of platformdirs will be the default in `jupyter_core` v6
   from jupyter_core.paths import jupyter_data_dir
+Processing unbound stage.
+
+==============================================================
+Sending anonymous Sire usage statistics to http://siremol.org.
+For more information, see http://siremol.org/analytics
+To disable, set the environment variable 'SIRE_DONT_PHONEHOME' to 1
+To see the information sent, set the environment variable 
+SIRE_VERBOSE_PHONEHOME equal to 1. To silence this message, set
+the environment variable SIRE_SILENT_PHONEHOME to 1.
+==============================================================
+
+Processing bound stage.
