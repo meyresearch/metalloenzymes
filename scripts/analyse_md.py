@@ -54,21 +54,21 @@ plt.rcParams.update(parameters)
 plt.style.use("dark_background")
 
 
-potential_file = "../amb_md_vim2/analysis/potential.agr"
+# potential_file = "../amb_md_vim2/analysis/potential.agr"
 temperature_file = "../amb_md_vim2/analysis/temperature.agr"
 density_file = "../amb_md_vim2/analysis/density.agr"
 pressure_file = "../amb_md_vim2/analysis/pressure.agr"
 
-time, potential = get_equilibration(potential_file)
+# time, potential = get_equilibration(potential_file)
 time, temperature = get_equilibration(temperature_file)
 time, density = get_equilibration(density_file)
 time, pressure = get_equilibration(pressure_file)
 
 fig, ax = plt.subplots(figsize=(10, 10))
-ax.plot(time, potential)
-ax.set_ylabel("Potential energy ")
-ax.set_xlabel("Time / ")
-plt.show()
+# ax.plot(time, potential)
+# ax.set_ylabel("Potential energy ")
+# ax.set_xlabel("Time / ")
+# plt.show()
 fig, ax = plt.subplots(figsize=(10, 10))
 ax.plot(time, temperature, label="Temperature")
 ax.set_ylabel("Temperature / K")
