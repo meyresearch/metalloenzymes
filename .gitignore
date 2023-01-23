@@ -48,6 +48,7 @@ scripts/__pycache__/*
 *.xvg
 *.edr
 *.cpt
+*.dat
 kpc2/outputs/GROMACS/lig_2~lig_4.zip
 kpc2/outputs/GROMACS/*/*/*/*/*
 *.nc

@@ -1,0 +1,18 @@
+parm ../4_production/md.top
+trajin ../4_production/md_nopbc.xtc 
+
+rms rmsd_1 :1-232@CA first out protein_bb_ca_rmsd.dat
+go
+rms rmsd_2 :83,85,87,148,167,209,233&!@H= first out metal_site_heavy_atoms_rmsd.dat
+go
+
+distance dis_zn1-83ne2 :ZN1 :83@NE2 out dis_zn1.dat
+distance dis_zn1-85nd1 :ZN1 :85@ND1 out dis_zn1.dat
+distance dis_zn1-148ne2 :ZN1 :148@NE2 out dis_zn1.dat
+distance dis_zn1-233o07 :ZN1 :233@O07 out dis_zn1.dat
+
+distance dis_zn2-87od2 :ZN2 :87@OD2 out dis_zn2.dat
+distance dis_zn2-167cs1 :ZN2 :167@SG out dis_zn2.dat
+distance dis_zn2-209ne2 :ZN2 :209@NE2 out dis_zn2.dat
+distance dis_zn2-233o08 :ZN2 :233@O08 out dis_zn2.dat
+go
