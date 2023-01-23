@@ -48,4 +48,11 @@ scripts/__pycache__/*
 *.xvg
 *.edr
 *.cpt
+kpc2/afe/nohup_unbound.out
+kpc2/afe/nohup_bound.out
 kpc2/outputs/GROMACS/lig_2~lig_4.zip
+kpc2/outputs/GROMACS/*/*/*/*/*
+*.nc
+*.agr
+*.out
+*mdcrd.*

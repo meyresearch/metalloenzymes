@@ -1,0 +1,3 @@
+parm ../10_md/vim2_equil.prmtop
+trajin ../10_md/md.nc
+trajout vim2_md.pdb PDB
