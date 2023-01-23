@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import MDAnalysis as mda
 import pandas as pd
 import numpy as np
+import argparse
 
 
 def get_rmsd(rmsd_file: str) -> tuple:
@@ -46,6 +47,13 @@ def get_equilibration(file: str) -> tuple:
     return time, quantity
 
 
+parser = argparse.ArgumentParser(description="plot MD analysis")
+parser.add_argument("engine",
+                     type=str,
+                     choices=["gromacs", "amber"],
+                     help="select which engine MD to analyse")
+
+
 parameters = {"ytick.color": "w",
               "xtick.color": "w",
               "axes.labelcolor": "w",
@@ -53,48 +61,55 @@ parameters = {"ytick.color": "w",
 plt.rcParams.update(parameters)
 plt.style.use("dark_background")
 
+arguments = parser.parse_args()
 
-# potential_file = "../amb_md_vim2/analysis/potential.agr"
-temperature_file = "../amb_md_vim2/analysis/temperature.agr"
-density_file = "../amb_md_vim2/analysis/density.agr"
-pressure_file = "../amb_md_vim2/analysis/pressure.agr"
+engine = arguments.engine
 
-# time, potential = get_equilibration(potential_file)
-time, temperature = get_equilibration(temperature_file)
-time, density = get_equilibration(density_file)
-time, pressure = get_equilibration(pressure_file)
+folder = ""
+if engine == "amber":
+    folder = "amb_md_vim2"
+    # potential_file = f"../{folder}/analysis/potential.agr"
+    temperature_file = f"../{folder}/analysis/temperature.agr"
+    density_file = f"../{folder}/analysis/density.agr"
+    pressure_file = f"../{folder}/analysis/pressure.agr"
 
-fig, ax = plt.subplots(figsize=(10, 10))
-# ax.plot(time, potential)
-# ax.set_ylabel("Potential energy ")
-# ax.set_xlabel("Time / ")
-# plt.show()
-fig, ax = plt.subplots(figsize=(10, 10))
-ax.plot(time, temperature, label="Temperature")
-ax.set_ylabel("Temperature / K")
-ax.set_xlabel("Time / ")
-plt.show()
-fig, ax = plt.subplots(figsize=(10, 10))
-ax.plot(time, density, label="Density")
-ax.set_ylabel("Density / kg / m^3")
-ax.set_xlabel("Time / ")
-plt.show()
-fig, ax = plt.subplots(figsize=(10, 10))
-ax.plot(time, pressure, label="Pressure")
-ax.set_ylabel("Pressure / bar")
-ax.set_xlabel("Time / ")
-plt.show()
+    # time, potential = get_equilibration(potential_file)
+    time, temperature = get_equilibration(temperature_file)
+    time, density = get_equilibration(density_file)
+    time, pressure = get_equilibration(pressure_file)
 
+    fig, ax = plt.subplots(figsize=(10, 10))
+    # ax.plot(time, potential)
+    # ax.set_ylabel("Potential energy ")
+    # ax.set_xlabel("Time / ")
+    # plt.show()
+    fig, ax = plt.subplots(figsize=(10, 10))
+    ax.plot(time, temperature, label="Temperature")
+    ax.set_ylabel("Temperature / K")
+    ax.set_xlabel("Time / ")
+    plt.show()
+    fig, ax = plt.subplots(figsize=(10, 10))
+    ax.plot(time, density, label="Density")
+    ax.set_ylabel("Density / kg / m^3")
+    ax.set_xlabel("Time / ")
+    plt.show()
+    fig, ax = plt.subplots(figsize=(10, 10))
+    ax.plot(time, pressure, label="Pressure")
+    ax.set_ylabel("Pressure / bar")
+    ax.set_xlabel("Time / ")
+    plt.show()
+elif engine == "gromacs":
+    folder = "gmx_md_vim2"
 
-bb_rmsd_file = "../amb_md_vim2/analysis/protein_bb_ca_rmsd.dat"
-metal_rmsd_file = "../amb_md_vim2/analysis/metal_site_heavy_atoms_rmsd.dat"
+bb_rmsd_file = f"../{folder}/analysis/protein_bb_ca_rmsd.dat"
+metal_rmsd_file = f"../{folder}/analysis/metal_site_heavy_atoms_rmsd.dat"
 
 bb_time, bb_rmsd = get_rmsd(bb_rmsd_file)
 metal_time, metal_rmsd = get_rmsd(metal_rmsd_file)
 
-zn1_distance_file = "../amb_md_vim2/analysis/dis_zn1.dat"
+zn1_distance_file = f"../{folder}/analysis/dis_zn1.dat"
 zn1_time, zn1_hd1, zn1_he1, zn1_hd2, zn1_pt1 = get_bond_lengths(zn1_distance_file)
-zn2_distance_file = "../amb_md_vim2/analysis/dis_zn2.dat"
+zn2_distance_file = f"../{folder}/analysis/dis_zn2.dat"
 zn2_time, zn2_ap1, zn2_cs1, zn2_hd3, zn2_pt1 = get_bond_lengths(zn2_distance_file)
 
 parameters = {"ytick.color": "w",
@@ -120,7 +135,7 @@ ax.tick_params(axis="both", which="major", labelsize=14)
 fig.set_facecolor("k")
 fig.tight_layout()
 plt.show()
-fig.savefig("../amb_md_vim2/plots/amb_rmsd_comp.png", dpi=600)
+fig.savefig(f"../{folder}/plots/rmsd_comp.png", dpi=600)
 
 fig, ax = plt.subplots(figsize=(10, 10))
 ax.plot(zn1_time, zn1_hd1, color="#0099AB", alpha=0.1)
@@ -151,7 +166,7 @@ ax.tick_params(axis="both", which="major", labelsize=14)
 fig.set_facecolor("k")
 fig.tight_layout()
 plt.show()
-fig.savefig("../amb_md_vim2/plots/amb_zn1_bonds.png", dpi=600)
+fig.savefig(f"../{folder}/plots/zn1_bonds.png", dpi=600)
 
 fig, ax = plt.subplots(figsize=(10, 10))
 ax.plot(zn2_time, zn2_ap1, color="#0099AB", alpha=0.1)
@@ -182,4 +197,4 @@ ax.tick_params(axis="both", which="major", labelsize=14)
 fig.set_facecolor("k")
 fig.tight_layout()
 plt.show()
-fig.savefig("../amb_md_vim2/plots/amb_zn2_bonds.png", dpi=600)
+fig.savefig(f"../{folder}/plots/zn2_bonds.png", dpi=600)
