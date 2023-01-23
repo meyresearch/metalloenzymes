@@ -1,0 +1,18 @@
+Error: segmentation violation
+   rax 0000000000000000, rbx ffffffffffffffff, rcx ffffffffffffffff
+   rdx 00000000000254b5, rsp 00007ffe9f640da8, rbp 00007ffe9f641320
+   rsi 000000000000000b, rdi 00000000000254b5, r8  0000000000000020
+   r9  00002abbaa02cba0, r10 00007ffe9f6401a0, r11 0000000000000202
+   r12 00007ffe9f641368, r13 0000000000000000, r14 0000000000000000
+   r15 00000000000003e6
+  /lib64/libpthread.so.0(+0xf630) [0x2abba99ca630]
+  /lib64/libc.so.6(kill+0x7) [0x2abba9f0f657]
+  /exports/applications/apps/community/chem/g16/l502.exe() [0x4b1049]
+  /exports/applications/apps/community/chem/g16/l502.exe() [0x4d32ea]
+  /exports/applications/apps/community/chem/g16/l502.exe() [0x55005c]
+  /exports/applications/apps/community/chem/g16/l502.exe() [0x52ee4f]
+  /exports/applications/apps/community/chem/g16/l502.exe() [0x4529db]
+  /exports/applications/apps/community/chem/g16/l502.exe() [0x450c2b]
+  /exports/applications/apps/community/chem/g16/l502.exe() [0x450b34]
+  /lib64/libc.so.6(__libc_start_main+0xf5) [0x2abba9efb555]
+  /exports/applications/apps/community/chem/g16/l502.exe() [0x450a29]

@@ -1,0 +1,21 @@
+Error: segmentation violation
+   rax 0000000000000000, rbx 0000000002e131b0, rcx ffffffffffffffff
+   rdx 00000000000208df, rsp 00007ffc8f764ea8, rbp 00007ffc8f764ee0
+   rsi 000000000000000b, rdi 00000000000208df, r8  0000000000000020
+   r9  00002af64f239ba0, r10 00007ffc8f7642a0, r11 0000000000000202
+   r12 00007ffc8f7652a8, r13 00007ffc8f765218, r14 00007ffc8f765310
+   r15 0000000002e2f1f0
+  /lib64/libpthread.so.0(+0xf630) [0x2af64ebd7630]
+  /lib64/libc.so.6(kill+0x7) [0x2af64f11c657]
+  /exports/applications/apps/community/chem/g16/l103.exe() [0x4b01a9]
+  /exports/applications/apps/community/chem/g16/l103.exe() [0x52cb88]
+  /exports/applications/apps/community/chem/g16/l103.exe() [0x4df779]
+  /exports/applications/apps/community/chem/g16/l103.exe() [0x573c88]
+  /exports/applications/apps/community/chem/g16/l103.exe() [0x573711]
+  /exports/applications/apps/community/chem/g16/l103.exe() [0x4caa8f]
+  /exports/applications/apps/community/chem/g16/l103.exe() [0x4ca4a5]
+  /exports/applications/apps/community/chem/g16/l103.exe() [0x4511a1]
+  /exports/applications/apps/community/chem/g16/l103.exe() [0x450bf2]
+  /exports/applications/apps/community/chem/g16/l103.exe() [0x450af4]
+  /lib64/libc.so.6(__libc_start_main+0xf5) [0x2af64f108555]
+  /exports/applications/apps/community/chem/g16/l103.exe() [0x4509e9]
