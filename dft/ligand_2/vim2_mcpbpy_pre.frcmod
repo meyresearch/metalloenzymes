@@ -215,3 +215,15 @@ YES X -O2-CO-Y6        10.5          180.          2.
 YES CT-CW-CC-Y2         1.1          180.          2.
  
 NONB
+YES   M1          1.3950  0.0149170000       IOD set for Zn2+ ion from Li et al. JCTC, 2013, 9, 2733
+YES   M2          1.3950  0.0149170000       IOD set for Zn2+ ion from Li et al. JCTC, 2013, 9, 2733
+YES   Y1          1.8240  0.1700             OPLS
+YES   Y2          1.8240  0.1700             OPLS
+YES   Y6          1.6612  0.2100             OPLS
+YES   Y3          1.8240  0.1700             OPLS
+YES   Y7          2.0000  0.2500             W. Cornell CH3SH and CH3SCH3 FEP's
+YES   Y8          1.8240  0.1700             OPLS
+YES   Y9          1.7107  0.1463
+YES   Y4          1.7107  0.1463
+YES   Y5          1.8200  0.0930
+ 
