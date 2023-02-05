@@ -1,0 +1,35 @@
+Note: The following floating-point exceptions are signalling: IEEE_UNDERFLOW_FLAG IEEE_DENORMAL
+srun: error: pluto: task 0: Exited with exit code 255
+STOP PMEMD Terminated Abnormally!
+srun: error: pluto: task 0: Exited with exit code 1
+
+  Unit    9 Error on OPEN: /home/jguven/projects/metalloenzymes/dft//ligand_13/amber/03_relax//relax.rst7                                                                                                                                                                                  
+STOP PMEMD Terminated Abnormally!
+srun: error: pluto: task 0: Exited with exit code 1
+
+  Unit    9 Error on OPEN: /home/jguven/projects/metalloenzymes/dft//ligand_13/amber/04_lower//lower.rst7                                                                                                                                                                                  
+STOP PMEMD Terminated Abnormally!
+srun: error: pluto: task 0: Exited with exit code 1
+
+  Unit    9 Error on OPEN: /home/jguven/projects/metalloenzymes/dft//ligand_13/amber/05_bb_min//bb_min.rst7                                                                                                                                                                                
+STOP PMEMD Terminated Abnormally!
+srun: error: pluto: task 0: Exited with exit code 1
+
+  Unit    9 Error on OPEN: /home/jguven/projects/metalloenzymes/dft//ligand_13/amber/06_bb_relax//bb_relax.rst7                                                                                                                                                                            
+STOP PMEMD Terminated Abnormally!
+srun: error: pluto: task 0: Exited with exit code 1
+
+  Unit    9 Error on OPEN: /home/jguven/projects/metalloenzymes/dft//ligand_13/amber/07_reduce//reduce.rst7                                                                                                                                                                                
+STOP PMEMD Terminated Abnormally!
+srun: error: pluto: task 0: Exited with exit code 1
+cp: missing destination file operand after '/home/jguven/projects/metalloenzymes/dft//scripts/free.in'
+Try 'cp --help' for more information.
+srun: error: pluto: task 0: Exited with exit code 1
+
+  Unit    5 Error on OPEN: free.in                                                                                                                                                                                                                                                         
+STOP PMEMD Terminated Abnormally!
+cp: cannot stat '/home/jguven/projects/metalloenzymes/dft//ligand_13/amber/09_free//free.rst7': No such file or directory
+srun: error: pluto: task 0: Exited with exit code 1
+
+  Unit    5 Error on OPEN: md.in                                                                                                                                                                                                                                                           
+STOP PMEMD Terminated Abnormally!

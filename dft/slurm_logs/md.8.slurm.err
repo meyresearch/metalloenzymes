@@ -1,0 +1,324 @@
+cp: cannot stat '/home/jguven/projects/metalloenzymes/dft//ligand_8/vim2_solv.gro': No such file or directory
+cp: cannot stat '/home/jguven/projects/metalloenzymes/dft//ligand_8/vim2_solv.top': No such file or directory
+                      :-) GROMACS - gmx grompp, 2022.4 (-:
+
+Executable:   /usr/local/gromacs/bin/gmx
+Data prefix:  /usr/local/gromacs
+Working dir:  /home/jguven/projects/metalloenzymes/dft/ligand_8/01_minimisation
+Command line:
+  gmx grompp -f min.mdp -c vim2_solv.gro -p vim2_solv.top -o em.tpr -maxwarn 1
+
+
+-------------------------------------------------------
+Program:     gmx grompp, version 2022.4
+Source file: src/gromacs/commandline/cmdlineparser.cpp (line 271)
+Function:    void gmx::CommandLineParser::parse(int*, char**)
+
+Error in user input:
+Invalid command-line options
+  In command-line option -c
+    File 'vim2_solv.gro' does not exist or is not accessible.
+    The file could not be opened.
+      Reason: No such file or directory
+      (call to fopen() returned error code 2)
+  In command-line option -p
+    File 'vim2_solv.top' does not exist or is not accessible.
+    The file could not be opened.
+      Reason: No such file or directory
+      (call to fopen() returned error code 2)
+
+For more information and tips for troubleshooting, please check the GROMACS
+website at http://www.gromacs.org/Documentation/Errors
+-------------------------------------------------------
+                      :-) GROMACS - gmx mdrun, 2022.4 (-:
+
+Executable:   /usr/local/gromacs/bin/gmx
+Data prefix:  /usr/local/gromacs
+Working dir:  /home/jguven/projects/metalloenzymes/dft/ligand_8/01_minimisation
+Command line:
+  gmx mdrun -ntmpi 1 -v -deffnm em
+
+
+-------------------------------------------------------
+Program:     gmx mdrun, version 2022.4
+Source file: src/gromacs/options/options.cpp (line 177)
+Function:    void gmx::internal::OptionSectionImpl::finish()
+
+Error in user input:
+Invalid input values
+  In option s
+    Required option was not provided, and the default file 'topol' does not
+    exist or is not accessible.
+    The following extensions were tried to complete the file name:
+      .tpr
+
+For more information and tips for troubleshooting, please check the GROMACS
+website at http://www.gromacs.org/Documentation/Errors
+-------------------------------------------------------
+srun: error: pluto: task 0: Exited with exit code 1
+                     :-) GROMACS - gmx make_ndx, 2022.4 (-:
+
+Executable:   /usr/local/gromacs/bin/gmx
+Data prefix:  /usr/local/gromacs
+Working dir:  /home/jguven/projects/metalloenzymes/dft/ligand_8/02_nvt
+Command line:
+  gmx make_ndx -f /home/jguven/projects/metalloenzymes/dft//ligand_8/01_minimisation//em.gro -o posre.ndx
+
+
+-------------------------------------------------------
+Program:     gmx make_ndx, version 2022.4
+Source file: src/gromacs/commandline/cmdlineparser.cpp (line 271)
+Function:    void gmx::CommandLineParser::parse(int*, char**)
+
+Error in user input:
+Invalid command-line options
+  In command-line option -f
+    File
+    '/home/jguven/projects/metalloenzymes/dft//ligand_8/01_minimisation//em.gro'
+    does not exist or is not accessible.
+    The file could not be opened.
+      Reason: No such file or directory
+      (call to fopen() returned error code 2)
+
+For more information and tips for troubleshooting, please check the GROMACS
+website at http://www.gromacs.org/Documentation/Errors
+-------------------------------------------------------
+                     :-) GROMACS - gmx genrestr, 2022.4 (-:
+
+Executable:   /usr/local/gromacs/bin/gmx
+Data prefix:  /usr/local/gromacs
+Working dir:  /home/jguven/projects/metalloenzymes/dft/ligand_8/02_nvt
+Command line:
+  gmx genrestr -f /home/jguven/projects/metalloenzymes/dft//ligand_8/01_minimisation//vim2_solv.gro -n posre.ndx -o posre.itp
+
+
+-------------------------------------------------------
+Program:     gmx genrestr, version 2022.4
+Source file: src/gromacs/commandline/cmdlineparser.cpp (line 271)
+Function:    void gmx::CommandLineParser::parse(int*, char**)
+
+Error in user input:
+Invalid command-line options
+  In command-line option -f
+    File
+    '/home/jguven/projects/metalloenzymes/dft//ligand_8/01_minimisation//vim2_solv.gro'
+    does not exist or is not accessible.
+    The file could not be opened.
+      Reason: No such file or directory
+      (call to fopen() returned error code 2)
+  In command-line option -n
+    File 'posre.ndx' does not exist or is not accessible.
+    The file could not be opened.
+      Reason: No such file or directory
+      (call to fopen() returned error code 2)
+
+For more information and tips for troubleshooting, please check the GROMACS
+website at http://www.gromacs.org/Documentation/Errors
+-------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/jguven/projects/metalloenzymes/dft//scripts/edit_topology.py", line 5, in <module>
+    lig = sys.argv[1]
+IndexError: list index out of range
+                      :-) GROMACS - gmx grompp, 2022.4 (-:
+
+Executable:   /usr/local/gromacs/bin/gmx
+Data prefix:  /usr/local/gromacs
+Working dir:  /home/jguven/projects/metalloenzymes/dft/ligand_8/02_nvt
+Command line:
+  gmx grompp -f nvt.mdp -c /home/jguven/projects/metalloenzymes/dft//ligand_8/01_minimisation//em.gro -r /home/jguven/projects/metalloenzymes/dft//ligand_8/01_minimisation//em.gro -p /home/jguven/projects/metalloenzymes/dft//ligand_8/01_minimisation//vim2_solv.top -o nvt.tpr -maxwarn 1
+
+
+-------------------------------------------------------
+Program:     gmx grompp, version 2022.4
+Source file: src/gromacs/commandline/cmdlineparser.cpp (line 271)
+Function:    void gmx::CommandLineParser::parse(int*, char**)
+
+Error in user input:
+Invalid command-line options
+  In command-line option -c
+    File
+    '/home/jguven/projects/metalloenzymes/dft//ligand_8/01_minimisation//em.gro'
+    does not exist or is not accessible.
+    The file could not be opened.
+      Reason: No such file or directory
+      (call to fopen() returned error code 2)
+  In command-line option -r
+    File
+    '/home/jguven/projects/metalloenzymes/dft//ligand_8/01_minimisation//em.gro'
+    does not exist or is not accessible.
+    The file could not be opened.
+      Reason: No such file or directory
+      (call to fopen() returned error code 2)
+  In command-line option -p
+    File
+    '/home/jguven/projects/metalloenzymes/dft//ligand_8/01_minimisation//vim2_solv.top'
+    does not exist or is not accessible.
+    The file could not be opened.
+      Reason: No such file or directory
+      (call to fopen() returned error code 2)
+
+For more information and tips for troubleshooting, please check the GROMACS
+website at http://www.gromacs.org/Documentation/Errors
+-------------------------------------------------------
+                      :-) GROMACS - gmx mdrun, 2022.4 (-:
+
+Executable:   /usr/local/gromacs/bin/gmx
+Data prefix:  /usr/local/gromacs
+Working dir:  /home/jguven/projects/metalloenzymes/dft/ligand_8/02_nvt
+Command line:
+  gmx mdrun -ntmpi 1 -v -deffnm nvt
+
+
+-------------------------------------------------------
+Program:     gmx mdrun, version 2022.4
+Source file: src/gromacs/options/options.cpp (line 177)
+Function:    void gmx::internal::OptionSectionImpl::finish()
+
+Error in user input:
+Invalid input values
+  In option s
+    Required option was not provided, and the default file 'topol' does not
+    exist or is not accessible.
+    The following extensions were tried to complete the file name:
+      .tpr
+
+For more information and tips for troubleshooting, please check the GROMACS
+website at http://www.gromacs.org/Documentation/Errors
+-------------------------------------------------------
+srun: error: pluto: task 0: Exited with exit code 1
+                      :-) GROMACS - gmx grompp, 2022.4 (-:
+
+Executable:   /usr/local/gromacs/bin/gmx
+Data prefix:  /usr/local/gromacs
+Working dir:  /home/jguven/projects/metalloenzymes/dft/ligand_8/03_npt
+Command line:
+  gmx grompp -f npt.mdp -c /home/jguven/projects/metalloenzymes/dft//ligand_8/02_nvt//nvt.gro -r /home/jguven/projects/metalloenzymes/dft//ligand_8/02_nvt//nvt.gro -t /home/jguven/projects/metalloenzymes/dft//ligand_8/02_nvt//nvt.cpt -p /home/jguven/projects/metalloenzymes/dft//ligand_8/01_minimisation//vim2_solv.top -o npt.tpr -maxwarn 1
+
+
+-------------------------------------------------------
+Program:     gmx grompp, version 2022.4
+Source file: src/gromacs/commandline/cmdlineparser.cpp (line 271)
+Function:    void gmx::CommandLineParser::parse(int*, char**)
+
+Error in user input:
+Invalid command-line options
+  In command-line option -c
+    File '/home/jguven/projects/metalloenzymes/dft//ligand_8/02_nvt//nvt.gro'
+    does not exist or is not accessible.
+    The file could not be opened.
+      Reason: No such file or directory
+      (call to fopen() returned error code 2)
+  In command-line option -r
+    File '/home/jguven/projects/metalloenzymes/dft//ligand_8/02_nvt//nvt.gro'
+    does not exist or is not accessible.
+    The file could not be opened.
+      Reason: No such file or directory
+      (call to fopen() returned error code 2)
+  In command-line option -t
+    File '/home/jguven/projects/metalloenzymes/dft//ligand_8/02_nvt//nvt.cpt'
+    does not exist or is not accessible.
+    The file could not be opened.
+      Reason: No such file or directory
+      (call to fopen() returned error code 2)
+  In command-line option -p
+    File
+    '/home/jguven/projects/metalloenzymes/dft//ligand_8/01_minimisation//vim2_solv.top'
+    does not exist or is not accessible.
+    The file could not be opened.
+      Reason: No such file or directory
+      (call to fopen() returned error code 2)
+
+For more information and tips for troubleshooting, please check the GROMACS
+website at http://www.gromacs.org/Documentation/Errors
+-------------------------------------------------------
+                      :-) GROMACS - gmx mdrun, 2022.4 (-:
+
+Executable:   /usr/local/gromacs/bin/gmx
+Data prefix:  /usr/local/gromacs
+Working dir:  /home/jguven/projects/metalloenzymes/dft/ligand_8/03_npt
+Command line:
+  gmx mdrun -ntmpi 1 -v -deffnm npt
+
+
+-------------------------------------------------------
+Program:     gmx mdrun, version 2022.4
+Source file: src/gromacs/options/options.cpp (line 177)
+Function:    void gmx::internal::OptionSectionImpl::finish()
+
+Error in user input:
+Invalid input values
+  In option s
+    Required option was not provided, and the default file 'topol' does not
+    exist or is not accessible.
+    The following extensions were tried to complete the file name:
+      .tpr
+
+For more information and tips for troubleshooting, please check the GROMACS
+website at http://www.gromacs.org/Documentation/Errors
+-------------------------------------------------------
+srun: error: pluto: task 0: Exited with exit code 1
+                      :-) GROMACS - gmx grompp, 2022.4 (-:
+
+Executable:   /usr/local/gromacs/bin/gmx
+Data prefix:  /usr/local/gromacs
+Working dir:  /home/jguven/projects/metalloenzymes/dft/ligand_8/04_md
+Command line:
+  gmx grompp -f md.mdp -c /home/jguven/projects/metalloenzymes/dft//ligand_8/03_npt//npt.gro -t /home/jguven/projects/metalloenzymes/dft//ligand_8/03_npt//npt.cpt -p /home/jguven/projects/metalloenzymes/dft//ligand_8/01_minimisation//vim2_solv.top -o md.tpr
+
+
+-------------------------------------------------------
+Program:     gmx grompp, version 2022.4
+Source file: src/gromacs/commandline/cmdlineparser.cpp (line 271)
+Function:    void gmx::CommandLineParser::parse(int*, char**)
+
+Error in user input:
+Invalid command-line options
+  In command-line option -c
+    File '/home/jguven/projects/metalloenzymes/dft//ligand_8/03_npt//npt.gro'
+    does not exist or is not accessible.
+    The file could not be opened.
+      Reason: No such file or directory
+      (call to fopen() returned error code 2)
+  In command-line option -t
+    File '/home/jguven/projects/metalloenzymes/dft//ligand_8/03_npt//npt.cpt'
+    does not exist or is not accessible.
+    The file could not be opened.
+      Reason: No such file or directory
+      (call to fopen() returned error code 2)
+  In command-line option -p
+    File
+    '/home/jguven/projects/metalloenzymes/dft//ligand_8/01_minimisation//vim2_solv.top'
+    does not exist or is not accessible.
+    The file could not be opened.
+      Reason: No such file or directory
+      (call to fopen() returned error code 2)
+
+For more information and tips for troubleshooting, please check the GROMACS
+website at http://www.gromacs.org/Documentation/Errors
+-------------------------------------------------------
+                      :-) GROMACS - gmx mdrun, 2022.4 (-:
+
+Executable:   /usr/local/gromacs/bin/gmx
+Data prefix:  /usr/local/gromacs
+Working dir:  /home/jguven/projects/metalloenzymes/dft/ligand_8/04_md
+Command line:
+  gmx mdrun -ntmpi 1 -v -deffnm md
+
+
+-------------------------------------------------------
+Program:     gmx mdrun, version 2022.4
+Source file: src/gromacs/options/options.cpp (line 177)
+Function:    void gmx::internal::OptionSectionImpl::finish()
+
+Error in user input:
+Invalid input values
+  In option s
+    Required option was not provided, and the default file 'topol' does not
+    exist or is not accessible.
+    The following extensions were tried to complete the file name:
+      .tpr
+
+For more information and tips for troubleshooting, please check the GROMACS
+website at http://www.gromacs.org/Documentation/Errors
+-------------------------------------------------------
+srun: error: pluto: task 0: Exited with exit code 1

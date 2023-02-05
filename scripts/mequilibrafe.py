@@ -109,12 +109,13 @@ for i in range(n_ligands):
                                                         ligand_minimisation_protocol,
                                                         name="min",
                                                         work_dir=ligand_min_unbound_dir)
-    fn.edit_mdp_options(ligand_min_unbound_dir, "min", {"emstep": 0.001, "emtol": 1000})
+    # fn.edit_mdp_options(ligand_min_unbound_dir, "min", {"emstep": 0.001, "emtol": 1000})
+    
     min_sp = sp.run(["sh", f"{ligand_min_unbound_dir}/{ligand_min_script}"], capture_output=True, text=True)
     fn.write_log_file(ligand_min_unbound_dir, ligand_number, "min", min_sp)
 
     minimised_ligand = bss.IO.readMolecules([f"{ligand_min_unbound_dir}/min.gro",
-                                            f"{ligand_min_unbound_dir}/min.top"])
+                                             f"{ligand_min_unbound_dir}/min.top"])
 
     with open(f"{ligand_min_unbound_dir}/min.log", "r") as file:
         min_log_lines = file.readlines()

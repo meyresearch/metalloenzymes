@@ -1,44 +1,44 @@
-lig_2~lig_4
--0.8489 kcal/mol ± 0.1086 kcal/mol kcal mol⁻¹ 
-lig_6~lig_7
-The temperature was not detected in the GROMACS output file, ../kpc2/outputs/GROMACS/lig_6~lig_7/unbound/lambda_1.0000/gromacs.xvg
-lig_10~lig_8
-1.9500 kcal/mol ± 0.1467 kcal/mol kcal mol⁻¹ 
-lig_6~lig_8
-The temperature was not detected in the GROMACS output file, ../kpc2/outputs/GROMACS/lig_6~lig_8/unbound/lambda_1.0000/gromacs.xvg
-lig_10~lig_4
--0.9539 kcal/mol ± 0.1172 kcal/mol kcal mol⁻¹ 
-lig_9~lig_10
-The temperature was not detected in the GROMACS output file, ../kpc2/outputs/GROMACS/lig_9~lig_10/unbound/lambda_0.0625/gromacs.xvg
-lig_13~lig_7
-The temperature was not detected in the GROMACS output file, ../kpc2/outputs/GROMACS/lig_13~lig_7/unbound/lambda_0.2000/gromacs.xvg
-lig_13~lig_6
-0.5651 kcal/mol ± 0.1719 kcal/mol kcal mol⁻¹ 
-lig_16~lig_9
-0.3243 kcal/mol ± 0.0816 kcal/mol kcal mol⁻¹ 
-lig_16~lig_10
-The temperature was not detected in the GROMACS output file, ../kpc2/outputs/GROMACS/lig_16~lig_10/bound/lambda_0.0625/gromacs.xvg
-lig_11~lig_15
-The temperature was not detected in the GROMACS output file, ../kpc2/outputs/GROMACS/lig_11~lig_15/bound/lambda_0.4000/gromacs.xvg
-lig_1~lig_2
-1.5150 kcal/mol ± 0.0865 kcal/mol kcal mol⁻¹ 
-lig_12~lig_15
--0.1608 kcal/mol ± 0.0587 kcal/mol kcal mol⁻¹ 
-lig_4~lig_6
-The temperature was not detected in the GROMACS output file, ../kpc2/outputs/GROMACS/lig_4~lig_6/bound/lambda_0.6000/gromacs.xvg
-lig_15~lig_5
-The temperature was not detected in the GROMACS output file, ../kpc2/outputs/GROMACS/lig_15~lig_5/bound/lambda_1.0000/gromacs.xvg
-lig_12~lig_14
-The temperature was not detected in the GROMACS output file, ../kpc2/outputs/GROMACS/lig_12~lig_14/bound/lambda_0.3000/gromacs.xvg
-lig_15~lig_9
-The temperature was not detected in the GROMACS output file, ../kpc2/outputs/GROMACS/lig_15~lig_9/unbound/lambda_0.1250/gromacs.xvg
 lig_11~lig_5
-1.7810 kcal/mol ± 0.2134 kcal/mol kcal mol⁻¹ 
-lig_14~lig_15
-The temperature was not detected in the GROMACS output file, ../kpc2/outputs/GROMACS/lig_14~lig_15/bound/lambda_0.2000/gromacs.xvg
+-0.5248 kcal/mol ± 0.2008 kcal/mol kcal mol⁻¹ 
 lig_1~lig_4
--0.8922 kcal/mol ± 0.1158 kcal/mol kcal mol⁻¹ 
+4.9103 kcal/mol ± 9.5499 kcal/mol kcal mol⁻¹ 
+lig_16~lig_9
+-0.4645 kcal/mol ± 0.1635 kcal/mol kcal mol⁻¹ 
+lig_11~lig_15
+-0.6591 kcal/mol ± 0.2039 kcal/mol kcal mol⁻¹ 
+lig_13~lig_7
+0.2037 kcal/mol ± 0.2597 kcal/mol kcal mol⁻¹ 
+lig_1~lig_2
+0.8296 kcal/mol ± 0.2050 kcal/mol kcal mol⁻¹ 
 lig_3~lig_6
-The temperature was not detected in the GROMACS output file, ../kpc2/outputs/GROMACS/lig_3~lig_6/unbound/lambda_0.3750/gromacs.xvg
+0.6587 kcal/mol ± 0.0623 kcal/mol kcal mol⁻¹ 
+lig_2~lig_4
+-1.8910 kcal/mol ± 0.0928 kcal/mol kcal mol⁻¹ 
+lig_15~lig_9
+1.0148 kcal/mol ± 0.2014 kcal/mol kcal mol⁻¹ 
+lig_15~lig_5
+0.0436 kcal/mol ± 0.0327 kcal/mol kcal mol⁻¹ 
 lig_13~lig_3
--0.4257 kcal/mol ± 0.0684 kcal/mol kcal mol⁻¹ 
+-0.3293 kcal/mol ± 0.1697 kcal/mol kcal mol⁻¹ 
+lig_6~lig_8
+0.7149 kcal/mol ± 0.0898 kcal/mol kcal mol⁻¹ 
+lig_4~lig_6
+-0.1178 kcal/mol ± 0.1641 kcal/mol kcal mol⁻¹ 
+lig_12~lig_15
+-0.2668 kcal/mol ± 291.1503 kcal/mol kcal mol⁻¹ 
+lig_10~lig_4
+-1.4619 kcal/mol ± 0.0981 kcal/mol kcal mol⁻¹ 
+lig_14~lig_15
+-5.0245 kcal/mol ± 0.0948 kcal/mol kcal mol⁻¹ 
+lig_6~lig_7
+0.4613 kcal/mol ± 0.0889 kcal/mol kcal mol⁻¹ 
+lig_10~lig_8
+0.4217 kcal/mol ± 0.2743 kcal/mol kcal mol⁻¹ 
+lig_9~lig_10
+0.7874 kcal/mol ± 0.3257 kcal/mol kcal mol⁻¹ 
+lig_13~lig_6
+-0.6034 kcal/mol ± 0.2133 kcal/mol kcal mol⁻¹ 
+lig_16~lig_10
+-0.7161 kcal/mol ± 0.2348 kcal/mol kcal mol⁻¹ 
+lig_12~lig_14
+-1.6701 kcal/mol ± 0.1480 kcal/mol kcal mol⁻¹ 
