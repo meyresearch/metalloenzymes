@@ -1,0 +1,44 @@
+lig_11~lig_5
+0.4641 kcal/mol ± 0.2021 kcal/mol 
+lig_1~lig_4
+-0.2040 kcal/mol ± 0.1549 kcal/mol 
+lig_16~lig_9
+-0.3937 kcal/mol ± 0.1659 kcal/mol 
+lig_11~lig_15
+0.7913 kcal/mol ± 0.2098 kcal/mol 
+lig_13~lig_7
+2.2428 kcal/mol ± 0.4870 kcal/mol 
+lig_1~lig_2
+0.3002 kcal/mol ± 0.2401 kcal/mol 
+lig_3~lig_6
+0.4084 kcal/mol ± 0.0997 kcal/mol 
+lig_2~lig_4
+-1.0165 kcal/mol ± 0.4050 kcal/mol 
+lig_15~lig_9
+1.5231 kcal/mol ± 0.2152 kcal/mol 
+lig_15~lig_5
+-0.7385 kcal/mol ± 0.0337 kcal/mol 
+lig_13~lig_3
+-0.5170 kcal/mol ± 0.2369 kcal/mol 
+lig_6~lig_8
+0.5747 kcal/mol ± 0.1546 kcal/mol 
+lig_4~lig_6
+-0.4056 kcal/mol ± 0.2291 kcal/mol 
+lig_12~lig_15
+-1.9072 kcal/mol ± 0.2548 kcal/mol 
+lig_10~lig_4
+-0.6541 kcal/mol ± 0.1809 kcal/mol 
+lig_14~lig_15
+-0.6039 kcal/mol ±   nan kcal/mol 
+lig_6~lig_7
+0.5406 kcal/mol ± 0.1803 kcal/mol 
+lig_10~lig_8
+1.0597 kcal/mol ± 0.2556 kcal/mol 
+lig_9~lig_10
+0.0990 kcal/mol ± 0.1887 kcal/mol 
+lig_13~lig_6
+0.8435 kcal/mol ± 0.2614 kcal/mol 
+lig_16~lig_10
+1.2695 kcal/mol ± 0.1632 kcal/mol 
+lig_12~lig_14
+-69.1050 kcal/mol ± 388.8245 kcal/mol 

@@ -1,7 +1,8 @@
 import warnings
-warnings.filterwarnings("ignore")
-import argparse
+warnings.filterwarnings("ignore", category=UserWarning)
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 import BioSimSpace as bss
+import argparse
 import os
 import subprocess as sp
 import sys
@@ -30,111 +31,27 @@ def check_positive_integer(input):
         print(message)
     return value
 
-# DEPRECATED
-def change_barostat(system: bss._SireWrappers._system.System,
-                    protocol: bss.Protocol._equilibration.Equilibration,
-                    work_directory: str,
-                    process_name: str) -> None:
+
+def run_process(system, protocol, process_name, working_directory, configuration=None):
     """
-    Change barostat in .mdp file for NPT runs
-    @param: system
-    @param: protocol
-    @param: work_directory
-    @param: process name
-    @return: None
+    Given a solvated system (BSS object) and BSS protocol, run a process workflow with either 
+    Sander (CPU) or pmemd.cuda (GPU). NPT is typically done with GPU to save computing time.
+    Returns the processed system.
+    Adapted from https://github.com/michellab/BioSimSpaceTutorials/blob/c9fdc046e7204f15c4fe5ac6667e562bf9677667/04_fep/fep_archiv/execution_model/scripts/BSSligprep.py
     """
-    try:
-        bss.Process.Gromacs(system,
-                            protocol,
-                            name=process_name,
-                            work_dir=work_directory)
-    except RuntimeError:
+    process = bss.Process.Gromacs(system, protocol, name=process_name, work_dir=working_directory)
+    if configuration:
+        process.setConfig(configuration)
+    process.setArg("-ntmpi", 1)
+    process.start()
+    process.wait()
+    if process.isError():
+        print(process.stdout())
+        print(process.stderr())
+        raise _Exceptions.ThirdPartyError("The process exited with an error!")
+    system = process.getSystem()
+    return system
 
-        with open(f"{work_directory}/{process_name}.mdp", "r") as mdp:
-            lines = mdp.read()
-
-        new_lines = lines.replace("pcoupl = berendsen", "pcoupl = C-rescale")
-        with open(f"{work_directory}/{process_name}.mdp", "w") as mdp:
-            mdp.write(new_lines)
-
-
-def dict_from_mdp(mdp_file: str) -> dict:
-    """
-    Open an mdp file and save into a dictionary
-    """
-    dictionary = {}
-    with open(mdp_file) as mdp:
-        for line in mdp:
-            if "fep-lambdas" in line or "annealing-time" in line or "annealing-temp" in line:
-                clean_line = line.replace("\n", "").strip(" ")
-            else:
-                clean_line = line.replace(" ", "").replace("\n", "")
-            (key, value) = clean_line.split("=")
-            dictionary[key] = value
-    return dictionary
-
-
-# COMBINE THIS AND edit_mdp_options TO ONE FUNCTION IN FUTURE
-def lambda_mdps(mdp_file: str, save_directory: str, process_name: str, options: dict):
-    """
-    Open AFE mdp file and save the equilibration mdp file to each lambda window folder
-    """
-    dictionary = dict_from_mdp(mdp_file)
-    for key, value in options.items():
-        dictionary[key] = value
-
-    with open(f"{save_directory}/{process_name}.mdp", "w") as mdp:
-        for key, value in dictionary.items():
-            mdp.write(f"{key} = {value}\n")
-
-
-def edit_mdp_options(work_dir: str, process_name: str, options: dict):
-    """
-    Write an mdp files
-    """
-    with open(f"{work_dir}/{process_name}.mdp", "r") as mdp:
-        mdp_lines = mdp.readlines()
-
-    get_mdp_options = lambda index: [line.split("=")[index].lstrip().rstrip().strip("\n") for line in mdp_lines]
-    mdp_keys = get_mdp_options(0)
-    mdp_values = get_mdp_options(-1)
-
-    change_indices = [mdp_keys.index(key) for key in options.keys() if key in mdp_keys]
-
-    for i in change_indices:
-        for key, value in options.items():
-            if key in mdp_keys:
-                mdp_values[i] = value
-
-    for key, value in options.items():
-        if key not in mdp_keys:
-            formatted_key = key
-            formatted_value = str(value)
-            mdp_keys.append(formatted_key)
-            mdp_values.append(formatted_value) 
-    
-    with open(f"{work_dir}/{process_name}.mdp", "w") as mdp:
-        for i in range(len(mdp_keys)):
-            mdp.write(f"{mdp_keys[i]} = {mdp_values[i]}\n")
-
-
-def write_script(work_dir: str, process_name: str, gpu_id: str, restrained=False, previous="") -> str:
-    script_name = work_dir + "/" + process_name + ".sh"
-    with open(script_name, "w") as script:
-        script.write("#!/bin/bash \n")
-        script.write(f"cd {work_dir} \n")
-        if not restrained and previous == "":
-            script.write(f"gmx grompp -f {process_name}.mdp -c {process_name}.gro -p {process_name}.top -o {process_name}.tpr \n")
-        elif restrained and previous == "min" or previous == "min_2": 
-            script.write(f"gmx grompp -f {process_name}.mdp -c ../{previous}/{previous}.gro -r ../{previous}/{previous}.gro -p {process_name}.top -o {process_name}.tpr \n")
-        elif not restrained and previous != "":
-            script.write(f"gmx grompp -f {process_name}.mdp -c ../{previous}/{previous}.gro -p {process_name}.top -t ../{previous}/{previous}.cpt -o {process_name}.tpr \n")
-        elif restrained and previous != "":
-            script.write(f"gmx grompp -f {process_name}.mdp -c ../{previous}/{previous}.gro -r ../{previous}/{previous}.gro -p {process_name}.top -t ../{previous}/{previous}.cpt -o {process_name}.tpr \n") 
-        script.write(f"gmx mdrun -v -deffnm {process_name} -nt 1 -nb gpu -gpu_id {gpu_id}")
-    os.system(f"chmod +x {script_name}")
-    executable = script_name.split("/")[-1]
-    return executable
 
 
 def write_log_file(work_dir: str, ligand_number: str, process_name: str, subprocess: sp.CompletedProcess) -> None:
@@ -188,3 +105,111 @@ def is_file(file: str) -> None:
     if not os.path.isfile(file):
         print(f"The file {file} does not exist")
         sys.exit()
+
+
+# DEPRECATED
+def change_barostat(system: bss._SireWrappers._system.System,
+                    protocol: bss.Protocol._equilibration.Equilibration,
+                    work_directory: str,
+                    process_name: str) -> None:
+    """
+    Change barostat in .mdp file for NPT runs
+    @param: system
+    @param: protocol
+    @param: work_directory
+    @param: process name
+    @return: None
+    """
+    try:
+        bss.Process.Gromacs(system,
+                            protocol,
+                            name=process_name,
+                            work_dir=work_directory)
+    except RuntimeError:
+
+        with open(f"{work_directory}/{process_name}.mdp", "r") as mdp:
+            lines = mdp.read()
+
+        new_lines = lines.replace("pcoupl = berendsen", "pcoupl = C-rescale")
+        with open(f"{work_directory}/{process_name}.mdp", "w") as mdp:
+            mdp.write(new_lines)
+
+# DEPRECATED
+def dict_from_mdp(mdp_file: str) -> dict:
+    """
+    Open an mdp file and save into a dictionary
+    """
+    dictionary = {}
+    with open(mdp_file) as mdp:
+        for line in mdp:
+            if "fep-lambdas" in line or "annealing-time" in line or "annealing-temp" in line:
+                clean_line = line.replace("\n", "").strip(" ")
+            else:
+                clean_line = line.replace(" ", "").replace("\n", "")
+            (key, value) = clean_line.split("=")
+            dictionary[key] = value
+    return dictionary
+
+
+# COMBINE THIS AND edit_mdp_options TO ONE FUNCTION IN FUTURE
+def lambda_mdps(mdp_file: str, save_directory: str, process_name: str, options: dict):
+    """
+    Open AFE mdp file and save the equilibration mdp file to each lambda window folder
+    """
+    dictionary = dict_from_mdp(mdp_file)
+    for key, value in options.items():
+        dictionary[key] = value
+
+    with open(f"{save_directory}/{process_name}.mdp", "w") as mdp:
+        for key, value in dictionary.items():
+            mdp.write(f"{key} = {value}\n")
+
+# DEPRECATED
+def edit_mdp_options(work_dir: str, process_name: str, options: dict):
+    """
+    Write an mdp files
+    """
+    with open(f"{work_dir}/{process_name}.mdp", "r") as mdp:
+        mdp_lines = mdp.readlines()
+
+    get_mdp_options = lambda index: [line.split("=")[index].lstrip().rstrip().strip("\n") for line in mdp_lines]
+    mdp_keys = get_mdp_options(0)
+    mdp_values = get_mdp_options(-1)
+
+    change_indices = [mdp_keys.index(key) for key in options.keys() if key in mdp_keys]
+
+    for i in change_indices:
+        for key, value in options.items():
+            if key in mdp_keys:
+                mdp_values[i] = value
+
+    for key, value in options.items():
+        if key not in mdp_keys:
+            formatted_key = key
+            formatted_value = str(value)
+            mdp_keys.append(formatted_key)
+            mdp_values.append(formatted_value) 
+    
+    with open(f"{work_dir}/{process_name}.mdp", "w") as mdp:
+        for i in range(len(mdp_keys)):
+            mdp.write(f"{mdp_keys[i]} = {mdp_values[i]}\n")
+
+# DEPRECATED
+def write_script(work_dir: str, process_name: str, gpu_id: str, restrained=False, previous="") -> str:
+    script_name = work_dir + "/" + process_name + ".sh"
+    with open(script_name, "w") as script:
+        script.write("#!/bin/bash \n")
+        script.write(f"cd {work_dir} \n")
+        if not restrained and previous == "":
+            script.write(f"gmx grompp -f {process_name}.mdp -c {process_name}.gro -p {process_name}.top -o {process_name}.tpr \n")
+        elif restrained and previous == "min" or previous == "min_2": 
+            script.write(f"gmx grompp -f {process_name}.mdp -c ../{previous}/{previous}.gro -r ../{previous}/{previous}.gro -p {process_name}.top -o {process_name}.tpr \n")
+        elif not restrained and previous != "":
+            script.write(f"gmx grompp -f {process_name}.mdp -c ../{previous}/{previous}.gro -p {process_name}.top -t ../{previous}/{previous}.cpt -o {process_name}.tpr \n")
+        elif restrained and previous != "":
+            script.write(f"gmx grompp -f {process_name}.mdp -c ../{previous}/{previous}.gro -r ../{previous}/{previous}.gro -p {process_name}.top -t ../{previous}/{previous}.cpt -o {process_name}.tpr \n") 
+        script.write(f"gmx mdrun -v -deffnm {process_name} -nt 1 -nb gpu -gpu_id {gpu_id}")
+    os.system(f"chmod +x {script_name}")
+    executable = script_name.split("/")[-1]
+    return executable
+
