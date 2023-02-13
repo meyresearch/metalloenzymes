@@ -117,15 +117,15 @@ for i in range(n_transformations):
     #                                      f"{bound_path}/system_{ligand_2_number}/npt/npt.rst7"])
     # else:
 
-    ligand_1_system = bss.IO.readMolecules([f"{unbound_path}/ligand_{ligand_1_number}/npt/npt.gro",
-                                            f"{unbound_path}/ligand_{ligand_1_number}/npt/npt.top"])
-    ligand_2_system = bss.IO.readMolecules([f"{unbound_path}/ligand_{ligand_2_number}/npt/npt.gro",
-                                            f"{unbound_path}/ligand_{ligand_2_number}/npt/npt.top"])
+    ligand_1_system = bss.IO.readMolecules([f"{unbound_path}/ligand_{ligand_1_number}/npt/ligand_{ligand_1_number}.prm7",
+                                            f"{unbound_path}/ligand_{ligand_1_number}/npt/ligand_{ligand_1_number}.rst7"])
+    ligand_2_system = bss.IO.readMolecules([f"{unbound_path}/ligand_{ligand_2_number}/npt/ligand_{ligand_2_number}.prm7",
+                                            f"{unbound_path}/ligand_{ligand_2_number}/npt/ligand_{ligand_2_number}.rst7"])
 
-    system_1 = bss.IO.readMolecules([f"{bound_path}/system_{ligand_1_number}/npt/npt.gro",
-                                        f"{bound_path}/system_{ligand_1_number}/npt/npt.top"])
-    system_2 = bss.IO.readMolecules([f"{bound_path}/system_{ligand_2_number}/npt/npt.gro",
-                                        f"{bound_path}/system_{ligand_2_number}/npt/npt.top"])
+    system_1 = bss.IO.readMolecules([f"{bound_path}/system_{ligand_1_number}/npt/system_{ligand_1_number}.prm7",
+                                        f"{bound_path}/system_{ligand_1_number}/npt/system_{ligand_1_number}.rst7"])
+    system_2 = bss.IO.readMolecules([f"{bound_path}/system_{ligand_2_number}/npt/system_{ligand_2_number}.prm7",
+                                        f"{bound_path}/system_{ligand_2_number}/npt/system_{ligand_2_number}.rst7"])
 
     ligand_1 = ligand_1_system.getMolecule(0)
     ligand_2 = ligand_2_system.getMolecule(0)

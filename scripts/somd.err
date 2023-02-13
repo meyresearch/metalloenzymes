@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "/home/jguven/Software/miniconda3/envs/bss-d/share/Sire/scripts/somd-freenrg.py", line 87, in <module>
+    params = readParams(args.config)
+  File "/home/jguven/Software/miniconda3/envs/bss-d/lib/python3.9/site-packages/Sire/Tools/__init__.py", line 25, in readParams
+    lines = open(filename, "r").readlines()
+FileNotFoundError: [Errno 2] No such file or directory: './somd.cfg'
