@@ -52,7 +52,12 @@ scripts/__pycache__/*
 kpc2/outputs/GROMACS/lig_2~lig_4.zip
 kpc2/outputs/SOMD/*/*/*/*/*
 kpc2/outputs/GROMACS/*/*/*/*/*
+kpc2/outputs/SOMD/*/*/*/*
+
 *.nc
 *.agr
 *.out
 *mdcrd.*
+slurm_logs/*
+scripts/test_min/*
+dft/nonbonded/ligand_1/*
