@@ -83,30 +83,31 @@ ligand_npt_unbound_dir = fn.create_dirs(f"{ligand_work_dir}/npt")
 
 solvated_ligand_files = glob.glob(ligand_path + f"ligand_{ligand_number}_solvated.*")
 solvated_ligand = bss.IO.readMolecules(solvated_ligand_files)
-
+print("Minimisation")
 ligand_minimisation_protocol = bss.Protocol.Minimisation(steps=minimisation_steps)
 minimised_ligand = fn.run_process(system=solvated_ligand, 
                                   protocol=ligand_minimisation_protocol, 
                                   process_name="min", 
                                   working_directory=ligand_min_unbound_dir,
                                   configuration=["emstep = 0.001", "emtol = 1000"])
-                                            
+print("R-NVT")
 ligand_r_nvt_protocol = bss.Protocol.Equilibration(runtime=runtime_short_nvt,
                                                    temperature_start=0*kelvin,
                                                    temperature_end=300*kelvin,
                                                    restraint="all")
+
 restrained_nvt_ligand = fn.run_process(system=minimised_ligand,
                                        protocol=ligand_r_nvt_protocol,
                                        process_name="r_nvt",
                                        working_directory=ligand_r_nvt_unbound_dir,
                                        configuration=["dt = 0.0005"])
-
+print("NVT")
 ligand_nvt_protocol = bss.Protocol.Equilibration(runtime=runtime_nvt, temperature=300*kelvin)
 ligand_nvt = fn.run_process(system=restrained_nvt_ligand,
                             protocol=ligand_nvt_protocol,
                             process_name="nvt",
                             working_directory=ligand_nvt_unbound_dir)
-
+print("R-NPT")
 ligand_r_npt_protocol = bss.Protocol.Equilibration(runtime=runtime_npt,
                                                    pressure=1*atm,
                                                    temperature=300*kelvin,
@@ -116,7 +117,7 @@ restrained_npt_ligand = fn.run_process(system=ligand_nvt,
                                        process_name="r_npt",
                                        working_directory=ligand_r_npt_unbound_dir)
 
-
+print("NPT")
 ligand_npt_protocol = bss.Protocol.Equilibration(runtime=runtime_npt,
                                                  pressure=1*atm,
                                                  temperature=300*kelvin)   

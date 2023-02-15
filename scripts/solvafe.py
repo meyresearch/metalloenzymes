@@ -22,7 +22,7 @@ parser.add_argument("protein",
 parser.add_argument("-c",
                     "--charge",
                     help="ligand net charge",
-                    type=fn.check_positive_integer,
+                    type=fn.check_charge,
                     default=0)
 
 parser.add_argument("-fi",

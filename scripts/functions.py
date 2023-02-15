@@ -1,6 +1,3 @@
-import warnings
-warnings.filterwarnings("ignore", category=UserWarning)
-warnings.filterwarnings("ignore", category=DeprecationWarning)
 import BioSimSpace as bss
 import argparse
 import os
@@ -17,6 +14,14 @@ def check_positive_float(input):
         print(f"Error: input value {input} should be a number")
     except argparse.ArgumentTypeError as message:
         print(message)
+    return value
+
+
+def check_charge(input):
+    try:
+        value = int(input)
+    except ValueError:
+        print("Error: charge should be an integer")
     return value
 
 
@@ -40,15 +45,24 @@ def run_process(system, protocol, process_name, working_directory, configuration
     Adapted from https://github.com/michellab/BioSimSpaceTutorials/blob/c9fdc046e7204f15c4fe5ac6667e562bf9677667/04_fep/fep_archiv/execution_model/scripts/BSSligprep.py
     """
     process = bss.Process.Gromacs(system, protocol, name=process_name, work_dir=working_directory)
+    config = process.getConfig()
     if configuration:
-        process.setConfig(configuration)
+        for setting in configuration:
+            key = setting.split()[0]
+            try:
+                index = [i for i, string in enumerate(config) if key in string][0]
+                config[index] = setting
+                process.setConfig(config)
+            except IndexError:
+                process.addToConfig(setting)
+                config = process.getConfig()
     process.setArg("-ntmpi", 1)
     process.start()
     process.wait()
     if process.isError():
         print(process.stdout())
         print(process.stderr())
-        raise _Exceptions.ThirdPartyError("The process exited with an error!")
+        raise bss._Exceptions.ThirdPartyError("The process exited with an error!")
     system = process.getSystem()
     return system
 

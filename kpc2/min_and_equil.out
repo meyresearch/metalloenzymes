@@ -19,35 +19,16 @@
 /home/jguven/Software/miniconda3/envs/bss-d/lib/python3.9/site-packages/setuptools/_distutils/version.py:346: DeprecationWarning: distutils Version classes are deprecated. Use packaging.version instead.
   other = LooseVersion(other)
 Warning: importing 'simtk.openmm' is deprecated.  Import 'openmm' instead.
-/home/jguven/Software/amber22/lib/python3.10/site-packages/parmed/formats/pdbx/PdbxReader.py:330: DeprecationWarning: invalid escape sequence \S
-  "(?:_(.+?)[.](\S+))"               "|"  # _category.attribute
-/home/jguven/Software/amber22/lib/python3.10/site-packages/parmed/formats/pdbx/PdbxReader.py:332: DeprecationWarning: invalid escape sequence \s
-  "(?:['](.*?)(?:[']\s|[']$))"       "|"  # single quoted strings
-/home/jguven/Software/amber22/lib/python3.10/site-packages/parmed/formats/pdbx/PdbxReader.py:333: DeprecationWarning: invalid escape sequence \s
-  "(?:[\"](.*?)(?:[\"]\s|[\"]$))"    "|"  # double quoted strings
-/home/jguven/Software/amber22/lib/python3.10/site-packages/parmed/formats/pdbx/PdbxReader.py:335: DeprecationWarning: invalid escape sequence \s
-  "(?:\s*#.*$)"                      "|"  # comments (dumped)
-/home/jguven/Software/amber22/lib/python3.10/site-packages/parmed/formats/pdbx/PdbxReader.py:337: DeprecationWarning: invalid escape sequence \S
-  "(\S+)"                                 # unquoted words
-/home/jguven/Software/amber22/lib/python3.10/site-packages/parmed/formats/pdbx/PdbxReader.py:402: DeprecationWarning: invalid escape sequence \S
-  "(?:_(.+?)[.](\S+))"               "|"  # _category.attribute
-/home/jguven/Software/amber22/lib/python3.10/site-packages/parmed/formats/pdbx/PdbxReader.py:404: DeprecationWarning: invalid escape sequence \s
-  "(?:['\"](.*?)(?:['\"]\s|['\"]$))" "|"  # quoted strings
-/home/jguven/Software/amber22/lib/python3.10/site-packages/parmed/formats/pdbx/PdbxReader.py:406: DeprecationWarning: invalid escape sequence \s
-  "(?:\s*#.*$)"                      "|"  # comments (dumped)
-/home/jguven/Software/amber22/lib/python3.10/site-packages/parmed/formats/pdbx/PdbxReader.py:408: DeprecationWarning: invalid escape sequence \S
-  "(\S+)"                                 # unquoted words
-/home/jguven/Software/amber22/lib/python3.10/site-packages/parmed/amber/parameters.py:40: DeprecationWarning: invalid escape sequence \s
-  '%(FLOATRE)s\s+%(FLOATRE)s\s+%(FLOATRE)s' % subs)
-/home/jguven/Software/amber22/lib/python3.10/site-packages/parmed/amber/parameters.py:46: DeprecationWarning: invalid escape sequence \s
-  '%(FLOATRE)s\s+%(FLOATRE)s\s+%(FLOATRE)s' % subs)
 /home/jguven/Software/miniconda3/envs/bss-d/lib/python3.9/site-packages/jupyter_client/connect.py:27: DeprecationWarning: Jupyter is migrating its paths to use standard platformdirs
 given by the platformdirs library.  To remove this warning and
 see the appropriate new directories, set the environment variable
 `JUPYTER_PLATFORM_DIRS=1` and then run `jupyter --paths`.
 The use of platformdirs will be the default in `jupyter_core` v6
   from jupyter_core.paths import jupyter_data_dir
-Processing unbound stage.
+usage: mequilibrafe.py [-h] [-m MINIMISATION_STEPS] [-s SHORT_NVT_RUNTIME]
+                       [-nvt NVT_RUNTIME] [-npt NPT_RUNTIME]
+                       system ligand_number
+mequilibrafe.py: error: the following arguments are required: ligand_number
 
 ==============================================================
 Sending anonymous Sire usage statistics to http://siremol.org.
@@ -58,4 +39,3 @@ SIRE_VERBOSE_PHONEHOME equal to 1. To silence this message, set
 the environment variable SIRE_SILENT_PHONEHOME to 1.
 ==============================================================
 
-Processing bound stage.

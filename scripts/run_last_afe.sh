@@ -29,29 +29,43 @@ engine=$1
 #lambdastring=$2
 
 #IFS=',' read -r -a lambdas <<< "$lambdastring"
-lambda=0.9000
+lambda=1.0000
 
 log_dir=$HOME/projects/metalloenzymes/slurm_logs/
 if [[ ! -d $log_dir ]]; then
 	mkdir $log_dir
 fi
 
-for stage in "bound" "unbound"
-do
-	lambda_dir=$HOME/projects/metalloenzymes/kpc2/outputs/$engine/$transformation/$stage/lambda_$lambda
-	cd $lambda_dir	
-	echo "using $engine for $transformation, at lambda $lambda"
-	
-	if [[ $engine == *"SOMD"* ]]; then
+#for stage in "bound" "unbound"
+#do
+#       lambda_dir=$HOME/projects/metalloenzymes/kpc2/outputs/$engine/$transformation/$stage/lambda_$lambda
+#       cd $lambda_dir	
+#       echo "using $engine for $transformation, at lambda $lambda"
+#       
+#       if [[ $engine == *"SOMD"* ]]; then
+#
+#       	$BSS_HOME/bin/somd-freenrg -C ./somd.cfg -l $lambda -c ./somd.rst7 -t ./somd.prm7 -m ./somd.pert -p CUDA 1> somd.log 2> somd.err
+#
+#       # add gromacs afe here
+#
+#       fi
+#       	
+#       
+#done
 
-		$BSS_HOME/bin/somd-freenrg -C ./somd.cfg -l $lambda -c ./somd.rst7 -t ./somd.prm7 -m ./somd.pert -p CUDA 1> somd.log 2> somd.err
 
-	# add gromacs afe here
+lambda_dir=$HOME/projects/metalloenzymes/kpc2/outputs/$engine/$transformation/bound/lambda_$lambda
+cd $lambda_dir	
+echo "using $engine for $transformation, at lambda $lambda"
 
-	fi
-		
-	
-done
+if [[ $engine == *"SOMD"* ]]; then
+
+	$BSS_HOME/bin/somd-freenrg -C ./somd.cfg -l $lambda -c ./somd.rst7 -t ./somd.prm7 -m ./somd.pert -p CUDA 1> somd.log 2> somd.err
+
+# add gromacs afe here
+
+fi
+
 
 end=`date +%s`
 runtime=$((end - start))

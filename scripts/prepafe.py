@@ -7,7 +7,7 @@ import pandas as pd
 import glob
 import BioSimSpace as bss
 from BioSimSpace import _Exceptions
-from Sire import Base as _SireBase
+from sire import base as _SireBase
 import warnings
 warnings.filterwarnings("ignore")
 bss.setVerbose(True)
@@ -86,36 +86,6 @@ for i in range(n_transformations):
     print(f"progress: {counter}/{n_transformations}")
     print(f"ligand 1: {ligand_1_number}, ligand 2: {ligand_2_number}")
     engine = engines[i].strip()
-    # if engine == "SOMD":
-
-    #     ligand_1_system_gmx = bss.IO.readMolecules([f"{unbound_path}/ligand_{ligand_1_number}/npt/npt.gro",
-    #                                                 f"{unbound_path}/ligand_{ligand_1_number}/npt/npt.top"])
-    #     ligand_2_system_gmx = bss.IO.readMolecules([f"{unbound_path}/ligand_{ligand_2_number}/npt/npt.gro",
-    #                                                 f"{unbound_path}/ligand_{ligand_2_number}/npt/npt.top"])
-
-    #     bss.IO.saveMolecules(f"{unbound_path}/ligand_{ligand_1_number}/npt/npt", ligand_1_system_gmx, ["PRM7", "RST7"])
-    #     bss.IO.saveMolecules(f"{unbound_path}/ligand_{ligand_2_number}/npt/npt", ligand_2_system_gmx, ["PRM7", "RST7"])
-       
-    #     ligand_1_system = bss.IO.readMolecules([f"{unbound_path}/ligand_{ligand_1_number}/npt/npt.prm7",
-    #                                             f"{unbound_path}/ligand_{ligand_1_number}/npt/npt.rst7"])
-        
-    #     ligand_2_system = bss.IO.readMolecules([f"{unbound_path}/ligand_{ligand_2_number}/npt/npt.prm7",
-    #                                             f"{unbound_path}/ligand_{ligand_2_number}/npt/npt.rst7"])
-
-    #     system_1_gmx = bss.IO.readMolecules([f"{bound_path}/system_{ligand_1_number}/npt/npt.gro",
-    #                                     f"{bound_path}/system_{ligand_1_number}/npt/npt.top"])
-    #     system_2_gmx = bss.IO.readMolecules([f"{bound_path}/system_{ligand_2_number}/npt/npt.gro",
-    #                                     f"{bound_path}/system_{ligand_2_number}/npt/npt.top"])
-
-    #     bss.IO.saveMolecules(f"{bound_path}/system_{ligand_1_number}/npt/npt", system_1_gmx, ["PRM7", "RST7"])
-    #     bss.IO.saveMolecules(f"{bound_path}/system_{ligand_2_number}/npt/npt", system_2_gmx, ["PRM7", "RST7"])
-        
-    #     system_1 = bss.IO.readMolecules([f"{bound_path}/system_{ligand_1_number}/npt/npt.prm7",
-    #                                      f"{bound_path}/system_{ligand_1_number}/npt/npt.rst7"])
-        
-    #     system_2 = bss.IO.readMolecules([f"{bound_path}/system_{ligand_2_number}/npt/npt.prm7",
-    #                                      f"{bound_path}/system_{ligand_2_number}/npt/npt.rst7"])
-    # else:
 
     ligand_1_system = bss.IO.readMolecules([f"{unbound_path}/ligand_{ligand_1_number}/npt/ligand_{ligand_1_number}.prm7",
                                             f"{unbound_path}/ligand_{ligand_1_number}/npt/ligand_{ligand_1_number}.rst7"])
