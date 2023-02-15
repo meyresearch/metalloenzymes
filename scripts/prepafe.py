@@ -1,5 +1,3 @@
-import warnings
-warnings.filterwarnings("ignore")
 import argparse
 import os
 import sys
@@ -7,10 +5,8 @@ import pandas as pd
 import glob
 import BioSimSpace as bss
 from BioSimSpace import _Exceptions
-from sire import base as _SireBase
-import warnings
-warnings.filterwarnings("ignore")
-bss.setVerbose(True)
+import functions as fn
+
 
 parser = argparse.ArgumentParser(description="prepare AFE calculations")
 parser.add_argument("system",
@@ -149,17 +145,28 @@ for i in range(n_transformations):
     free_energy_protocol = bss.Protocol.FreeEnergy(lam_vals=lambda_values[i], runtime=runtime*runtime_unit)
 
     working_directory = f"{full_path}/{system_name}/outputs/{engines[i].strip()}/lig_{ligand_1_number}~lig_{ligand_2_number}"
+    bound_directory = working_directory + "/bound/"
+    unbound_directory = working_directory + "/unbound/"
 
-    # bss.IO.saveMolecules(f"{working_directory}/bound/system", bound_system, ["PRM7", "RST7"])
-    # bss.IO.saveMolecules(f"{working_directory}/unbound/system", unbound_system, ["PRM7", "RST7"])
+    bss.FreeEnergy.Relative(bound_system, free_energy_protocol, engine=engines[i].strip(), work_dir=bound_directory, setup_only=True)
+    bss.FreeEnergy.Relative(unbound_system, free_energy_protocol, engine=engines[i].strip(), work_dir=unbound_directory, setup_only=True)
 
-    # unbound_system = bss.IO.readMolecules([f"{working_directory}/unbound/system.prm7",
-    #                                        f"{working_directory}/unbound/system.rst7"])
-    # bound_system = bss.IO.readMolecules([f"{working_directory}/bound/system.prm7",
-    #                                      f"{working_directory}/bound/system.rst7"])
+    bound_minimisation_directory = fn.create_dirs(bound_directory + "minimisation/")
+    unbound_minimisation_directory = fn.create_dirs(unbound_directory + "minimisation/")
 
-    bss.FreeEnergy.Relative(bound_system, free_energy_protocol, engine=engines[i].strip(), work_dir=working_directory + "/bound/", setup_only=True)
-    bss.FreeEnergy.Relative(unbound_system, free_energy_protocol, engine=engines[i].strip(), work_dir=working_directory + "/unbound/", setup_only=True)
+    bss.FreeEnergy.Relative(bound_system, free_energy_protocol, engine=engines[i].strip(), work_dir=bound_minimisation_directory, setup_only=True)
+    bss.FreeEnergy.Relative(unbound_system, free_energy_protocol, engine=engines[i].strip(), work_dir=unbound_minimisation_directory, setup_only=True)
+
+    bound_configuration_files = glob.glob(bound_minimisation_directory + "/*/*.cfg")
+    unbound_configuration_files = glob.glob(unbound_minimisation_directory + "/*/*.cfg")
+
+    minimisation_config = ["minimise = True\n", "minimise maximum iterations = 10000\n"]
+    for i in range(len(bound_configuration_files)):
+        with open(bound_configuration_files[i], "a") as config:
+            config.writelines(minimisation_config)
+        with open(unbound_configuration_files[i], "a") as config:
+            config.writelines(minimisation_config)
+
     counter += 1
 
  

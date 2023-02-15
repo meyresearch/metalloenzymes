@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd ../kpc2/outputs/GROMACS/
+cd ../kpc2/outputs/SOMD/
 
 for transformation in */ 
 do
