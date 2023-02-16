@@ -50,15 +50,12 @@ do
 
 		$BSS_HOME/bin/somd-freenrg -C ./somd.cfg -l $lambda -c ./somd.rst7 -t ./somd.prm7 -m ./somd.pert -p CUDA 1> somd.log 2> somd.err
 	
-	fi
-	cp $min_dir/sim_restart.s3 $lambda_dir/sim_restart.s3
-	cp $min_dir/sim_restart.s3.previous $lambda_dir/sim_restart.s3.previous
-	cp $min_dir/SYSTEM.s3 $lambda_dir/SYSTEM.s3
+		cp $min_dir/sim_restart.s3 $lambda_dir/sim_restart.s3
+		cp $min_dir/sim_restart.s3.previous $lambda_dir/sim_restart.s3.previous
+		cp $min_dir/SYSTEM.s3 $lambda_dir/SYSTEM.s3
 
-	echo "perturbing"
-	cd $lambda_dir	
-
-	if [[ $engine == *"SOMD"* ]]; then
+		echo "perturbing"
+		cd $lambda_dir	
 
 		$BSS_HOME/bin/somd-freenrg -C ./somd.cfg -l $lambda -c ./somd.rst7 -t ./somd.prm7 -m ./somd.pert -p CUDA 1> somd.log 2> somd.err
 

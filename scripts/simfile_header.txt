@@ -1,0 +1,13 @@
+#This file was generated on Wed Feb 15 15:36:14 2023
+#Using the somd command, of the molecular library Sire version <2023.1.2> 
+#For more information visit: https://github.com/michellab/Sire
+#
+#General information on simulation parameters:
+#Simulation used 200000 moves, 5 cycles and 2000 ps of simulation time
+#Generating lambda is		 0.00000
+#Alchemical array is		 (0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0)
+#Generating temperature is 	300 K
+#Energy was saved every 250 steps 
+#
+#
+#   [step]      [potential kcal/mol]       [gradient kcal/mol]      [forward Metropolis]     [backward Metropolis]                   [u_kl]

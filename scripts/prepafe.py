@@ -160,7 +160,7 @@ for i in range(n_transformations):
     bound_configuration_files = glob.glob(bound_minimisation_directory + "/*/*.cfg")
     unbound_configuration_files = glob.glob(unbound_minimisation_directory + "/*/*.cfg")
 
-    minimisation_config = ["minimise = True\n", "minimise maximum iterations = 10000\n"]
+    minimisation_config = ["ncycles = 1", "minimise = True\n", "minimise maximum iterations = 10000\n"]
     for i in range(len(bound_configuration_files)):
         with open(bound_configuration_files[i], "a") as config:
             config.writelines(minimisation_config)
