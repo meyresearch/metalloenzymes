@@ -174,7 +174,7 @@ elif forcefield.lower() == "ff14sb":
 
 
 # LIGANDS
-ligand_files = sorted(glob.glob(f"{ligand_path}docked_*.sdf"))
+ligand_files = sorted(glob.glob(f"{ligand_path}*.sdf"))
 ligands = [bss.IO.readMolecules(filepath)[0] for filepath in ligand_files]
 ligand_names = [filepath.split("/")[-1].replace(".sdf","") for filepath in ligand_files]
 transformations, lomap_scores = bss.Align.generateNetwork(ligands, plot_network=True, names=ligand_names, work_dir=ligand_path)

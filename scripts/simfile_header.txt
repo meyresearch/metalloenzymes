@@ -4,10 +4,4 @@
 #
 #General information on simulation parameters:
 #Simulation used 200000 moves, 5 cycles and 2000 ps of simulation time
-#Generating lambda is		 0.00000
-#Alchemical array is		 (0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0)
-#Generating temperature is 	300 K
-#Energy was saved every 250 steps 
-#
-#
-#   [step]      [potential kcal/mol]       [gradient kcal/mol]      [forward Metropolis]     [backward Metropolis]                   [u_kl]
+

@@ -20,3 +20,6 @@
 ('docked_16', 'docked_10'):0.1
 ('docked_15', 'docked_9'):0.1
 ('docked_9', 'docked_10'):0.1
+('docked_9', 'docked_5'):0.1
+('docked_5', 'docked_10'):0.1
+('docked_4', 'docked_16'):0.1

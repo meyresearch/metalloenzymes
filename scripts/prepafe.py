@@ -31,11 +31,11 @@ if not os.path.isfile(network_file):
     print(f"The input file {network_file} does not exist")
     sys.exit()
 
-network = pd.read_csv(network_file, header=None, names=["ligand_1", 
-                                                        "ligand_2", 
-                                                        "n_windows", 
-                                                        "windows",
-                                                        "engine"])
+network = pd.read_csv(network_file, header=None, comment="#", names=["ligand_1", 
+                                                                     "ligand_2", 
+                                                                     "n_windows", 
+                                                                     "windows",
+                                                                     "engine"])
 
 columns_to_list = lambda column: network[column].tolist()
 first_ligands = columns_to_list("ligand_1")
@@ -99,7 +99,7 @@ for i in range(n_transformations):
     inverse_mapping = {value:key for key,value in mapping.items()}
     ligand_2_aligned = bss.Align.rmsdAlign(ligand_2, ligand_1, inverse_mapping)
 
-    merged_ligands = bss.Align.merge(ligand_1, ligand_2_aligned, mapping) 
+    merged_ligands = bss.Align.merge(ligand_1, ligand_2_aligned, mapping, allow_ring_breaking=True, allow_ring_size_change=True) 
 
     ligand_1_system.removeMolecules(ligand_1)
     ligand_1_system.addMolecules(merged_ligands)
@@ -136,7 +136,7 @@ for i in range(n_transformations):
 
     system_2_ligand_aligned = bss.Align.rmsdAlign(system_2_ligand, system_1_ligand, inverse_mapping)
 
-    bound_merged_ligands = bss.Align.merge(system_1_ligand, system_2_ligand_aligned, mapping)
+    bound_merged_ligands = bss.Align.merge(system_1_ligand, system_2_ligand_aligned, mapping, allow_ring_breaking=True, allow_ring_size_change=True)
 
     system_1.removeMolecules(system_1_ligand)
     system_1.addMolecules(bound_merged_ligands)
@@ -166,14 +166,14 @@ for i in range(n_transformations):
         with open(bound_configuration_files[i], "r") as file:
             old_config = file.readlines()
         with open(bound_configuration_files[i], "w") as file:
-            replaced_config = [setting.replace("ncycles = 5\n", "ncycles = 1\n") for setting in old_config]
+            replaced_config = [setting.replace("ncycles = 5\n", "ncycles = 1\n").replace("nmoves = 200000", "nmoves = 50000") for setting in old_config]
             for min_setting in minimisation_config:
                 replaced_config.append(min_setting)
             file.writelines(replaced_config)
         with open(unbound_configuration_files[i], "r") as file:
             old_config = file.readlines()
         with open(unbound_configuration_files[i], "w") as file:
-            replaced_config = [setting.replace("ncycles = 5\n", "ncycles = 1\n") for setting in old_config]
+            replaced_config = [setting.replace("ncycles = 5\n", "ncycles = 1\n").replace("nmoves = 200000", "nmoves = 50000") for setting in old_config]
             for min_setting in minimisation_config:
                 replaced_config.append(min_setting)
             file.writelines(replaced_config)

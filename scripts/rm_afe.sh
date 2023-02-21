@@ -11,12 +11,7 @@ do
 		cd $stage
 		for lambda in */
 		do
-			cd $lambda
-			for dir in */
-			do
-				rm -r $dir/*			
-			done
-			cd ../
+			rm -r $lambda/*			
 		done
 		cd ../
 	done
