@@ -30,7 +30,7 @@ parser.add_argument("-fi",
                     help="filetype for ligand files",
                     type=str,
                     choices=["sdf", "mol2", "pdb"],
-                    default="sdf")
+                    default="mol2")
 
 
 parser.add_argument("-fo",
