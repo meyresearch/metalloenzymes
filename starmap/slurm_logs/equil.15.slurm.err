@@ -1,0 +1,2 @@
+INFO:numexpr.utils:Note: NumExpr detected 32 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 8.
+WARNING:root:Warning: importing 'simtk.openmm' is deprecated.  Import 'openmm' instead.

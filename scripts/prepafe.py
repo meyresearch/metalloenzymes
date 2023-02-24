@@ -24,7 +24,8 @@ network_file = arguments.network
 full_path = os.getcwd() + "/"
 if "scripts" in full_path:
     full_path = full_path.replace("/scripts/", "/")
-
+elif system_name in full_path:
+    full_path = full_path.replace(f"/{system_name}/", "/")
 equilibration_path = full_path + system_name + "/equilibration/"
 
 if not os.path.isfile(network_file):
@@ -35,7 +36,7 @@ network = pd.read_csv(network_file, header=None, comment="#", names=["ligand_1",
                                                                      "ligand_2", 
                                                                      "n_windows", 
                                                                      "windows",
-                                                                     "engine"])
+                                                                     "engine"], sep="\s")
 
 columns_to_list = lambda column: network[column].tolist()
 first_ligands = columns_to_list("ligand_1")
@@ -43,10 +44,9 @@ second_ligands = columns_to_list("ligand_2")
 n_windows = columns_to_list("n_windows")
 windows = columns_to_list("windows")
 engines = columns_to_list("engine")
-
 n_transformations = len(first_ligands)
 
-lambda_values_string = [lambdas.split() for lambdas in windows]
+lambda_values_string = [lambdas.split(",") for lambdas in windows]
 lambda_values = [[float(value) for value in lambda_list] for lambda_list in lambda_values_string]
 
 afe_folder_path = full_path + system_name + "/afe/"
