@@ -1,3 +1,4 @@
+5 ns heating to 300 K
  &cntrl
   imin = 0, 
   nstlim = 5000000, 

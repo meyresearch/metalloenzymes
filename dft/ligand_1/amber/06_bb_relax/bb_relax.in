@@ -1,3 +1,4 @@
+5 ns relaxation at constant pressure
 &cntrl
   imin = 0, nstlim = 5000000, dt = 0.001,
   irest = 0, ntx = 1, ig = -1,

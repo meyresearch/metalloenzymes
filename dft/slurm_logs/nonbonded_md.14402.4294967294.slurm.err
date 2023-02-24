@@ -1,0 +1,26 @@
+
+  Unit    9 Error on OPEN: /lower.rst7                                                                                                                                                                                                                                                     
+STOP PMEMD Terminated Abnormally!
+srun: error: pluto: task 0: Exited with exit code 1
+srun: error: pluto: task 0: Exited with exit code 1
+
+  Unit    5 Error on OPEN: bb_relax.in                                                                                                                                                                                                                                                     
+STOP PMEMD Terminated Abnormally!
+srun: error: pluto: task 0: Exited with exit code 1
+
+  Unit    5 Error on OPEN: reduce.in                                                                                                                                                                                                                                                       
+STOP PMEMD Terminated Abnormally!
+srun: error: pluto: task 0: Exited with exit code 1
+
+  Unit    5 Error on OPEN: continue.in                                                                                                                                                                                                                                                     
+STOP PMEMD Terminated Abnormally!
+srun: error: pluto: task 0: Exited with exit code 1
+
+  Unit    5 Error on OPEN: free.in                                                                                                                                                                                                                                                         
+STOP PMEMD Terminated Abnormally!
+cp: cannot stat '/vim2_solv.prmtop': No such file or directory
+cp: cannot stat '/home/jguven/projects/metalloenzymes/dft/ligand_1/amber//09_free//free.rst7': No such file or directory
+srun: error: pluto: task 0: Exited with exit code 1
+
+  Unit    5 Error on OPEN: md.in                                                                                                                                                                                                                                                           
+STOP PMEMD Terminated Abnormally!
