@@ -88,7 +88,7 @@ ligands = [bss.IO.readMolecules(ligand_file)[0] for ligand_file in ligand_files]
 
 for i in range(n_ligands):
 
-    ligand_number = ligand_names[i].split("_")[1]
+    ligand_number = ligand_names[i].split("_")[-1]
     print(f"working on ligand {ligand_number}")
     ligand_parameters = bss.Parameters.gaff2(ligands[i], net_charge=ligand_charge).getMolecule()
 
