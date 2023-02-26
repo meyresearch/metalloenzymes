@@ -89,7 +89,7 @@ minimised_ligand = fn.run_process(system=solvated_ligand,
                                   protocol=ligand_minimisation_protocol, 
                                   process_name="min", 
                                   working_directory=ligand_min_unbound_dir,
-                                #   configuration=["emstep = 0.001", "emtol = 1000"]
+                                  configuration=["emstep = 0.001", "emtol = 1000"]
                                   )
 print("R-NVT")
 ligand_r_nvt_protocol = bss.Protocol.Equilibration(runtime=runtime_short_nvt,
@@ -101,7 +101,7 @@ restrained_nvt_ligand = fn.run_process(system=minimised_ligand,
                                        protocol=ligand_r_nvt_protocol,
                                        process_name="r_nvt",
                                        working_directory=ligand_r_nvt_unbound_dir,
-                                    #    configuration=["dt = 0.0005"]
+                                       configuration=["dt = 0.0005"]
                                        )
 print("NVT")
 ligand_nvt_protocol = bss.Protocol.Equilibration(runtime=runtime_nvt, temperature=300*kelvin)
@@ -151,7 +151,7 @@ minimised_system = fn.run_process(system=solvated_system,
                                   protocol=system_minimisation_protocol,
                                   process_name="min",
                                   working_directory=system_min_bound_dir,
-                                #   configuration=["emstep = 0.001", "emtol = 1000"]
+                                  configuration=["emstep = 0.001", "emtol = 1000"]
                                   )
 
 system_r_nvt_protocol = bss.Protocol.Equilibration(runtime=runtime_short_nvt,
@@ -163,7 +163,7 @@ restrained_nvt_system = fn.run_process(system=minimised_system,
                                        protocol=system_r_nvt_protocol,
                                        process_name="r_nvt",
                                        working_directory=system_r_nvt_bound_dir,
-                                    #    configuration=["dt = 0.0005"]
+                                       configuration=["dt = 0.0005"]
                                        )
 
 system_bb_restrained_protocol = bss.Protocol.Equilibration(runtime=runtime_nvt,

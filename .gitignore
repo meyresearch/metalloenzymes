@@ -49,6 +49,7 @@ scripts/__pycache__/*
 *.edr
 *.cpt
 *.dat
+starmap/equilibration_rerun_1/*/*/*/*
 kpc2/outputs/GROMACS/lig_2~lig_4.zip
 kpc2/outputs/SOMD/*/*/*/*/*
 kpc2/outputs/GROMACS/*/*/*/*/*
