@@ -1,0 +1,8 @@
+lig_1~lig_15
+1.0821 kcal/mol ± 0.1433 kcal/mol 
+lig_1~lig_16
+1.0446 kcal/mol ± 0.1277 kcal/mol 
+lig_1~lig_2
+1.1405 kcal/mol ± 0.1523 kcal/mol 
+lig_1~lig_3
+-1.1148 kcal/mol ± 0.2120 kcal/mol 

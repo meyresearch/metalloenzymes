@@ -53,7 +53,7 @@ kpc2/outputs/GROMACS/lig_2~lig_4.zip
 kpc2/outputs/SOMD/*/*/*/*/*
 kpc2/outputs/GROMACS/*/*/*/*/*
 kpc2/outputs/SOMD/*/*/*/*
-
+starmap/outputs/*/*/*/*/*
 *.nc
 *.agr
 *.out
@@ -61,3 +61,4 @@ kpc2/outputs/SOMD/*/*/*/*
 slurm_logs/*
 scripts/test_min/*
 dft/nonbonded/ligand_1/*
+*.err

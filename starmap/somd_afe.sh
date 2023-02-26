@@ -1,7 +1,7 @@
 #!/bin/bash
 # -o controls output. %A is replaced with job ID and %a with array index
-#SBATCH -o /home/jguven/projects/metalloenzymes/slurm_logs/somd_afe.%A.%a.slurm.out
-#SBATCH -e /home/jguven/projects/metalloenzymes//slurm_logs/somd_afe.%A.%a.slurm.err
+#SBATCH -o /home/jguven/projects/metalloenzymes/starmap/slurm_logs/somd_afe.%A.%a.slurm.out
+#SBATCH -e /home/jguven/projects/metalloenzymes/starmap/slurm_logs/somd_afe.%A.%a.slurm.err
 # Only launch a max of 1 task
 #SBATCH -n 1
 # allocate 1 gpu per job
@@ -31,7 +31,7 @@ lambdastring=$4
 IFS=',' read -r -a lambdas <<< "$lambdastring"
 lambda=${lambdas[$idx]}
 
-log_dir=$HOME/projects/metalloenzymes/slurm_logs/
+log_dir=$HOME/projects/metalloenzymes/starmap/slurm_logs/
 if [[ ! -d $log_dir ]]; then
 	mkdir $log_dir
 fi
@@ -40,7 +40,7 @@ for stage in "bound" "unbound"
 do
 
 #	min_dir=$HOME/projects/metalloenzymes/kpc2/outputs/$engine/$lig_1~$lig_2/$stage/minimisation/lambda_$lambda
-	lambda_dir=$HOME/projects/metalloenzymes/kpc2/outputs/$engine/$lig_1~$lig_2/$stage/lambda_$lambda
+	lambda_dir=$HOME/projects/metalloenzymes/starmap/outputs/$engine/$lig_1~$lig_2/$stage/lambda_$lambda
 	
 	echo "using $engine for $lig_1 and $lig_2, at lambda $lambda"
 #	echo "minimising"

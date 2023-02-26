@@ -81,7 +81,7 @@ for i in range(n_transformations):
     bound_path = equilibration_path + "bound/"
     print(f"progress: {counter}/{n_transformations}")
     print(f"ligand 1: {ligand_1_number}, ligand 2: {ligand_2_number}")
-    engine = engines[i].strip()
+    engine = engines[i].rstrip()
 
     ligand_1_system = bss.IO.readMolecules([f"{unbound_path}/ligand_{ligand_1_number}/npt/ligand_{ligand_1_number}.prm7",
                                             f"{unbound_path}/ligand_{ligand_1_number}/npt/ligand_{ligand_1_number}.rst7"])
