@@ -5,5 +5,5 @@ ligands=( 2 5 11 14 15 )
 
 for i in ${ligands[@]}
 do
-	rsync -av  eddie:/exports/eddie/scratch/s1607171/ligand_$i/small_ligand_$i.xyz ../geometries/
+	rsync -av  eddie:/exports/eddie/scratch/s1607171/ligand_$i/ligand_$i.xyz ../geometries/
 done

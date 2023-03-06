@@ -79,7 +79,8 @@ def check_parmed_output(parmed_out: str) -> None:
 
 
 # ligands = [1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15, 16]
-ligands = [1, 3, 4, 6, 7, 9, 10, 12, 13, 16]
+# ligands = [1, 3, 4, 6, 7, 9, 10, 12, 13, 16]
+ligands = [2, 5, 11, 14, 15]
 
 for lig in ligands:
     print(f"Ligand {lig}, ZN1")

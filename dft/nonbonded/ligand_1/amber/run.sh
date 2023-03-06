@@ -14,16 +14,15 @@
 
 run_dir=$HOME/projects/metalloenzymes/dft/nonbonded/ligand_1/amber/
 
-# I already ran these for ligand_1 to test the restraints
 min_dir=$run_dir/01_minimisation/
-#cd $min_dir
-#echo $min_dir
-#srun pmemd.cuda -O -i min.in -o min.out -p vim2_nb_solv.prmtop -c vim2_nb_solv.inpcrd -r min.rst7 -inf min.info -ref vim2_nb_solv.inpcrd -x mdcrd.min
-#
+cd $min_dir
+echo $min_dir
+srun pmemd.cuda -O -i min.in -o min.out -p vim2_nb_solv.prmtop -c vim2_nb_solv.inpcrd -r min.rst7 -inf min.info -ref vim2_nb_solv.inpcrd -x mdcrd.min
+
 heat_dir=$run_dir/02_heat/
-#cd $heat_dir
-#echo $heat_dir
-#srun pmemd.cuda -O -i heat.in -o heat.out -p $min_dir/vim2_nb_solv.prmtop -c $min_dir/min.rst7 -r heat.rst7 -inf heat.info -ref $min_dir/min.rst7 -x mdcrd.heat
+cd $heat_dir
+echo $heat_dir
+srun pmemd.cuda -O -i heat.in -o heat.out -p $min_dir/vim2_nb_solv.prmtop -c $min_dir/min.rst7 -r heat.rst7 -inf heat.info -ref $min_dir/min.rst7 -x mdcrd.heat
 
 relax_dir=$run_dir/03_relax/
 cd $relax_dir

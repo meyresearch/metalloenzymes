@@ -54,7 +54,7 @@ kpc2/outputs/GROMACS/lig_2~lig_4.zip
 kpc2/outputs/SOMD/*/*/*/*/*
 kpc2/outputs/GROMACS/*/*/*/*/*
 kpc2/outputs/SOMD/*/*/*/*
-starmap/outputs/*/*/*/*/*
+starmap/outputs/*/*/*/*/*/*
 *.nc
 *.agr
 *.out

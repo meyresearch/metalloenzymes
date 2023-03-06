@@ -151,32 +151,32 @@ for i in range(n_transformations):
     bss.FreeEnergy.Relative(bound_system, free_energy_protocol, engine=engines[i].strip(), work_dir=bound_directory, setup_only=True)
     bss.FreeEnergy.Relative(unbound_system, free_energy_protocol, engine=engines[i].strip(), work_dir=unbound_directory, setup_only=True)
 
-    # bound_minimisation_directory = fn.create_dirs(bound_directory + "minimisation/")
-    # unbound_minimisation_directory = fn.create_dirs(unbound_directory + "minimisation/")
+    bound_minimisation_directory = fn.create_dirs(bound_directory + "minimisation/")
+    unbound_minimisation_directory = fn.create_dirs(unbound_directory + "minimisation/")
 
-    # bss.FreeEnergy.Relative(bound_system, free_energy_protocol, engine=engines[i].strip(), work_dir=bound_minimisation_directory, setup_only=True)
-    # bss.FreeEnergy.Relative(unbound_system, free_energy_protocol, engine=engines[i].strip(), work_dir=unbound_minimisation_directory, setup_only=True)
+    bss.FreeEnergy.Relative(bound_system, free_energy_protocol, engine=engines[i].strip(), work_dir=bound_minimisation_directory, setup_only=True)
+    bss.FreeEnergy.Relative(unbound_system, free_energy_protocol, engine=engines[i].strip(), work_dir=unbound_minimisation_directory, setup_only=True)
 
-    # bound_configuration_files = glob.glob(bound_minimisation_directory + "/*/*.cfg")
-    # unbound_configuration_files = glob.glob(unbound_minimisation_directory + "/*/*.cfg")
+    bound_configuration_files = glob.glob(bound_minimisation_directory + "/*/*.cfg")
+    unbound_configuration_files = glob.glob(unbound_minimisation_directory + "/*/*.cfg")
 
-    # minimisation_config = ["minimise = True\n", "minimise maximum iterations = 10000\n"]
+    minimisation_config = ["minimise = True\n", "minimise maximum iterations = 10000\n"]
 
-    # for i in range(len(bound_configuration_files)):
-    #     with open(bound_configuration_files[i], "r") as file:
-    #         old_config = file.readlines()
-    #     with open(bound_configuration_files[i], "w") as file:
-    #         replaced_config = [setting.replace("ncycles = 5\n", "ncycles = 1\n").replace("nmoves = 200000", "nmoves = 50000") for setting in old_config]
-    #         for min_setting in minimisation_config:
-    #             replaced_config.append(min_setting)
-    #         file.writelines(replaced_config)
-    #     with open(unbound_configuration_files[i], "r") as file:
-    #         old_config = file.readlines()
-    #     with open(unbound_configuration_files[i], "w") as file:
-    #         replaced_config = [setting.replace("ncycles = 5\n", "ncycles = 1\n").replace("nmoves = 200000", "nmoves = 50000") for setting in old_config]
-    #         for min_setting in minimisation_config:
-    #             replaced_config.append(min_setting)
-    #         file.writelines(replaced_config)
+    for i in range(len(bound_configuration_files)):
+        with open(bound_configuration_files[i], "r") as file:
+            old_config = file.readlines()
+        with open(bound_configuration_files[i], "w") as file:
+            replaced_config = [setting.replace("ncycles = 5\n", "ncycles = 1\n").replace("nmoves = 200000", "nmoves = 50000") for setting in old_config]
+            for min_setting in minimisation_config:
+                replaced_config.append(min_setting)
+            file.writelines(replaced_config)
+        with open(unbound_configuration_files[i], "r") as file:
+            old_config = file.readlines()
+        with open(unbound_configuration_files[i], "w") as file:
+            replaced_config = [setting.replace("ncycles = 5\n", "ncycles = 1\n").replace("nmoves = 200000", "nmoves = 50000") for setting in old_config]
+            for min_setting in minimisation_config:
+                replaced_config.append(min_setting)
+            file.writelines(replaced_config)
 
     counter += 1
 

@@ -1,0 +1,64 @@
+# Analysing data contained in file(s) ['/home/jguven/projects/metalloenzymes/starmap/outputs/with_min/SOMD_3/lig_1~lig_2/bound/lambda_0.0000/simfile.dat', '/home/jguven/projects/metalloenzymes/starmap/outputs/with_min/SOMD_3/lig_1~lig_2/bound/lambda_0.1000/simfile.dat', '/home/jguven/projects/metalloenzymes/starmap/outputs/with_min/SOMD_3/lig_1~lig_2/bound/lambda_0.2000/simfile.dat', '/home/jguven/projects/metalloenzymes/starmap/outputs/with_min/SOMD_3/lig_1~lig_2/bound/lambda_0.3000/simfile.dat', '/home/jguven/projects/metalloenzymes/starmap/outputs/with_min/SOMD_3/lig_1~lig_2/bound/lambda_0.4000/simfile.dat', '/home/jguven/projects/metalloenzymes/starmap/outputs/with_min/SOMD_3/lig_1~lig_2/bound/lambda_0.5000/simfile.dat', '/home/jguven/projects/metalloenzymes/starmap/outputs/with_min/SOMD_3/lig_1~lig_2/bound/lambda_0.6000/simfile.dat', '/home/jguven/projects/metalloenzymes/starmap/outputs/with_min/SOMD_3/lig_1~lig_2/bound/lambda_0.7000/simfile.dat', '/home/jguven/projects/metalloenzymes/starmap/outputs/with_min/SOMD_3/lig_1~lig_2/bound/lambda_0.8000/simfile.dat', '/home/jguven/projects/metalloenzymes/starmap/outputs/with_min/SOMD_3/lig_1~lig_2/bound/lambda_0.9000/simfile.dat', '/home/jguven/projects/metalloenzymes/starmap/outputs/with_min/SOMD_3/lig_1~lig_2/bound/lambda_1.0000/simfile.dat']
+#Overlap matrix
+0.8658 0.1304 0.0037 0.0001 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000
+0.1304 0.6757 0.1787 0.0143 0.0009 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000
+0.0037 0.1787 0.5530 0.2248 0.0372 0.0026 0.0001 0.0000 0.0000 0.0000 0.0000
+0.0001 0.0143 0.2248 0.4658 0.2474 0.0445 0.0030 0.0001 0.0000 0.0000 0.0000
+0.0000 0.0009 0.0372 0.2474 0.4263 0.2366 0.0477 0.0038 0.0001 0.0000 0.0000
+0.0000 0.0000 0.0026 0.0445 0.2366 0.4120 0.2461 0.0543 0.0038 0.0001 0.0000
+0.0000 0.0000 0.0001 0.0030 0.0477 0.2461 0.4072 0.2448 0.0481 0.0029 0.0001
+0.0000 0.0000 0.0000 0.0001 0.0038 0.0543 0.2448 0.4131 0.2387 0.0429 0.0023
+0.0000 0.0000 0.0000 0.0000 0.0001 0.0038 0.0481 0.2387 0.4301 0.2405 0.0386
+0.0000 0.0000 0.0000 0.0000 0.0000 0.0001 0.0029 0.0429 0.2405 0.4607 0.2529
+0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0001 0.0023 0.0386 0.2529 0.7062
+#DG from neighbouring lambda in kcal/mol
+0.0000 0.1000 41.2501 0.0475
+0.1000 0.2000 38.2872 0.0357
+0.2000 0.3000 34.8305 0.0262
+0.3000 0.4000 31.1301 0.0214
+0.4000 0.5000 27.0808 0.0213
+0.5000 0.6000 22.8826 0.0198
+0.6000 0.7000 18.7081 0.0199
+0.7000 0.8000 14.4906 0.0213
+0.8000 0.9000 10.3128 0.0221
+0.9000 1.0000 6.3448 0.0246
+#PMF from MBAR in kcal/mol
+0.0000 0.0000 0.0000
+0.1000 41.2501 0.0475
+0.2000 79.5373 0.0651
+0.3000 114.3678 0.0744
+0.4000 145.4978 0.0804
+0.5000 172.5787 0.0860
+0.6000 195.4612 0.0908
+0.7000 214.1693 0.0953
+0.8000 228.6600 0.1000
+0.9000 238.9728 0.1048
+1.0000 245.3176 0.1099
+#TI average gradients and standard deviation in kcal/mol
+0.0000 427.8636 18.9411
+0.1000 396.8683 15.5838
+0.2000 366.3681 11.7509
+0.3000 331.2853 9.8224
+0.4000 291.5473 9.0721
+0.5000 249.8835 9.0862
+0.6000 207.9396 9.0829
+0.7000 165.7545 9.0526
+0.8000 124.0500 9.5774
+0.9000 83.0358 10.0466
+1.0000 45.6198 10.6593
+#PMF from TI in kcal/mol
+0.0000 0.0000
+0.1000 41.2366
+0.2000 79.3984
+0.3000 114.2811
+0.4000 145.4227
+0.5000 172.4943
+0.6000 195.3854
+0.7000 214.0701
+0.8000 228.5603
+0.9000 238.9146
+1.0000 245.3474
+#MBAR free energy difference in kcal/mol: 
+245.317624, 0.109898 
+#TI free energy difference in kcal/mol: 
+245.347411  
