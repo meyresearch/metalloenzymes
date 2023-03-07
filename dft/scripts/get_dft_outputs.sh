@@ -7,7 +7,7 @@ for i in ${ligands[@]}
 do
 	cd ligand_$i
 	echo "ligand_$i"
-	rsync -av azuma:/home/jguven/projects/metalloenzymes/dft/ligand_$i/* .
+#	rsync -av azuma:/home/jguven/projects/metalloenzymes/dft/ligand_$i/* .
 	rsync -av eddie:/exports/eddie/scratch/s1607171/ligand_$i/* .
 	cd ..
 done
