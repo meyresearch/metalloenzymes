@@ -33,7 +33,7 @@ cp $dft_dir/ligand_$ligand/vim2_solv.prmtop $min_dir
 cp $dft_dir/scripts/min.in $min_dir
 
 srun pmemd.cuda -O -i min.in -o min.out -p vim2_solv.prmtop -c vim2_solv.inpcrd -r min.rst7 -inf min.info -ref vim2_solv.inpcrd -x mdcrd.min 
-cd ../
+
 echo "-----------------------------------------------------------------"
 echo "-----------------------------------------------------------------"
 echo "HEAT $ligand"
@@ -49,7 +49,7 @@ cp $dft_dir/scripts/heat.in .
 
 srun pmemd.cuda -O -i heat.in -o heat.out -p $min_dir/vim2_solv.prmtop -c $min_dir/min.rst7 -r heat.rst7 -inf heat.info -ref $min_dir/min.rst7 -x mdcrd.heat 
 
-cd ../
+
 
 
 echo "-----------------------------------------------------------------"
@@ -67,7 +67,7 @@ cp $dft_dir/scripts/relax.in .
 
 srun pmemd.cuda -O -i relax.in -o relax.out -p $min_dir/vim2_solv.prmtop -c $heat_dir/heat.rst7 -r relax.rst7 -inf relax.info -ref $heat_dir/heat.rst7 -x mdcrd.relax
 
-cd ../
+
 echo "-----------------------------------------------------------------"
 echo "-----------------------------------------------------------------"
 echo "LOWER $ligand"
@@ -83,7 +83,7 @@ cp $dft_dir/scripts/lower.in .
 
 srun pmemd.cuda -O -i lower.in -o lower.out -p $min_dir/vim2_solv.prmtop -c $relax_dir/relax.rst7 -r lower.rst7 -inf lower.info -ref $relax_dir/relax.rst7 -x mdcrd.lower
 
-cd ../
+
 echo "-----------------------------------------------------------------"
 echo "-----------------------------------------------------------------"
 echo "BB MINIMISATION $ligand"
@@ -99,7 +99,7 @@ cp $dft_dir/scripts/bb_min.in .
 
 srun pmemd.cuda -O -i bb_min.in -o bb_min.out -p $min_dir/vim2_solv.prmtop -c $lower_dir/lower.rst7 -r bb_min.rst7 -inf bb_min.info -ref $lower_dir/lower.rst7 -x mdcrd.bb_min
 
-cd ../
+
 echo "-----------------------------------------------------------------"
 echo "-----------------------------------------------------------------"
 echo "BB RELAX $ligand"
@@ -115,7 +115,7 @@ cp $dft_dir/scripts/bb_relax.in .
 
 srun pmemd.cuda -O -i bb_relax.in -o bb_relax.out -p $min_dir/vim2_solv.prmtop -c $bb_min_dir/bb_min.rst7 -r bb_relax.rst7 -inf bb_relax.info -ref $bb_min_dir/bb_min.rst7 -x mdcrd.bb_relax
 
-cd ../
+
 echo "-----------------------------------------------------------------"
 echo "-----------------------------------------------------------------"
 echo "REDUCE $ligand"
@@ -131,7 +131,7 @@ cp $dft_dir/scripts/reduce.in .
 
 srun pmemd.cuda -O -i reduce.in -o reduce.out -p $min_dir/vim2_solv.prmtop -c $bb_relax_dir/bb_relax.rst7 -r reduce.rst7 -inf reduce.info -ref $bb_relax_dir/bb_relax.rst7 -x mdcrd.reduce
 
-cd ../
+
 echo "-----------------------------------------------------------------"
 echo "-----------------------------------------------------------------"
 echo "CONTINUE $ligand"
@@ -147,7 +147,7 @@ cp $dft_dir/scripts/continue.in .
 
 srun pmemd.cuda -O -i continue.in -o continue.out -p $min_dir/vim2_solv.prmtop -c $reduce_dir/reduce.rst7 -r continue.rst7 -inf continue.info -ref $reduce_dir/reduce.rst7 -x mdcrd.continue
 
-cd ../
+
 echo "-----------------------------------------------------------------"
 echo "-----------------------------------------------------------------"
 echo "FREE $ligand"
@@ -163,7 +163,7 @@ cp $dft_dir/scripts/free.in
 
 srun pmemd.cuda -O -i free.in -o free.out -p $min_dir/vim2_solv.prmtop -c $continue_dir/continue.rst7 -r free.rst7 -inf free.info -ref $continue_dir/continue.rst7 -x mdcrd.free
 
-cd ../
+
 echo "-----------------------------------------------------------------"
 echo "-----------------------------------------------------------------"
 echo "MD PRODUCTION $ligand"
@@ -178,7 +178,7 @@ cd $md_dir
 cp $dft_dir/scripts/md.mdp .
 cp $min_dir/vim2_solv.prmtop vim2_equil.prmtop
 cp $free_dir/free.rst7 vim2_equil.rst7
-srun pmemd.cuda -O -i md.in -o md.out -p vim2_equil.prmtop -c vim2_equil.rst7 -ref vim2_equil.rst7 -r vim2_equil.rst7 -x md.nc
+srun pmemd.cuda -O -i md.in -o md.out -p vim2_equil.prmtop -c vim2_equil.rst7 -inf md.info -ref vim2_equil.rst7 -r vim2_equil.rst7 -x md.nc
 
-cd ../
+
 echo "-----------------------------------------------------------------"

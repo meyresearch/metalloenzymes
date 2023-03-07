@@ -33,8 +33,8 @@ bond mol.87.OD2 mol.232.ZN
 bond mol.148.NE2 mol.231.ZN
 bond mol.167.SG mol.232.ZN
 bond mol.209.NE2 mol.232.ZN
-bond mol.231.ZN mol.233.O1
-bond mol.232.ZN mol.233.O2
+bond mol.231.ZN mol.233.O2
+bond mol.232.ZN mol.233.O1
 bond mol.82.C mol.83.N
 bond mol.83.C mol.84.N
 bond mol.84.C mol.85.N
