@@ -28,7 +28,7 @@ lig_2=`echo $ligand_2 | sed "s/ligand_/lig_/g"`
 
 engine=$3
 lambdastring=$4
-IFS=',' read -r -a lambdas <<< "$lambdastring"
+IFS=' ' read -r -a lambdas <<< "$lambdastring"
 lambda=${lambdas[$idx]}
 
 log_dir=$HOME/projects/metalloenzymes/slurm_logs/

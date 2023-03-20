@@ -36,7 +36,7 @@ network = pd.read_csv(network_file, header=None, comment="#", names=["ligand_1",
                                                                      "ligand_2", 
                                                                      "n_windows", 
                                                                      "windows",
-                                                                     "engine"], sep="\s")
+                                                                     "engine"])
 
 columns_to_list = lambda column: network[column].tolist()
 first_ligands = columns_to_list("ligand_1")
@@ -46,7 +46,7 @@ windows = columns_to_list("windows")
 engines = columns_to_list("engine")
 n_transformations = len(first_ligands)
 
-lambda_values_string = [lambdas.split(",") for lambdas in windows]
+lambda_values_string = [lambdas.split() for lambdas in windows]
 lambda_values = [[float(value) for value in lambda_list] for lambda_list in lambda_values_string]
 
 afe_folder_path = full_path + system_name + "/afe/"
