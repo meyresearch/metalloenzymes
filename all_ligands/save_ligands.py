@@ -13,6 +13,7 @@ ligand_numbers = np.arange(1,17,1)
 for i in range(len(project.ligands)):
     ligand = project.ligands[i]
     ligand_properties = ligand.properties
-    filename = str(ligand_properties["Filename"])
-    print(filename.replace(".mol2", ""))
-    ligand.write_file(f"/Users/jasminguven/projects/metalloenzymes/all_ligands/{filename}.sdf", "sdf")
+    filename = str(ligand_properties["Title"])
+    print(filename)
+    home_dir = os.path.expanduser("~")
+    ligand.write_file(f"{home_dir}/projects/metalloenzymes/all_ligands/kpc2/{filename}.sdf", "sdf")
