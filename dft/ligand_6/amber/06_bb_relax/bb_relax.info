@@ -1,25 +1,25 @@
 
- NSTEP =  4828000   TIME(PS) =    4828.000  TEMP(K) =   296.28  PRESS =     0.0
- Etot   =    -61612.4529  EKtot   =     15612.7188  EPtot      =    -77225.1716
- BOND   =       638.4019  ANGLE   =      1847.5323  DIHED      =      2837.7436
- 1-4 NB =       814.4158  1-4 EEL =      8870.4443  VDWAALS    =      8148.5267
- EELEC  =   -100538.3431  EHBOND  =         0.0000  RESTRAINT  =       156.1067
- EAMBER (non-restraint)  =    -77381.2783
- EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    253814.5063
-                                                    Density    =         1.0357
+ NSTEP =  4913000   TIME(PS) =    4913.000  TEMP(K) =   301.86  PRESS =     0.0
+ Etot   =    -61537.7265  EKtot   =     15906.8818  EPtot      =    -77444.6083
+ BOND   =       625.1628  ANGLE   =      1746.0105  DIHED      =      2836.0441
+ 1-4 NB =       818.4041  1-4 EEL =      8940.9052  VDWAALS    =      8389.9142
+ EELEC  =   -100972.4997  EHBOND  =         0.0000  RESTRAINT  =       171.4505
+ EAMBER (non-restraint)  =    -77616.0588
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    254323.7851
+                                                    Density    =         1.0336
  ------------------------------------------------------------------------------
 | Current Timing Info
 | -------------------
-| Total steps:   5000000 | Completed:   4828000 ( 96.6%) | Remaining:    172000
+| Total steps:   5000000 | Completed:   4913000 ( 98.3%) | Remaining:     87000
 |
-| Average timings for last  172000 steps:
-|     Elapsed(s) =      59.82 Per Step(ms) =       0.35
-|         ns/day =     248.41   seconds/ns =     347.81
+| Average timings for last  171000 steps:
+|     Elapsed(s) =      59.84 Per Step(ms) =       0.35
+|         ns/day =     246.90   seconds/ns =     349.93
 |
 | Average timings for all steps:
-|     Elapsed(s) =    1679.15 Per Step(ms) =       0.35
-|         ns/day =     248.42   seconds/ns =     347.79
+|     Elapsed(s) =    1739.91 Per Step(ms) =       0.35
+|         ns/day =     243.97   seconds/ns =     354.14
 |
 |
-| Estimated time remaining:      59.8 seconds.
+| Estimated time remaining:      30.8 seconds.
  ------------------------------------------------------------------------------

@@ -2,7 +2,7 @@ minimisation of solvent
  &cntrl
   imin = 1,		
   maxcyc = 1000,	
-  ncyc = 20,		
+  ncyc = 100,		
   ntx = 1, 		
   ntwe = 0, 		
   ntwr = 500,		

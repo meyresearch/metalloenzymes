@@ -1,25 +1,25 @@
 
- NSTEP =   345000   TIME(PS) =   10345.000  TEMP(K) =   301.07  PRESS =     0.0
- Etot   =    -61156.2908  EKtot   =     15862.7637  EPtot      =    -77019.0545
- BOND   =       570.6148  ANGLE   =      1600.5790  DIHED      =      2765.1467
- 1-4 NB =       872.4512  1-4 EEL =      9196.2670  VDWAALS    =      8724.5809
- EELEC  =   -101553.6486  EHBOND  =         0.0000  RESTRAINT  =       804.9543
- EAMBER (non-restraint)  =    -77824.0088
- EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    253003.6161
-                                                    Density    =         1.0389
+ NSTEP =  4992000   TIME(PS) =   14992.000  TEMP(K) =   301.91  PRESS =     0.0
+ Etot   =    -61153.2629  EKtot   =     15907.0723  EPtot      =    -77060.3352
+ BOND   =       578.5132  ANGLE   =      1641.2819  DIHED      =      2783.2888
+ 1-4 NB =       868.7495  1-4 EEL =      9191.7447  VDWAALS    =      8554.5372
+ EELEC  =   -101485.0483  EHBOND  =         0.0000  RESTRAINT  =       806.5979
+ EAMBER (non-restraint)  =    -77866.9330
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    253447.9557
+                                                    Density    =         1.0371
  ------------------------------------------------------------------------------
 | Current Timing Info
 | -------------------
-| Total steps:   5000000 | Completed:    345000 (  6.9%) | Remaining:   4655000
+| Total steps:   5000000 | Completed:   4992000 ( 99.8%) | Remaining:      8000
 |
 | Average timings for last  172000 steps:
-|     Elapsed(s) =      60.04 Per Step(ms) =       0.35
-|         ns/day =     247.50   seconds/ns =     349.10
+|     Elapsed(s) =      60.00 Per Step(ms) =       0.35
+|         ns/day =     247.68   seconds/ns =     348.83
 |
 | Average timings for all steps:
-|     Elapsed(s) =     120.53 Per Step(ms) =       0.35
-|         ns/day =     247.31   seconds/ns =     349.36
+|     Elapsed(s) =    1740.01 Per Step(ms) =       0.35
+|         ns/day =     247.88   seconds/ns =     348.56
 |
 |
-| Estimated time remaining:      27.1 minutes.
+| Estimated time remaining:       2.8 seconds.
  ------------------------------------------------------------------------------

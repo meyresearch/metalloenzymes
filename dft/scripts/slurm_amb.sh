@@ -159,7 +159,7 @@ if [[ -d $free_dir ]]; then
 fi
 mkdir -p $free_dir
 cd $free_dir
-cp $dft_dir/scripts/free.in
+cp $dft_dir/scripts/free.in .
 
 srun pmemd.cuda -O -i free.in -o free.out -p $min_dir/vim2_solv.prmtop -c $continue_dir/continue.rst7 -r free.rst7 -inf free.info -ref $continue_dir/continue.rst7 -x mdcrd.free
 
