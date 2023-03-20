@@ -63,3 +63,4 @@ slurm_logs/*
 scripts/test_min/*
 dft/nonbonded/ligand_1/*
 *.err
+stdout_*
