@@ -56,7 +56,8 @@ parser.add_argument("-e",
                     "--engine",
                     type=str,
                     help="MD engine for AFE",
-                    default="GROMACS")
+                    choices=["SOMD", "GROMACS"],
+                    default="SOMD")
 
 parser.add_argument("-n", 
                     "--n-windows",
@@ -315,8 +316,8 @@ with open(production_directory + "network_fwd.dat", "w") as network_file:
             n_windows = difficult_windows
         else:
             n_windows = windows
-        lambda_list_numpy = list(np.around(np.linspace(0, 1, int(n_windows)), decimals=5))
-        lambda_list = [str(item) for item in lambda_list_numpy]
+        lambda_list_numpy = list(np.linspace(0, 1, int(n_windows)))
+        lambda_list = [format(item, ".4f") for item in lambda_list_numpy]
 
         lambda_array_bash = " ".join(lambda_list)
         network_file.write(f"{perturbation[0]}, {perturbation[1]}, {len(lambda_list_numpy)}, {lambda_array_bash}, {engine}\n")
@@ -327,8 +328,8 @@ with open(production_directory + "network_bwd.dat", "w") as network_file:
             n_windows = difficult_windows
         else:
             n_windows = windows
-        lambda_list_numpy = list(np.around(np.linspace(0, 1, int(n_windows)), decimals=5))
-        lambda_list = [str(item) for item in lambda_list_numpy]
+        lambda_list_numpy = list(np.linspace(0, 1, int(n_windows)))
+        lambda_list = [format(item, ".4f") for item in lambda_list_numpy]
 
         lambda_array_bash = " ".join(lambda_list)
         network_file.write(f"{perturbation[1]}, {perturbation[0]}, {len(lambda_list_numpy)}, {lambda_array_bash}, {engine}\n")

@@ -30,7 +30,7 @@ parser.add_argument("-fi",
                     help="filetype for ligand files",
                     type=str,
                     choices=["sdf", "mol2", "pdb"],
-                    default="mol2")
+                    default="sdf")
 
 
 parser.add_argument("-fo",
@@ -38,7 +38,7 @@ parser.add_argument("-fo",
                     help="output filetype",
                     type=str,
                     choices=["GROMACS", "AMBER"],
-                    default="GROMACS")
+                    default="AMBER")
 
 arguments = parser.parse_args()
 system_name = arguments.system
@@ -65,12 +65,13 @@ protocol_file = afe_folder_path + "protocol.dat"
 network_file = afe_folder_path + "network.dat"
 ligand_path = full_path + system_name + "/inputs/ligands/"
 
-# check files exist
+#TODO check files exist!!!
 
 with open(ligands_file) as file:
     ligand_lines = file.readlines()
 ligand_names = [line.rstrip() for line in ligand_lines]
 n_ligands = len(ligand_names)
+
 with open(protocol_file) as file:
     protocol_lines = file.readlines()
 
@@ -81,15 +82,17 @@ box_edges = protocol_lines[3].split()[-1].split("*")[0]
 box_axis_unit = bss.Units.Length.angstrom
 box_type = protocol_lines[4].split()[-1]
 
-ligand_files = glob.glob(f"{ligand_path}*.{filetype}")
+ligand_files = sorted(glob.glob(f"{ligand_path}*.{filetype}"))
 
 protein = bss.IO.readMolecules([protein_file + ".rst7", protein_file + ".prm7"])[0]
 ligands = [bss.IO.readMolecules(ligand_file)[0] for ligand_file in ligand_files]
 
-for i in range(n_ligands):
 
+
+for i in range(n_ligands):
     ligand_number = ligand_names[i].split("_")[-1]
     print(f"working on ligand {ligand_number}")
+
     ligand_parameters = bss.Parameters.gaff2(ligands[i], net_charge=ligand_charge).getMolecule()
 
     box_min, box_max = ligand_parameters.getAxisAlignedBoundingBox()

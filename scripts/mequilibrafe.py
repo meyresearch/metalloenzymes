@@ -24,7 +24,7 @@ parser.add_argument("ligand_number",
 parser.add_argument("-m",
                     "--minimisation-steps",
                     type=fn.check_positive_integer,
-                    default=250)
+                    default=500)
 
 parser.add_argument("-s",
                     "--short-nvt-runtime",
@@ -67,7 +67,8 @@ ligand_path = full_path + system_name + "/inputs/ligands/"
 print(ligand_path)
 protein_path = full_path + system_name + "/inputs/protein/"
 print(protein_path)
-# DO THIS LATER
+
+#TODO  
 # if not os.path.isfile(input_file):
 #     print(f"The input file {input_file} does not exist")
 #     sys.exit()
