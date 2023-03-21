@@ -84,7 +84,7 @@ ligand_npt_unbound_dir = fn.create_dirs(f"{ligand_work_dir}/npt")
 
 solvated_ligand_files = glob.glob(ligand_path + f"ligand_{ligand_number}_solvated.*")
 solvated_ligand = bss.IO.readMolecules(solvated_ligand_files)
-print("Minimisation")f
+print("Minimisation")
 ligand_minimisation_protocol = bss.Protocol.Minimisation(steps=minimisation_steps)
 minimised_ligand = fn.run_process(system=solvated_ligand, 
                                   protocol=ligand_minimisation_protocol, 
