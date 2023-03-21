@@ -39,34 +39,30 @@ fi
 
 for stage in "bound" "unbound"
 do
-	
 
-      min_dir=$HOME/projects/metalloenzymes/kpc2/outputs/$engine/$lig_1~$lig_2/$stage/minimisation/lambda_$lambda
-      echo $min_dir
-       lambda_dir=$HOME/projects/metalloenzymes/kpc2/outputs/$engine/$lig_1~$lig_2/$stage/lambda_$lambda
+    min_dir=$HOME/projects/metalloenzymes/kpc2/outputs/$engine/$lig_1~$lig_2/$stage/minimisation/lambda_$lambda
+    echo $min_dir
+    lambda_dir=$HOME/projects/metalloenzymes/kpc2/outputs/$engine/$lig_1~$lig_2/$stage/lambda_$lambda
       
-       echo "using $engine for $lig_1 and $lig_2, at lambda $lambda"
-       echo "minimising"
+	echo "using $engine for $lig_1 and $lig_2, at lambda $lambda"
+	echo "minimising"
       
-       cd $min_dir
-       if [[ $engine == *"SOMD"* ]]; then
+	cd $min_dir
+	if [[ $engine == *"SOMD"* ]]; then
 
-	      	$BSS_HOME/bin/somd-freenrg -C ./somd.cfg -l $lambda -c ./somd.rst7 -t ./somd.prm7 -m ./somd.pert -p CUDA 1> somd.log 2> somd.err
-	     
-	      	cp $min_dir/sim_restart.s3 $lambda_dir/sim_restart.s3
-	      	cp $min_dir/sim_restart.s3.previous $lambda_dir/sim_restart.s3.previous
-	      	cp $min_dir/SYSTEM.s3 $lambda_dir/SYSTEM.s3
-	
-	      	echo "perturbing"
-	      	cd $lambda_dir	
-	
-	      	$BSS_HOME/bin/somd-freenrg -C ./somd.cfg -l $lambda -c ./somd.rst7 -t ./somd.prm7 -m ./somd.pert -p CUDA 1> somd.log 2> somd.err
-	
-	     # add gromacs afe here
+		$BSS_HOME/bin/somd-freenrg -C ./somd.cfg -l $lambda -c ./somd.rst7 -t ./somd.prm7 -m ./somd.pert -p CUDA 1> somd.log 2> somd.err
+		
+		cp $min_dir/sim_restart.s3 $lambda_dir/sim_restart.s3
+		cp $min_dir/sim_restart.s3.previous $lambda_dir/sim_restart.s3.previous
+		cp $min_dir/SYSTEM.s3 $lambda_dir/SYSTEM.s3
+
+		echo "perturbing"
+		cd $lambda_dir	
+
+		$BSS_HOME/bin/somd-freenrg -C ./somd.cfg -l $lambda -c ./somd.rst7 -t ./somd.prm7 -m ./somd.pert -p CUDA 1> somd.log 2> somd.err
 
 	fi
 		
-	
 done
 
 end=`date +%s`

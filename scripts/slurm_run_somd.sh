@@ -2,7 +2,6 @@
 # sys arg: $1: network file
 #afe_dir=$HOME/projects/metalloenzymes/kpc2/afe
 
-
 network=$1
 mapfile network_file < $network
 for perturbation in "${network_file[@]}"
@@ -17,4 +16,5 @@ do
 	# ligpair[4]: engine
 	#sbatch --array=0-$(($n_windows-1)) somd_afe.sh ligand_1 ligand_4 ${ligpair[4]} ${ligpair[3]}
 	sbatch --array=0-$(($n_windows-1)) somd_afe.sh ${ligpair[0]} ${ligpair[1]} ${ligpair[4]} "${ligpair[3]}"
+	sleep 1
 done
