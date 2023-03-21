@@ -82,15 +82,17 @@ box_edges = protocol_lines[3].split()[-1].split("*")[0]
 box_axis_unit = bss.Units.Length.angstrom
 box_type = protocol_lines[4].split()[-1]
 
-ligand_files = glob.glob(f"{ligand_path}*.{filetype}")
+ligand_files = sorted(glob.glob(f"{ligand_path}*.{filetype}"))
 
 protein = bss.IO.readMolecules([protein_file + ".rst7", protein_file + ".prm7"])[0]
 ligands = [bss.IO.readMolecules(ligand_file)[0] for ligand_file in ligand_files]
 
-for i in range(n_ligands):
 
+
+for i in range(n_ligands):
     ligand_number = ligand_names[i].split("_")[-1]
     print(f"working on ligand {ligand_number}")
+
     ligand_parameters = bss.Parameters.gaff2(ligands[i], net_charge=ligand_charge).getMolecule()
 
     box_min, box_max = ligand_parameters.getAxisAlignedBoundingBox()
