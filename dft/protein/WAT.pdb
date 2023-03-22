@@ -1,34 +1,15 @@
-HEADER                                                                          
-TITLE     6O5T_P (1)                                                            
-HETATM    1  O   HOH A 601      16.659   7.501   5.172  1.00 22.67           O  
-HETATM    2  H2  HOH A 601      15.930   7.465   5.793  1.00  0.00           H  
-HETATM    3  H1  HOH A 601      17.390   7.964   5.673  1.00  0.00           H  
-HETATM    4  O   HOH A 611      21.424   0.780   3.276  1.00 23.17           O  
-HETATM    5  H2  HOH A 611      21.416   0.437   2.381  1.00  0.00           H  
-HETATM    6  H1  HOH A 611      20.559   1.275   3.361  1.00  0.00           H  
-HETATM    7  O   HOH A 631      15.426   2.154   2.039  1.00 27.33           O  
-HETATM    8  H2  HOH A 631      16.372   2.299   1.992  1.00  0.00           H  
-HETATM    9  H1  HOH A 631      15.268   1.352   1.463  1.00  0.00           H  
-HETATM   10  O   HOH A 650      21.405  -1.775   4.639  1.00 21.81           O  
-HETATM   11  H2  HOH A 650      21.416  -0.865   4.338  1.00  0.00           H  
-HETATM   12  H1  HOH A 650      22.324  -1.929   5.001  1.00  0.00           H  
-HETATM   13  O   HOH A 674      13.525   7.524   8.350  1.00 49.39           O  
-HETATM   14  H2  HOH A 674      13.543   6.594   8.581  1.00  0.00           H  
-HETATM   15  H1  HOH A 674      12.712   7.880   8.810  1.00  0.00           H  
-CONECT    1    2    3                                                           
-CONECT    2    1                                                                
-CONECT    3    1                                                                
-CONECT    4    5    6                                                           
-CONECT    5    4                                                                
-CONECT    6    4                                                                
-CONECT    7    8    9                                                           
-CONECT    8    7                                                                
-CONECT    9    7                                                                
-CONECT   10   11   12                                                           
-CONECT   11   10                                                                
-CONECT   12   10                                                                
-CONECT   13   14   15                                                           
-CONECT   14   13                                                                
-CONECT   15   13                                                                
-MASTER        0    0    0    0    0    0    0    0   15    0   15    0          
-END                                                                             
+HETATM 3444  O   HOH A 236      16.659   7.501   5.172  1.00 22.67           O  
+HETATM 3445  H2  HOH A 236      17.659   7.501   5.172  1.00  0.00           H  
+HETATM 3446  H1  HOH A 236      16.159   6.823   4.633  1.00  0.00           H  
+HETATM 3447  O   HOH A 237      21.424   0.780   3.276  1.00 23.17           O  
+HETATM 3448  H2  HOH A 237      22.424   0.780   3.276  1.00  0.00           H  
+HETATM 3449  H1  HOH A 237      20.924   0.838   2.412  1.00  0.00           H  
+HETATM 3450  O   HOH A 238      15.426   2.154   2.039  1.00 27.33           O  
+HETATM 3451  H2  HOH A 238      16.426   2.154   2.039  1.00  0.00           H  
+HETATM 3452  H1  HOH A 238      14.926   1.727   1.285  1.00  0.00           H  
+HETATM 3453  O   HOH A 239      21.405  -1.775   4.639  1.00 21.81           O  
+HETATM 3454  H2  HOH A 239      22.405  -1.775   4.639  1.00  0.00           H  
+HETATM 3455  H1  HOH A 239      20.905  -1.330   3.896  1.00  0.00           H  
+HETATM 3456  O   HOH A 240      13.525   7.524   8.350  1.00 49.39           O  
+HETATM 3457  H2  HOH A 240      14.525   7.524   8.350  1.00  0.00           H  
+HETATM 3458  H1  HOH A 240      13.025   6.991   7.668  1.00  0.00           H  
