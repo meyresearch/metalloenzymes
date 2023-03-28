@@ -1,54 +1,56 @@
 HEADER                                                                          
-TITLE     TWB_D (2)                                                             
-HETATM    1  C   MOL     1     -38.054   4.528   9.741  1.00 -0.21           C  
-HETATM    2  C   MOL     1     -37.194   3.567   9.294  1.00 -0.24           C  
-HETATM    3  C   MOL     1     -36.036   3.924   8.616  1.00 -0.32           C  
-HETATM    4  C   MOL     1     -33.986   3.175   7.596  1.00 -0.39           C  
-HETATM    5  C   MOL     1     -33.654   4.541   7.308  1.00 -0.24           C  
-HETATM    6  C   MOL     1     -34.497   5.552   7.630  1.00 -0.23           C  
-HETATM    7  C   MOL     1     -34.029   6.939   7.244  1.00 -0.33           C  
-HETATM    8  C   MOL     1     -35.738   5.264   8.365  1.00 -0.30           C  
-HETATM    9  C   MOL     1     -36.631   6.235   8.850  1.00 -0.29           C  
-HETATM   10  C   MOL     1     -37.764   5.865   9.519  1.00 -0.33           C  
-HETATM   11  N   MOL     1     -35.160   2.936   8.201  1.00 -0.16           N  
-HETATM   12  O   MOL     1     -34.404   8.882   5.342  1.00 -1.44           O1-
-HETATM   13  O   MOL     1     -33.660   6.574   4.548  1.00 -1.13           O1-
-HETATM   14  O   MOL     1     -36.041   6.924   5.395  1.00 -0.27           O  
-HETATM   15  P   MOL     1     -34.496   7.382   5.516  1.00 -0.42           P  
-HETATM   16  BR  MOL     1     -39.616   4.041  10.667  1.00 -1.26          BR  
-HETATM   17  O   MOL     1     -33.192   2.295   7.270  1.00 -0.45           O  
-HETATM   18  BR  MOL     1     -36.332   8.083   8.651  1.00 -1.23          BR  
-HETATM   19  H   MOL     1     -37.399   2.602   9.456  1.00  0.00           H  
-HETATM   20  H   MOL     1     -32.784   4.751   6.862  1.00  0.00           H  
-HETATM   21  H   MOL     1     -33.033   6.979   7.331  1.00  0.00           H  
-HETATM   22  H   MOL     1     -34.474   7.592   7.857  1.00  0.00           H  
-HETATM   23  H   MOL     1     -38.392   6.569   9.851  1.00  0.00           H  
-HETATM   24  H   MOL     1     -35.376   2.095   8.353  1.00 -0.10           H  
-HETATM   25  H   MOL     1     -36.658   7.626   5.769  1.00  0.19           H  
-CONECT    1    2   10   16                                                      
-CONECT    2    1    3   19                                                      
-CONECT    3    2    8   11                                                      
-CONECT    4    5   11   17                                                      
-CONECT    5    4    6   20                                                      
-CONECT    6    5    7    8                                                      
-CONECT    7    6   15   21   22                                                 
-CONECT    8    3    6    9                                                      
-CONECT    9    8   10   18                                                      
-CONECT   10    1    9   23                                                      
-CONECT   11    3    4   24                                                      
-CONECT   12   15                                                                
-CONECT   13   15                                                                
-CONECT   14   15   25                                                           
-CONECT   15    7   12   13   14                                                 
-CONECT   16    1                                                                
-CONECT   17    4                                                                
-CONECT   18    9                                                                
-CONECT   19    2                                                                
-CONECT   20    5                                                                
-CONECT   21    7                                                                
-CONECT   22    7                                                                
-CONECT   23   10                                                                
+TITLE     ligand_16                                                             
+HETATM    1  C02 L8J A 503      15.359  -1.003   9.002  1.00 55.06           C  
+HETATM    2  C03 L8J A 503      16.555  -0.377   8.726  1.00 45.29           C  
+HETATM    3  C04 L8J A 503      16.554   0.981   8.470  1.00 54.91           C  
+HETATM    4  C06 L8J A 503      14.200  -0.248   9.015  1.00 52.92           C  
+HETATM    5  C07 L8J A 503      14.215   1.142   8.751  1.00 59.01           C  
+HETATM    6  C08 L8J A 503      15.391   1.833   8.465  1.00 54.37           C  
+HETATM    7  C09 L8J A 503      15.263   3.250   8.216  1.00 58.03           C  
+HETATM    8  C10 L8J A 503      16.330   4.296   7.863  1.00 47.26           C  
+HETATM    9  C15 L8J A 503      13.985   3.794   8.282  1.00 58.39           C  
+HETATM   10  C16 L8J A 503      12.875   3.023   8.574  1.00 58.19           C  
+HETATM   11  N18 L8J A 503      13.011   1.737   8.799  1.00 57.46           N  
+HETATM   12  O12 L8J A 503      17.348   3.159   5.540  1.00 45.61           O  
+HETATM   13  O13 L8J A 503      17.318   5.622   5.622  1.00 27.91           O  
+HETATM   14  O14 L8J A 503      15.229   4.356   5.322  1.00 29.91           O  
+HETATM   15  O17 L8J A 503      11.803   3.524   8.622  1.00 62.11           O  
+HETATM   16  P11 L8J A 503      16.571   4.366   6.010  1.00 39.94           P  
+HETATM   17 BR01 L8J A 503      15.338  -2.906   9.368  1.00 84.91          BR  
+HETATM   18 BR05 L8J A 503      18.217   1.906   8.084  1.00 68.05          BR  
+HETATM   19 H102 L8J A 503      16.039   5.193   8.196  1.00  0.00           H  
+HETATM   20 H103 L8J A 503      17.195   4.051   8.302  1.00  0.00           H  
+HETATM   21  H03 L8J A 503      17.409  -0.897   8.711  1.00  0.00           H  
+HETATM   22  H06 L8J A 503      13.329  -0.696   9.216  1.00  0.00           H  
+HETATM   23  H15 L8J A 503      13.865   4.772   8.113  1.00  0.00           H  
+HETATM   24  H18 L8J A 503      12.202   1.189   9.011  1.00  0.00           H  
+HETATM   25  H   L8J A 503      18.271   5.587   5.941  1.00  0.00           H  
+HETATM   26  H1  L8J A 503      14.772   3.467   5.436  1.00  0.00           H  
+CONECT    1    2    4   17                                                      
+CONECT    2    1    3   21                                                      
+CONECT    3    2    6   18                                                      
+CONECT    4    1    5   22                                                      
+CONECT    5    4    6   11                                                      
+CONECT    6    3    5    7                                                      
+CONECT    7    6    8    9                                                      
+CONECT    8    7   16   19   20                                                 
+CONECT    9    7   10   23                                                      
+CONECT   10    9   11   15                                                      
+CONECT   11    5   10   24                                                      
+CONECT   12   16                                                                
+CONECT   13   16   25                                                           
+CONECT   14   16   26                                                           
+CONECT   15   10                                                                
+CONECT   16    8   12   13   14                                                 
+CONECT   17    1                                                                
+CONECT   18    3                                                                
+CONECT   19    8                                                                
+CONECT   20    8                                                                
+CONECT   21    2                                                                
+CONECT   22    4                                                                
+CONECT   23    9                                                                
 CONECT   24   11                                                                
-CONECT   25   14                                                                
-MASTER        0    0    0    0    0    0    0    0   25    0   25    0          
+CONECT   25   13                                                                
+CONECT   26   14                                                                
+MASTER        0    0    0    0    0    0    0    0   26    0   26    0          
 END                                                                             

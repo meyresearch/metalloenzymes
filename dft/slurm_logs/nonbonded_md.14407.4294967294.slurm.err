@@ -1,7 +1,0 @@
-Note: The following floating-point exceptions are signalling: IEEE_UNDERFLOW_FLAG IEEE_DENORMAL
-srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
-srun: got SIGCONT
-slurmstepd-pluto: error: *** STEP 14407.1 ON pluto CANCELLED AT 2023-02-24T00:41:01 ***
-slurmstepd-pluto: error: *** JOB 14407 ON pluto CANCELLED AT 2023-02-24T00:41:01 ***
-srun: forcing job termination
-srun: error: pluto: task 0: Terminated
