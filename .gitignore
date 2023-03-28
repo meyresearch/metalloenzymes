@@ -63,6 +63,12 @@ X_starmap/outputs/*/*/*/*/*/*
 *mdcrd.*
 slurm_logs/*
 scripts/test_min/*
+dft/ligand_*/protonated/*
+dft/ligand_*/deprotonated/*
+kpc2/equilibration_protonated/*/*/*/*
+kpc2/inputs_protonated/*
+kpc2/outputs/
+kpc2/outputs_protonated/
 dft/nonbonded/ligand_1/*
 *.err
 stdout_*

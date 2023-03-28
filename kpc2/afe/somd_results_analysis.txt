@@ -1,2 +1,0 @@
-lig_1~lig_4
--0.0269 kcal/mol ± 0.1829 kcal/mol 
