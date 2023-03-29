@@ -91,7 +91,9 @@ protein_path = full_path + system + "/inputs/protein/"
 
 ligand_path = full_path + system + "/inputs/ligands/"
 protein_file = arguments.protein
+
 fn.is_file(protein_path+protein_file)
+
 water_file = arguments.water
 output_file = arguments.output
 forcefield = arguments.forcefield
