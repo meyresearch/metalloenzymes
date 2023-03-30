@@ -21,7 +21,7 @@ echo "-----------------------------------------------------------------"
 echo "MINIMISATION $ligand"
 
 # If minimisation folder exists, delete the old one
-min_dir=$path//amber/01_minimisation/
+min_dir=$path/01_minimisation/
 if [[ -d $min_dir ]]; then
 	rm -r $min_dir
 fi
@@ -33,7 +33,7 @@ srun pmemd.cuda -O -i min.in -o min.out -p vim2_solv.prmtop -c vim2_solv.inpcrd 
 echo "-----------------------------------------------------------------"
 echo "-----------------------------------------------------------------"
 echo "HEAT $ligand"
-heat_dir=$path//amber/02_heat/
+heat_dir=$path/02_heat/
 
 # If heat folder exists, remove it 
 if [[ -d $heat_dir ]]; then
@@ -48,7 +48,7 @@ srun pmemd.cuda -O -i heat.in -o heat.out -p $min_dir/vim2_solv.prmtop -c $min_d
 echo "-----------------------------------------------------------------"
 echo "-----------------------------------------------------------------"
 echo "RELAX $ligand"
-relax_dir=$path//amber/03_relax/
+relax_dir=$path/03_relax/
 
 # If relax folder exists, remove it 
 if [[ -d $relax_dir ]]; then
@@ -63,7 +63,7 @@ srun pmemd.cuda -O -i relax.in -o relax.out -p $min_dir/vim2_solv.prmtop -c $hea
 echo "-----------------------------------------------------------------"
 echo "-----------------------------------------------------------------"
 echo "LOWER $ligand"
-lower_dir=$path//amber/04_lower/
+lower_dir=$path/04_lower/
 
 # If lower folder exists, remove it 
 if [[ -d $lower_dir ]]; then
@@ -78,7 +78,7 @@ srun pmemd.cuda -O -i lower.in -o lower.out -p $min_dir/vim2_solv.prmtop -c $rel
 echo "-----------------------------------------------------------------"
 echo "-----------------------------------------------------------------"
 echo "BB MINIMISATION $ligand"
-bb_min_dir=$path//amber/05_bb_min/
+bb_min_dir=$path/05_bb_min/
 
 # If bb min folder exists, remove it
 if [[ -d $bb_min_dir ]]; then
@@ -93,7 +93,7 @@ srun pmemd.cuda -O -i bb_min.in -o bb_min.out -p $min_dir/vim2_solv.prmtop -c $l
 echo "-----------------------------------------------------------------"
 echo "-----------------------------------------------------------------"
 echo "BB RELAX $ligand"
-bb_relax_dir=$path//amber/06_bb_relax/
+bb_relax_dir=$path/06_bb_relax/
 
 # If bb relax folder exists, remove it
 if [[ -d $bb_relax_dir ]]; then
@@ -108,7 +108,7 @@ srun pmemd.cuda -O -i bb_relax.in -o bb_relax.out -p $min_dir/vim2_solv.prmtop -
 echo "-----------------------------------------------------------------"
 echo "-----------------------------------------------------------------"
 echo "REDUCE $ligand"
-reduce_dir=$path//amber/07_reduce/
+reduce_dir=$path/07_reduce/
 
 # If reduce folder exists, remove it
 if [[ -d $reduce_dir ]]; then
@@ -123,7 +123,7 @@ srun pmemd.cuda -O -i reduce.in -o reduce.out -p $min_dir/vim2_solv.prmtop -c $b
 echo "-----------------------------------------------------------------"
 echo "-----------------------------------------------------------------"
 echo "CONTINUE $ligand"
-continue_dir=$path//amber/08_continue/
+continue_dir=$path/08_continue/
 
 # If continue folder exists, remove it
 if [[ -d $continue_dir ]]; then
@@ -138,7 +138,7 @@ srun pmemd.cuda -O -i continue.in -o continue.out -p $min_dir/vim2_solv.prmtop -
 echo "-----------------------------------------------------------------"
 echo "-----------------------------------------------------------------"
 echo "FREE $ligand"
-free_dir=$path//amber/09_free/
+free_dir=$path/09_free/
 
 # If free folder exists, remove it
 if [[ -d $free_dir ]]; then
@@ -153,7 +153,7 @@ srun pmemd.cuda -O -i free.in -o free.out -p $min_dir/vim2_solv.prmtop -c $conti
 echo "-----------------------------------------------------------------"
 echo "-----------------------------------------------------------------"
 echo "MD PRODUCTION $ligand"
-md_dir=$path//amber/10_md/
+md_dir=$path/10_md/
 
 if [[ -d $md_dir ]]; then
 	rm -r $md_dir
@@ -161,7 +161,6 @@ fi
 
 mkdir -p $md_dir
 cd $md_dir
-cp $path/scripts/md.mdp .
 cp $min_dir/vim2_solv.prmtop vim2_equil.prmtop .
 cp $free_dir/free.rst7 vim2_equil.rst7 .
 srun pmemd.cuda -O -i md.in -o md.out -p vim2_equil.prmtop -c vim2_equil.rst7 -inf md.info -ref vim2_equil.rst7 -r vim2_equil.rst7 -x md.nc
