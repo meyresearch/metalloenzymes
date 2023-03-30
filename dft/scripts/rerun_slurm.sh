@@ -26,11 +26,7 @@ if [[ -d $min_dir ]]; then
 	rm -r $min_dir
 fi
 mkdir -p $min_dir
-
 cd $min_dir
-cp $path//vim2_solv.inpcrd $min_dir
-cp $path//vim2_solv.prmtop $min_dir
-
 
 srun pmemd.cuda -O -i min.in -o min.out -p vim2_solv.prmtop -c vim2_solv.inpcrd -r min.rst7 -inf min.info -ref vim2_solv.inpcrd -x mdcrd.min 
 
@@ -45,7 +41,6 @@ if [[ -d $heat_dir ]]; then
 fi
 mkdir -p $heat_dir
 cd $heat_dir
-cp $path/scripts/heat.in .
 
 srun pmemd.cuda -O -i heat.in -o heat.out -p $min_dir/vim2_solv.prmtop -c $min_dir/min.rst7 -r heat.rst7 -inf heat.info -ref $min_dir/min.rst7 -x mdcrd.heat 
 
@@ -61,7 +56,6 @@ if [[ -d $relax_dir ]]; then
 fi
 mkdir -p $relax_dir
 cd $relax_dir
-cp $path/scripts/relax.in .
 
 srun pmemd.cuda -O -i relax.in -o relax.out -p $min_dir/vim2_solv.prmtop -c $heat_dir/heat.rst7 -r relax.rst7 -inf relax.info -ref $heat_dir/heat.rst7 -x mdcrd.relax
 
@@ -77,7 +71,6 @@ if [[ -d $lower_dir ]]; then
 fi
 mkdir -p $lower_dir
 cd $lower_dir
-cp $path/scripts/lower.in .
 
 srun pmemd.cuda -O -i lower.in -o lower.out -p $min_dir/vim2_solv.prmtop -c $relax_dir/relax.rst7 -r lower.rst7 -inf lower.info -ref $relax_dir/relax.rst7 -x mdcrd.lower
 
@@ -93,7 +86,6 @@ if [[ -d $bb_min_dir ]]; then
 fi
 mkdir -p $bb_min_dir
 cd $bb_min_dir
-cp $path/scripts/bb_min.in .
 
 srun pmemd.cuda -O -i bb_min.in -o bb_min.out -p $min_dir/vim2_solv.prmtop -c $lower_dir/lower.rst7 -r bb_min.rst7 -inf bb_min.info -ref $lower_dir/lower.rst7 -x mdcrd.bb_min
 
@@ -109,7 +101,6 @@ if [[ -d $bb_relax_dir ]]; then
 fi
 mkdir -p $bb_relax_dir
 cd $bb_relax_dir
-cp $path/scripts/bb_relax.in .
 
 srun pmemd.cuda -O -i bb_relax.in -o bb_relax.out -p $min_dir/vim2_solv.prmtop -c $bb_min_dir/bb_min.rst7 -r bb_relax.rst7 -inf bb_relax.info -ref $bb_min_dir/bb_min.rst7 -x mdcrd.bb_relax
 
@@ -125,7 +116,6 @@ if [[ -d $reduce_dir ]]; then
 fi
 mkdir -p $reduce_dir
 cd $reduce_dir
-cp $path/scripts/reduce.in .
 
 srun pmemd.cuda -O -i reduce.in -o reduce.out -p $min_dir/vim2_solv.prmtop -c $bb_relax_dir/bb_relax.rst7 -r reduce.rst7 -inf reduce.info -ref $bb_relax_dir/bb_relax.rst7 -x mdcrd.reduce
 
@@ -141,7 +131,6 @@ if [[ -d $continue_dir ]]; then
 fi
 mkdir -p $continue_dir
 cd $continue_dir
-cp $path/scripts/continue.in .
 
 srun pmemd.cuda -O -i continue.in -o continue.out -p $min_dir/vim2_solv.prmtop -c $reduce_dir/reduce.rst7 -r continue.rst7 -inf continue.info -ref $reduce_dir/reduce.rst7 -x mdcrd.continue
 
@@ -157,7 +146,6 @@ if [[ -d $free_dir ]]; then
 fi
 mkdir -p $free_dir
 cd $free_dir
-cp $path/scripts/free.in .
 
 srun pmemd.cuda -O -i free.in -o free.out -p $min_dir/vim2_solv.prmtop -c $continue_dir/continue.rst7 -r free.rst7 -inf free.info -ref $continue_dir/continue.rst7 -x mdcrd.free
 
@@ -174,9 +162,8 @@ fi
 mkdir -p $md_dir
 cd $md_dir
 cp $path/scripts/md.mdp .
-cp $min_dir/vim2_solv.prmtop vim2_equil.prmtop
-cp $free_dir/free.rst7 vim2_equil.rst7
+cp $min_dir/vim2_solv.prmtop vim2_equil.prmtop .
+cp $free_dir/free.rst7 vim2_equil.rst7 .
 srun pmemd.cuda -O -i md.in -o md.out -p vim2_equil.prmtop -c vim2_equil.rst7 -inf md.info -ref vim2_equil.rst7 -r vim2_equil.rst7 -x md.nc
-
 
 echo "-----------------------------------------------------------------"
