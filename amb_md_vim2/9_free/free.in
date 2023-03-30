@@ -8,4 +8,9 @@
   ntt =3, gamma_ln=1.0, ntb = 2, ntp = 1,
   nscm = 1000, barostat = 2,
   ioutfm=1, ntxo=2,
+  nmropt=1,
  /
+ &wt type="DUMPFREQ", istep1=10 /
+ &wt type="END"  /
+DISANG=disres.rst
+DUMPAVE=min_restraints.rst 

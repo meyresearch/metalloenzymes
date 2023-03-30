@@ -6,4 +6,9 @@ Explicit solvent molecular dynamics constant pressure 50 ns MD
    temp0=300, gamma_ln=1.0, ig=-1, 
    ntp=1, ntc=2, ntf=2, cut=9, 
    ntb=2, iwrap=1, ioutfm=1, 
+   nmropt=1,
 / 
+ &wt type="DUMPFREQ", istep1=10 /
+ &wt type="END"  /
+DISANG=disres.rst
+DUMPAVE=min_restraints.rst 

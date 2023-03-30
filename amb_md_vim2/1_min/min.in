@@ -1,6 +1,7 @@
 minimisation of solvent
  &cntrl
-  imin = 1,		
+  imin = 1,	
+  nmropt = 1, 	
   maxcyc = 1000,	
   ncyc = 20,		
   ntx = 1, 		
@@ -18,3 +19,7 @@ minimisation of solvent
   ioutfm = 1		
   ntxo = 2		
 /
+ &wt type="DUMPFREQ", istep1=10 /
+ &wt type="END"  /
+DISANG=disres.rst
+DUMPAVE=min_restraints.rst

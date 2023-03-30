@@ -26,7 +26,11 @@
   restraint_wt=100.0
   nmropt=1,
   ioutfm=1,
-   ntxo=2,
+  ntxo=2,
  /
-&wt TYPE="TEMP0", istep1=0, istep2=1000000, value1=100., value2=300., /
-&wt TYPE="END", /
+ &wt TYPE="TEMP0", istep1=0, istep2=1000000, value1=100., value2=300., /
+ &wt TYPE="END", /
+ &wt type="DUMPFREQ", istep1=10 /
+ &wt type="END"  /
+DISANG=disres.rst
+DUMPAVE=min_restraints.rst 
