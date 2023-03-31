@@ -72,3 +72,4 @@ kpc2/outputs_protonated/
 dft/nonbonded/ligand_1/*
 *.err
 stdout_*
+amb_md_vim2/*/*
