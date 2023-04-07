@@ -68,7 +68,10 @@ dft/ligand_*/deprotonated/*
 kpc2/equilibration_protonated/*/*/*/*
 kpc2/inputs_protonated/*
 kpc2/outputs/
+bss_d_kpc2/outputs/
+bss_d_kpc2/*/*/*
 kpc2/outputs_protonated/
 dft/nonbonded/ligand_1/*
 *.err
 stdout_*
+amb_md_vim2/*/*

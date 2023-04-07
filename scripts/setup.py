@@ -1,5 +1,3 @@
-import warnings
-warnings.filterwarnings("ignore")
 import BioSimSpace as bss
 import argparse
 import os
@@ -178,7 +176,7 @@ elif forcefield.lower() == "ff14sb":
 ligand_files = sorted(glob.glob(f"{ligand_path}*.sdf"))
 ligands = [bss.IO.readMolecules(filepath)[0] for filepath in ligand_files]
 ligand_names = [filepath.split("/")[-1].replace(".sdf","") for filepath in ligand_files]
-transformations, lomap_scores = bss.Align.generateNetwork(ligands, plot_network=True, names=ligand_names, work_dir=ligand_path)
+transformations, lomap_scores = bss.Align.generateNetwork(ligands, plot_network=True, names=ligand_names, work_dir=ligand_path) # Change plot_network=True when fixed!
 
 perturbation_network_dict = {}
 transformations_named = [(ligand_names[transf[0]], ligand_names[transf[1]]) for transf in transformations]
