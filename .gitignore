@@ -72,3 +72,6 @@ kpc2/outputs_protonated/
 dft/nonbonded/ligand_1/*
 *.err
 stdout_*
+*/__pycache__/*
+bss_d_kpc2/*
+*.rst
