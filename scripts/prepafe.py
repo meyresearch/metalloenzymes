@@ -99,7 +99,7 @@ for i in range(n_transformations):
     inverse_mapping = {value:key for key,value in mapping.items()}
     ligand_2_aligned = bss.Align.rmsdAlign(ligand_2, ligand_1, inverse_mapping)
 
-    merged_ligands = bss.Align.merge(ligand_1, ligand_2_aligned, mapping, allow_ring_breaking=True, allow_ring_size_change=True) 
+    merged_ligands = bss.Align.merge(ligand_1, ligand_2_aligned, mapping) 
 
     ligand_1_system.removeMolecules(ligand_1)
     ligand_1_system.addMolecules(merged_ligands)
@@ -136,7 +136,7 @@ for i in range(n_transformations):
 
     system_2_ligand_aligned = bss.Align.rmsdAlign(system_2_ligand, system_1_ligand, inverse_mapping)
 
-    bound_merged_ligands = bss.Align.merge(system_1_ligand, system_2_ligand_aligned, mapping, allow_ring_breaking=True, allow_ring_size_change=True)
+    bound_merged_ligands = bss.Align.merge(system_1_ligand, system_2_ligand_aligned, mapping)
 
     system_1.removeMolecules(system_1_ligand)
     system_1.addMolecules(bound_merged_ligands)
