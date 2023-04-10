@@ -75,3 +75,4 @@ dft/nonbonded/ligand_1/*
 *.err
 stdout_*
 amb_md_vim2/*/*
+*/__pycache__/*
