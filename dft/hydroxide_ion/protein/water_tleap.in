@@ -1,0 +1,5 @@
+loadoff solvents.lib
+HOH = TP3
+wat = loadpdb WAT.pdb
+savepdb wat WAT.tleap.pdb
+quit

@@ -144,7 +144,7 @@ for i in range(n_transformations):
 
     free_energy_protocol = bss.Protocol.FreeEnergy(lam_vals=lambda_values[i], runtime=runtime*runtime_unit)
 
-    working_directory = f"{full_path}/{system_name}/outputs/{engines[i].strip()}/lig_{ligand_1_number}~lig_{ligand_2_number}"
+    working_directory = f"{full_path}/{system_name}/outputs/{engines[i].strip()}_2/lig_{ligand_1_number}~lig_{ligand_2_number}"
     bound_directory = working_directory + "/bound/"
     unbound_directory = working_directory + "/unbound/"
 

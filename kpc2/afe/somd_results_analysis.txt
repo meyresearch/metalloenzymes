@@ -1,0 +1,23 @@
+lig_11~lig_5
+lig_1~lig_4
+-0.1422 kcal/mol ± 0.1410 kcal/mol 
+lig_16~lig_9
+lig_6~lig_9
+lig_7~lig_9
+lig_13~lig_16
+lig_11~lig_14
+lig_2~lig_4
+lig_10~lig_6
+lig_6~lig_8
+lig_15~lig_3
+lig_12~lig_15
+lig_11~lig_12
+lig_1~lig_5
+lig_2~lig_9
+lig_14~lig_15
+lig_4~lig_9
+lig_11~lig_3
+lig_11~lig_4
+lig_6~lig_7
+lig_10~lig_8
+lig_13~lig_6
