@@ -8,4 +8,4 @@ water = bss.IO.readMolecules("../protein/WAT.pdb")[0]
 
 complex = protein + zn1 + zn2 + water
 
-bss.IO.saveMolecules("../protein/complex.pdb", complex, "pdb")
+bss.IO.saveMolecules("../protein/bss_complex.pdb", complex, "pdb")

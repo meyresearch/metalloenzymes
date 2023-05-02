@@ -21,6 +21,10 @@ parser.add_argument("protein",
                     type=str,
                     help="protein pdb file in ../system/inputs/protein/")
 
+parser.add_argument("path",
+                    type=str,
+                    help="path to /inputs/")
+
 parser.add_argument("-a",
                     "--active-site",
                     type=str,
@@ -80,14 +84,17 @@ parser.add_argument("-t",
 
 arguments = parser.parse_args()
 system = arguments.system
-
+path = arguments.path
 full_path = os.getcwd() + "/"
 if "scripts" in full_path:
     full_path = full_path.replace("/scripts/", "/")
 
 protein_path = full_path + system + "/inputs/protein/"
+protein_path = path + "/inputs/protein/"
+
 
 ligand_path = full_path + system + "/inputs/ligands/"
+ligand_path = path + "/inputs/ligands/"
 protein_file = arguments.protein
 fn.is_file(protein_path+protein_file)
 water_file = arguments.water
@@ -301,6 +308,7 @@ while adjust_network == True:
 
 adjusted_dict = dict(zip(edited_dataframe["perturbations"], edited_dataframe["score"]))
 production_directory = full_path + system + "/afe/"
+production_directory = path + "/afe/"
 pathlib.Path(production_directory).mkdir(parents=True, exist_ok=True)
 
 with open(production_directory + "ligands.dat", "w") as ligands_file:

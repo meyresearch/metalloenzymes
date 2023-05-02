@@ -12,6 +12,9 @@ parser = argparse.ArgumentParser(description="prepare AFE calculations")
 parser.add_argument("system",
                      type=str,
                      help="system name; this is used to find the folder containing input files")
+parser.add_argument("path",
+                     type=str,
+                     help="path; this is used to find the folder containing input files")
 parser.add_argument("network",
                     type=str,
                     help="filename including full path to network file")
@@ -19,6 +22,7 @@ parser.add_argument("network",
 arguments = parser.parse_args()
 
 system_name = arguments.system
+path = arguments.path
 network_file = arguments.network
 
 full_path = os.getcwd() + "/"
@@ -27,7 +31,7 @@ if "scripts" in full_path:
 elif system_name in full_path:
     full_path = full_path.replace(f"/{system_name}/", "/")
 equilibration_path = full_path + system_name + "/equilibration/"
-
+equilibration_path = path + "/equilibration/"
 if not os.path.isfile(network_file):
     print(f"The input file {network_file} does not exist")
     sys.exit()
@@ -50,6 +54,8 @@ lambda_values_string = [lambdas.split() for lambdas in windows]
 lambda_values = [[float(value) for value in lambda_list] for lambda_list in lambda_values_string]
 
 afe_folder_path = full_path + system_name + "/afe/"
+afe_folder_path = path + "/afe/"
+
 protocol_file = afe_folder_path + "protocol.dat"
 with open(protocol_file, "r") as file:
     protocol = file.readlines()
@@ -144,7 +150,8 @@ for i in range(n_transformations):
 
     free_energy_protocol = bss.Protocol.FreeEnergy(lam_vals=lambda_values[i], runtime=runtime*runtime_unit)
 
-    working_directory = f"{full_path}/{system_name}/outputs/{engines[i].strip()}_2/lig_{ligand_1_number}~lig_{ligand_2_number}"
+    working_directory = f"{full_path}/{system_name}/outputs/{engines[i].strip()}_1/lig_{ligand_1_number}~lig_{ligand_2_number}"
+    working_directory = f"{path}/outputs/{engines[i].strip()}_1/lig_{ligand_1_number}~lig_{ligand_2_number}"
     bound_directory = working_directory + "/bound/"
     unbound_directory = working_directory + "/unbound/"
 

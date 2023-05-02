@@ -18,6 +18,9 @@ parser.add_argument("protein",
                     type=str,
                     help="filename for .prm7 and .rst7 files in ../system/inputs/protein/")
 
+parser.add_argument("path",
+                    type=str,
+                    help="path to /inputs/protein/")
 
 parser.add_argument("-c",
                     "--charge",
@@ -43,6 +46,7 @@ parser.add_argument("-fo",
 arguments = parser.parse_args()
 system_name = arguments.system
 protein_name = arguments.protein
+path = arguments.path
 output_filetype = arguments.fileoutput
 ligand_charge = arguments.charge
 
@@ -56,15 +60,17 @@ if "scripts" in full_path:
     full_path = full_path.replace("/scripts/", "/")
 
 protein_path = full_path + system_name + "/inputs/protein/"
+protein_path = path + "/inputs/protein/"
 protein_file = protein_path + protein_name
 filetype = arguments.fileinput
 
 afe_folder_path = full_path + system_name + "/afe/"
+afe_folder_path = path + "/afe/"
 ligands_file = afe_folder_path + "ligands.dat"
 protocol_file = afe_folder_path + "protocol.dat"
 network_file = afe_folder_path + "network.dat"
 ligand_path = full_path + system_name + "/inputs/ligands/"
-
+ligand_path = path + "/inputs/ligands/"
 #TODO check files exist!!!
 
 with open(ligands_file) as file:

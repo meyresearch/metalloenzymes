@@ -17,6 +17,10 @@ parser.add_argument("system",
                      type=str,
                      help="system name; this is used to find the folder containing input files")
 
+parser.add_argument("path",
+                     type=str,
+                     help="path; this is used to find the folder containing input files")
+
 parser.add_argument("ligand_number",
                     type=str,
                     help="number of ligand to minimise&equilibrate for AFE")
@@ -51,6 +55,7 @@ atm = bss.Units.Pressure.atm
 
 arguments = parser.parse_args()
 system_name = arguments.system
+path = arguments.path
 ligand_number = arguments.ligand_number
 
 minimisation_steps = arguments.minimisation_steps
@@ -61,11 +66,14 @@ runtime_npt = arguments.npt_runtime * picosecond
 full_path = os.getenv("HOME") + "/projects/metalloenzymes/"
 
 afe_folder_path = full_path + system_name + "/afe/"
+afe_folder_path = path + "/afe/"
 protocol_file = afe_folder_path + "protocol.dat"
 network_file = afe_folder_path + "network.dat"
 ligand_path = full_path + system_name + "/inputs/ligands/"
+ligand_path = path + "/inputs/ligands/"
 print(ligand_path)
 protein_path = full_path + system_name + "/inputs/protein/"
+protein_path = path + "/inputs/protein/"
 print(protein_path)
 
 #TODO  
@@ -75,7 +83,7 @@ print(protein_path)
 
 print("Processing unbound stage.")
 
-ligand_work_dir = fn.create_dirs(f"{full_path}/{system_name}/equilibration/unbound/ligand_{ligand_number}")
+ligand_work_dir = fn.create_dirs(f"{path}/equilibration/unbound/ligand_{ligand_number}")
 ligand_min_unbound_dir = fn.create_dirs(f"{ligand_work_dir}/min" )
 ligand_r_nvt_unbound_dir = fn.create_dirs(f"{ligand_work_dir}/r_nvt")
 ligand_nvt_unbound_dir = fn.create_dirs(f"{ligand_work_dir}/nvt")  
@@ -135,7 +143,7 @@ bss.IO.saveMolecules(filebase=ligand_npt_unbound_dir + f"/ligand_{ligand_number}
 
 print("Processing bound stage.")
 
-ligand_work_dir = fn.create_dirs(f"{full_path}/{system_name}/equilibration/bound/system_{ligand_number}/")
+ligand_work_dir = fn.create_dirs(f"{path}/equilibration/bound/system_{ligand_number}/")
 system_min_bound_dir = fn.create_dirs(f"{ligand_work_dir}/min") 
 system_r_nvt_bound_dir = fn.create_dirs(f"{ligand_work_dir}/r_nvt")
 system_bb_r_nvt_bound_dir = fn.create_dirs(f"{ligand_work_dir}/bb_r_nvt")  
