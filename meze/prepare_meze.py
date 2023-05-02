@@ -24,6 +24,7 @@ def clean_arguments(arguments):
 
 
 def main():
+
     parser = argparse.ArgumentParser(description="MEZE: MEtalloenZymE FF-builder for alchemistry")
    
     parser.add_argument("-i",
@@ -39,8 +40,10 @@ def main():
                         help="path to ligand files")
     
     arguments = parser.parse_args()
-    arguments = clean_arguments(arguments)
-    functions.prepare_system(arguments.ligand_path, arguments.protein)
+    # arguments = clean_arguments(arguments)
+    ligand_path = functions.path_exists(arguments.ligand_path)
+
+    functions.prepare_system(ligand_path, arguments.protein)
 
 if __name__ == "__main__":
     main()
