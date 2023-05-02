@@ -5,6 +5,7 @@ import os
 import glob
 import BioSimSpace as bss
 import network
+from definitions import ROOT_DIRECTORY
 
 
 def file_exists(file):
@@ -44,6 +45,22 @@ def path_exists(path):
         raise argparse.ArgumentTypeError(f"{path} does not exist")
     return path
 
+
+def get_absolute_path(path):
+    """
+    Take a path, check it exists and convert it to absolute 
+    Parameters:
+    -----------
+    path: str
+        absolute/relative path 
+    Return:
+    -------
+    str
+        absolute path
+    """
+    correct_path = path_exists(path)
+    clean_path = correct_path.replace("..", "")
+    return ROOT_DIRECTORY + clean_path
 
 def read_files(path):
     """
