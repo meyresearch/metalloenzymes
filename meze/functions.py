@@ -11,7 +11,6 @@ from definitions import ROOT_DIRECTORY
 def file_exists(file):
     """ 
     Check that given file exists
-    
     Parameters:
     -----------
     file: str
@@ -29,7 +28,6 @@ def file_exists(file):
 def path_exists(path):
     """ 
     Check that given path exists
-    
     Parameters:
     -----------
     path: str
@@ -65,7 +63,6 @@ def get_absolute_path(path):
 def read_files(path):
     """
     Read and sort files in a given path
-
     Parameters:
     -----------
     path: str
@@ -81,7 +78,6 @@ def read_files(path):
 def get_filenames(path):
     """
     Read path to file and remove extension.
-    
     Parameters:
     -----------
     path: str
@@ -99,7 +95,6 @@ def get_filenames(path):
 def get_ligand_files(ligand_path):
     """
     Read in all .sdf and .mol2 files in the provided path 
-    
     Parameters:
     -----------
     ligand_path: str
@@ -128,7 +123,7 @@ def prepare_system(ligand_path, protein):
     ligand_names = [get_filenames(filepath) for filepath in ligand_files]
 
     network_dict = network.create_network(ligands, ligand_names, ligand_path)
-
+    network = network.edit_network(network_dict)
 
 
 

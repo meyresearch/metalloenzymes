@@ -1,4 +1,5 @@
 import BioSimSpace as bss
+bss.setVerbose(True)
 import argparse
 import functions
 from argparse import RawTextHelpFormatter
@@ -6,6 +7,99 @@ import pandas as pd
 import sys
 from definitions import ADJUST_OPTIONS
 import numpy as np
+import shutil
+import os
+import logging
+
+
+def directories_exist(paths):
+    """
+    Check if LOMAP directories (images, inputs, outputs) already exist in ligand_path.
+    Raises a warning in each case.
+    Parameters:
+    -----------
+    paths: list
+        list of ligand_path + images/inputs/outputs
+    Return:
+    -------
+    bool
+        True: LOMAP directories exist, False: LOMAP directories do not exist
+    """
+    exists = False
+    for directory in paths:
+        if os.path.exists(directory) and os.path.isdir(directory):
+            exists = True
+            logging.warning(f"LOMAP output directory {directory} already exist.")
+    return exists
+
+
+def remove_lomap_directories(paths):
+    """
+    Remove LOMAP directories (images, inputs, outputs) in ligand_path.
+    Parameters:
+    -----------
+    paths: list
+        list of ligand_path + images/inputs/outputs
+    Return:
+    -------
+    """
+    for directory in paths:
+        if os.path.exists(directory) and os.path.isdir(directory):
+            print(f"Removing directory {directory}")
+            shutil.rmtree(directory)
+
+
+def create_new_lomap_directory(ligand_path):
+    """
+    Create a lomap directory in ligand path 
+    Parameters:
+    -----------
+    ligand_path: str
+        path to ligand files
+    Return:
+    -------
+    str
+        new LOMAP working directory 
+    """
+    new_lomap_directory = ligand_path + "/lomap/"
+    print(f"Creating new directory {new_lomap_directory}")
+    if not os.path.exists(new_lomap_directory):
+        os.mkdir(new_lomap_directory)
+    else:
+        print(f"Directory {new_lomap_directory} already exists. Continuing.")
+    return new_lomap_directory
+
+
+def check_lomap_directory(ligand_path):
+    """
+    This is work-around to avoid the network plotting failing if the directories already exist. 
+    Parameters:
+    -----------
+    ligand_path: str
+        path to ligand files
+    Return:
+    -------
+    str
+        updated working directory to be input into bss.generateNetwork
+    """
+    lomap_work_directory = ligand_path
+    lomap_names = ["/images/", "/inputs/", "/outputs/"]
+    lomap_directories = [ligand_path + name for name in lomap_names]
+
+    exists = directories_exist(lomap_directories)
+
+    while exists:
+        delete = input("\nDo you want to over-write them? [y]es/[n]o: ").lower()
+        if delete == "yes" or delete == "y":
+            remove_lomap_directories(lomap_directories)
+            break
+        elif delete == "no" or delete == "n":
+            create_new_lomap_directory(ligand_path)
+            break
+        else:
+            print("Invalid option.")
+            continue
+    return lomap_work_directory
 
 
 def create_network(ligands, ligand_names, ligand_path):
@@ -23,16 +117,16 @@ def create_network(ligands, ligand_names, ligand_path):
     -------
     dictionary
         dict of transformation: score
-
     """
-    transformations, lomap_scores = bss.Align.generateNetwork(ligands, plot_network=True, names=ligand_names, work_dir=ligand_path)
+    lomap_work_directory = check_lomap_directory(ligand_path)
+    transformations, lomap_scores = bss.Align.generateNetwork(ligands, plot_network=True, names=ligand_names, work_dir=lomap_work_directory)
     network_dict = {}
     named_transformations = [(ligand_names[transformation[0]], ligand_names[transformation[1]]) for transformation in transformations]
     
     for transformation, score in zip(named_transformations, lomap_scores):
         network_dict[transformation] = score
 
-    with open(ligand_path+f"/meze_lomap_network.csv", "w") as lomap_out:
+    with open(ligand_path+f"/meze_network.csv", "w") as lomap_out:
         for key, value in network_dict.items():
             lomap_out.write(f"{key}: {value}\n")
     
@@ -218,8 +312,20 @@ def add_transformation(edited_dataframe, options, last_index):
     return edited_dataframe
 
 
-def edit_network(network):
-
+def edit_network(ligand_path, network):
+    """
+    Edit LOMAP network
+    Parameters:
+    -----------
+    ligand_path: str
+        path to ligand files
+    network: dict
+        LOMAP network as a dictionary
+    Return:
+    -------
+    pd.DataFrame
+        adjusted network
+    """
     network = network_to_df(network)   
     first_index = network.first_valid_index()
     last_index = network.last_valid_index()
@@ -231,7 +337,9 @@ def edit_network(network):
         print_options()
         options = get_user_options()
         n_inputs = len(options)
-        if options[0] == "del":
+        if not options:
+            continue
+        elif options[0] == "del":
             edited_dataframe = delete_transformation(edited_dataframe, options, first_index, last_index)
         elif options[0] == "edit":
             edited_dataframe = edit_transformation(edited_dataframe, options, first_index, last_index)
@@ -239,19 +347,18 @@ def edit_network(network):
             edited_dataframe = add_transformation(edited_dataframe, options, last_index)
             last_index = edited_dataframe.last_valid_index()
         elif options[0] == "s":
-            pass
-        elif n_inputs == 1 and options.lower() != "q":
+            edited_dataframe.to_csv(ligand_path+"/meze_adjusted_network.csv", sep=":", header=None, index=False)
+            break
+        elif n_inputs == 1 and options[0].lower() != "q":
             print("Error: expected index")
             continue
-        elif options.lower() == "q":
+        elif options[0].lower() == "q":
             print("Quitting.")
             sys.exit()
-        elif options == "":
-            continue
         else:
             print("Invalid option.")
             continue
-    
+    return edited_dataframe
     
 def main():
 
@@ -268,9 +375,9 @@ def main():
     ligand_files = functions.get_ligand_files(ligand_path)
     ligands = [bss.IO.readMolecules(file)[0] for file in ligand_files]
     ligand_names = [functions.get_filenames(filepath) for filepath in ligand_files]
-
+    #TODO add a thing where you can input a network and then edit it here
     network_dict = create_network(ligands, ligand_names, ligand_path)
-
+    edit_network(ligand_path, network_dict)
 
 if __name__ == "__main__":
     main()
