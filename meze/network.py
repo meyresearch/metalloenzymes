@@ -59,6 +59,7 @@ def network_to_df(dictionary):
     print(network_dataframe)
     return network_dataframe
 
+
 def adjust():
     """
     Ask user if they want to edit the LOMAP network
@@ -252,15 +253,6 @@ def edit_network(network):
             continue
     
     
-
-
-
-
-
-    
-    
-
-
 def main():
 
     parser = argparse.ArgumentParser(description="MEZE: MEtalloenZymE FF-builder for alchemistry\nCreate and edit a LOMAP network.",
@@ -278,7 +270,6 @@ def main():
     ligand_names = [functions.get_filenames(filepath) for filepath in ligand_files]
 
     network_dict = create_network(ligands, ligand_names, ligand_path)
-
 
 
 if __name__ == "__main__":
