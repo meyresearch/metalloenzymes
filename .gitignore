@@ -28,7 +28,7 @@
 *.po*
 *.pe*
 *.o*
-
+*.pickle
 kpc2/outputs
 kpc2/equilibration
 dft/ligand_*

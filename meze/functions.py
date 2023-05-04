@@ -114,7 +114,7 @@ def get_ligand_files(ligand_path):
     return ligand_files
 
 
-def prepare_system(ligand_path, protein):
+def prepare_system(ligand_path, protein): # should probably separate to ligand and protein
     """
     
     """
@@ -124,7 +124,10 @@ def prepare_system(ligand_path, protein):
 
     network_dict = network.create_network(ligands, ligand_names, ligand_path)
     network = network.edit_network(network_dict)
+    
+    # create afe production directory and add .dat files to it
 
+    # create protocol and add to above directory
 
 
 

@@ -323,7 +323,7 @@ def edit_network(ligand_path, network):
         LOMAP network as a dictionary
     Return:
     -------
-    pd.DataFrame
+    dict
         adjusted network
     """
     network = network_to_df(network)   
@@ -358,7 +358,7 @@ def edit_network(ligand_path, network):
         else:
             print("Invalid option.")
             continue
-    return edited_dataframe
+    return dict(zip(edited_dataframe["transformations"], edited_dataframe["score"]))
     
 def main():
 
@@ -378,6 +378,7 @@ def main():
     #TODO add a thing where you can input a network and then edit it here
     network_dict = create_network(ligands, ligand_names, ligand_path)
     edit_network(ligand_path, network_dict)
+
 
 if __name__ == "__main__":
     main()
