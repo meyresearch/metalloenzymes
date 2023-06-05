@@ -44,10 +44,10 @@ network = pd.read_csv(network_file, header=None, comment="#", names=["ligand_1",
 
 columns_to_list = lambda column: network[column].tolist()
 first_ligands = columns_to_list("ligand_1")
-second_ligands = columns_to_list("ligand_2")
+second_ligands = [name.strip() for name in columns_to_list("ligand_2")]
 n_windows = columns_to_list("n_windows")
 windows = columns_to_list("windows")
-engines = columns_to_list("engine")
+engines = [engine.strip() for engine in columns_to_list("engine")]
 n_transformations = len(first_ligands)
 
 lambda_values_string = [lambdas.split() for lambdas in windows]
@@ -150,8 +150,8 @@ for i in range(n_transformations):
 
     free_energy_protocol = bss.Protocol.FreeEnergy(lam_vals=lambda_values[i], runtime=runtime*runtime_unit)
 
-    working_directory = f"{full_path}/{system_name}/outputs/{engines[i].strip()}_1/lig_{ligand_1_number}~lig_{ligand_2_number}"
-    working_directory = f"{path}/outputs/{engines[i].strip()}_1/lig_{ligand_1_number}~lig_{ligand_2_number}"
+    working_directory = f"{full_path}/{system_name}/outputs/{engines[i].strip()}_3/lig_{ligand_1_number}~lig_{ligand_2_number}"
+    working_directory = f"{path}/outputs/{engines[i].strip()}_3/lig_{ligand_1_number}~lig_{ligand_2_number}"
     bound_directory = working_directory + "/bound/"
     unbound_directory = working_directory + "/unbound/"
 

@@ -44,9 +44,9 @@ fi
 for stage in "bound" "unbound"
 do
 
-    	min_dir=$HOME/projects/metalloenzymes/azetidinimines/kpc2/outputs/${engine}_1/$lig_1~$lig_2/$stage/minimisation/lambda_$lambda
+    	min_dir=$HOME/projects/metalloenzymes/azetidinimines/kpc2/outputs/${engine}_2/$lig_1~$lig_2/$stage/minimisation/lambda_$lambda
     	echo $min_dir
-    	lambda_dir=$HOME/projects/metalloenzymes/azetidinimines/kpc2/outputs/${engine}_1/$lig_1~$lig_2/$stage/lambda_$lambda
+    	lambda_dir=$HOME/projects/metalloenzymes/azetidinimines/kpc2/outputs/${engine}_2/$lig_1~$lig_2/$stage/lambda_$lambda
       
 	echo "using $engine for $lig_1 and $lig_2, at lambda $lambda"
 	echo "minimising"

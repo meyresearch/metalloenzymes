@@ -97,6 +97,7 @@ ligand_path = full_path + system + "/inputs/ligands/"
 ligand_path = path + "/inputs/ligands/"
 protein_file = arguments.protein
 fn.is_file(protein_path+protein_file)
+
 water_file = arguments.water
 output_file = arguments.output
 forcefield = arguments.forcefield
@@ -107,6 +108,7 @@ windows = arguments.n_windows
 difficult_windows = arguments.difficult
 threshold = arguments.threshold
 active_site_file = arguments.active_site
+
 # SYSTEM
 if arguments.water is not None:
     water_file = protein_path + arguments.water
@@ -228,13 +230,16 @@ options = ["\tdel: delete perturbations by index",
            "\ts: save and continue preparing",
            "\tq: quit"]
 edited_dataframe = perturbation_dataframe.copy()
+
 while adjust_network == True:
     print("Choose an option:")
     for option in options:
         print(option)
+
     option = input("> ").lower()
     check_option = option.replace(",", "").split()
     n_inputs = len(check_option)
+    
     if 1 < n_inputs <= 2 and check_option[0] == "del":
         try:
             delete_index = int(check_option[1])
