@@ -76,3 +76,4 @@ dft/nonbonded/ligand_1/*
 stdout_*
 amb_md_vim2/*/*
 */__pycache__/*
+azetidinimines/kpc2/outputs/SOMD_*/*/*/*

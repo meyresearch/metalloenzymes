@@ -1,0 +1,99 @@
+lig_7aaa~lig_7aal
+0.0831 kcal/mol ± 0.1618 kcal/mol 
+lig_7aaa~lig_7aia
+-0.0717 kcal/mol ± 0.0552 kcal/mol 
+lig_7aab~lig_7aea
+-0.6733 kcal/mol ± 0.4083 kcal/mol 
+lig_7aab~lig_7ahb
+-0.1881 kcal/mol ± 0.1532 kcal/mol 
+lig_7aac~lig_7aam
+1.1737 kcal/mol ± 0.2649 kcal/mol 
+lig_7aac~lig_7dfc
+-0.1639 kcal/mol ± 0.6473 kcal/mol 
+lig_7aad~lig_7aai
+-0.0121 kcal/mol ± 0.2655 kcal/mol 
+lig_7aad~lig_7aaj
+0.7476 kcal/mol ± 0.1321 kcal/mol 
+lig_7aaf~lig_7aai
+-1.5228 kcal/mol ± 0.1389 kcal/mol 
+lig_7aag~lig_7aaj
+2.1040 kcal/mol ± 0.2050 kcal/mol 
+lig_7aah~lig_7aaj
+-0.8031 kcal/mol ± 0.2055 kcal/mol 
+lig_7aaj~lig_7aak
+-0.6999 kcal/mol ± 0.3000 kcal/mol 
+lig_7aaj~lig_7aam
+-0.0722 kcal/mol ± 0.1005 kcal/mol 
+lig_7aak~lig_7aam
+-0.1660 kcal/mol ± 0.2080 kcal/mol 
+lig_7aba~lig_7aca
+-0.0599 kcal/mol ± 0.1258 kcal/mol 
+lig_7aba~lig_7ada
+-0.0639 kcal/mol ± 0.1085 kcal/mol 
+lig_7aba~lig_7dba
+-0.1480 kcal/mol ± 0.2857 kcal/mol 
+lig_7aba~lig_7dfa
+-2.7487 kcal/mol ± 0.4339 kcal/mol 
+lig_7aba~lig_7fba
+-0.3101 kcal/mol ± 0.1356 kcal/mol 
+lig_7aca~lig_7aea
+0.1442 kcal/mol ± 0.2113 kcal/mol 
+lig_7ada~lig_7dda
+-0.7421 kcal/mol ± 0.3180 kcal/mol 
+lig_7aea~lig_7dba
+-0.0463 kcal/mol ± 0.3266 kcal/mol 
+lig_7aga~lig_7dga
+-1.1833 kcal/mol ± 0.3352 kcal/mol 
+lig_7aha~lig_7ahb
+0.0417 kcal/mol ± 0.1364 kcal/mol 
+lig_7aha~lig_7bha
+-0.3604 kcal/mol ± 0.1798 kcal/mol 
+lig_7aha~lig_7cha
+-0.8214 kcal/mol ± 0.2316 kcal/mol 
+lig_7aha~lig_7dha
+-1.4103 kcal/mol ± 0.3161 kcal/mol 
+lig_7ahb~lig_7bhb
+-0.5834 kcal/mol ± 0.1912 kcal/mol 
+lig_7ahb~lig_7dhb
+-1.2546 kcal/mol ± 0.3064 kcal/mol 
+lig_7ahb~lig_7fhb
+lig_7bba~lig_7cba
+-0.1152 kcal/mol ± 0.0327 kcal/mol 
+lig_7bba~lig_7dba
+-0.1766 kcal/mol ± 0.0709 kcal/mol 
+lig_7bha~lig_7cha
+-0.0930 kcal/mol ± 0.0327 kcal/mol 
+lig_7bhb~lig_7dhb
+-0.2395 kcal/mol ± 0.0745 kcal/mol 
+lig_7bhb~lig_7fhb
+0.3338 kcal/mol ± 0.1382 kcal/mol 
+lig_7cba~lig_7cfa
+0.9762 kcal/mol ± 0.1815 kcal/mol 
+lig_7cba~lig_7dba
+-0.2107 kcal/mol ± 0.0387 kcal/mol 
+lig_7cfa~lig_7dfa
+-0.1992 kcal/mol ± 0.0474 kcal/mol 
+lig_7cha~lig_7dha
+-0.1380 kcal/mol ± 0.0410 kcal/mol 
+lig_7dba~lig_7dda
+0.2472 kcal/mol ± 0.1035 kcal/mol 
+lig_7dba~lig_7dea
+0.1216 kcal/mol ± 0.0757 kcal/mol 
+lig_7dba~lig_7dfm
+2.0420 kcal/mol ± 0.3084 kcal/mol 
+lig_7dea~lig_7dga
+0.9866 kcal/mol ± 0.6235 kcal/mol 
+lig_7dfa~lig_7dfn
+0.0187 kcal/mol ± 0.0845 kcal/mol 
+lig_7dfa~lig_7efa
+0.0275 kcal/mol ± 0.1489 kcal/mol 
+lig_7dfc~lig_7dfm
+-0.7107 kcal/mol ± 0.3044 kcal/mol 
+lig_7dfm~lig_7dfo
+-0.5307 kcal/mol ± 0.7438 kcal/mol 
+lig_7dfn~lig_7dfo
+0.5639 kcal/mol ± 0.0850 kcal/mol 
+lig_7eba~lig_7efa
+2.9193 kcal/mol ± 0.1872 kcal/mol 
+lig_7eba~lig_7fba
+0.2373 kcal/mol ± 0.0984 kcal/mol 
