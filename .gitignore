@@ -1,4 +1,5 @@
 flare_files/*
+*.txt
 *.pdb
 *.flr
 *.DS_Store
