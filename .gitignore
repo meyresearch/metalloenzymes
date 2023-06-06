@@ -78,3 +78,4 @@ stdout_*
 amb_md_vim2/*/*
 */__pycache__/*
 azetidinimines/kpc2/outputs/SOMD_*/*/*/*
+azetidinimines/kpc2/scripts/__pycache__/*.pyc
