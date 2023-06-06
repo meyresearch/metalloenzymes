@@ -16,4 +16,6 @@ for i in range(len(project.ligands)):
     filename = str(ligand_properties["Title"])
     print(filename)
     home_dir = os.path.expanduser("~")
-    ligand.write_file(f"{home_dir}/projects/metalloenzymes/all_ligands/kpc2/{filename}.sdf", "sdf")
+   ligand.write_file(f"{home_dir}/projects/metalloenzymes/all_ligands/vim2/{filename}.pdb", "pdb")
+   # print(f"{home_dir}/projects/metalloenzymes/all_ligands/vim2/{filename}.pdb")
+
