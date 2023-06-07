@@ -3,8 +3,6 @@
 ligands=( 1 2 3 4 5 6 7 9 10 11 12 13 14 15 )
 
 parent_dir="$HOME/projects/metalloenzymes/nonbonded_model_vim2/"
-prep_dir="$parent_dir/system_preparation"
-steps=( 1 2 )
 
 for i in ${ligands[@]}
 do
@@ -16,8 +14,8 @@ do
 	echo $step_4n1_directory
 	sed -i "s/L8J/LIG/g" vim2.in
 	sed -i "s/vim2.pdb/prepared_system.pdb/g" vim2.in
-	# MCPB.py -i vim2.in -s 1m 
-	# MCPB.py -i vim2.in -s 4n1
+	MCPB.py -i vim2.in -s 1m 
+	MCPB.py -i vim2.in -s 4n1
 
 	step_4n2_directory="$ligand_directory/step_4n2"
 	cd $step_4n2_directory
