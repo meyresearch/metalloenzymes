@@ -1,3 +1,5 @@
+*.info
+*.rst
 flare_files/*
 *.txt
 *.pdb

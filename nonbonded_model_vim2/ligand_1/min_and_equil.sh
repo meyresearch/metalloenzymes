@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH -o /home/jguven/projects/metalloenzymes/slurm_logs/step_4n2_min_and_equil.%A.%a.slurm.out
-#SBATCH -e /home/jguven/projects/metalloenzymes/slurm_logs/step_4n2_min_and_equil.%A.%a.slurm.err
+#SBATCH -o /home/jguven/projects/metalloenzymes/nonbonded_model_vim2/step_4n2/harmonic_restraints_md/slurm_log/min_and_equil.%A.%a.slurm.out
+#SBATCH -e /home/jguven/projects/metalloenzymes/nonbonded_model_vim2/step_4n2/harmonic_restraints_md/slurm_log/min_and_equil.%A.%a.slurm.err
 # Only launch a max of 1 task
 #SBATCH -n 1
 # allocate 1 gpu per job
@@ -10,26 +10,7 @@
 #SBATCH --mem 4096
 # set job name
 #SBATCH --job-name=min_and_equil
-date
 
-idx=$SLURM_ARRAY_TASK_ID
-input_dir=$HOME/projects/metalloenzymes/nonbonded_model_vim2/ligand_$idx/
-# nb_dir=$HOME/projects/metalloenzymes/nonbonded_model_vim2/step_4n2/harmonic_restraints_md/
-
-cd $input_dir
-echo $input_dir
-
-production_dir=$input_dir/production/
-# if [[ ! -d $production_dir ]]; then
-#     mkdir $production_dir
-# fi
-
-cd $production_dir
-
-# cp $nb_dir/*.in .
-cp $input_dir/disres.rst .
-cp $input_dir/vim2_solv.prmtop .
-cp $input_dir/vim2_solv.inpcrd .
 
 echo "starting 1min at $date"
 
@@ -100,10 +81,3 @@ $AMBERHOME/bin/pmemd.cuda -O -i 9md.in\
             -o 9md.out -p vim2_solv.prmtop -c 8md.rst7 -r 9md.rst7\
             -inf 9md.info -ref 8md.rst7 -x mdcrd.9md
 echo "ending 9md at $date"
-wait
-
-echo "starting md at $date"
-
-$AMBERHOME/bin/pmemd.cuda -O -i md.in -p vim2_solv.prmtop -c 9md.rst7 -ref 9md.rst7 -o md.mdout -r vim2_md.rst7 -x vim2_md.nc
-
-echo "ending md at $date"
