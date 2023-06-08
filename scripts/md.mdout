@@ -6,7 +6,7 @@
 | PMEMD implementation of SANDER, Release 22
 
 |  Compiled date/time: Thu Apr 14 19:06:37 2022
-| Run on 06/06/2023 at 18:32:12
+| Run on 06/08/2023 at 09:03:02
 
 |   Executable path: /home/jguven/Software/amber22/bin/pmemd.cuda
 | Working directory: /home/jguven/projects/metalloenzymes/scripts
@@ -18,7 +18,7 @@ File Assignments:
 |   MDIN: md.in                                                                 
 |  MDOUT: md.mdout                                                              
 | INPCRD: 9md.rst7                                                              
-|   PARM: /home/jguven/projects/metalloenzymes/ligand_/step_4n2//vim2_solv.prmto
+|   PARM: vim2_solv.prmtop                                                      
 | RESTRT: vim2_md.rst7                                                          
 |   REFC: 9md.rst7                                                              
 |  MDVEL: mdvel                                                                 
@@ -46,7 +46,7 @@ File Assignments:
  DUMPAVE=dist_md.txt                                                           
 
 
-Note: ig = -1. Setting random seed to   317882 based on wallclock time in 
+Note: ig = -1. Setting random seed to   440052 based on wallclock time in 
       microseconds.
 | irandom = 1, using AMBER's internal random number generator (default).
  
@@ -98,11 +98,11 @@ Note: ig = -1. Setting random seed to   317882 based on wallclock time in
  
 |------------------- GPU DEVICE INFO --------------------
 |
-|            CUDA_VISIBLE_DEVICES: 2
+|            CUDA_VISIBLE_DEVICES: 1
 |   CUDA Capable Devices Detected:      1
 |           CUDA Device ID in use:      0
 |                CUDA Device Name: NVIDIA GeForce RTX 3080
-|     CUDA Device Global Mem Size:  10009 MB
+|     CUDA Device Global Mem Size:  10007 MB
 | CUDA Device Num Multiprocessors:     68
 |           CUDA Device Core Freq:   1.71 GHz
 |
