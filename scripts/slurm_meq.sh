@@ -28,4 +28,5 @@ if [[ ! -d $slurm_logs_dir ]]; then
        mkdir $slurm_logs_dir
 fi
 
-srun python mequilibrafe.py kpc2 ../azetidinimines/kpc2/ $ligand 
+python mequilibrafe.py /home/jguven/projects/metalloenzymes/vim_2/ $SLURM_ARRAY_TASK_ID
+#srun python mequilibrafe.py kpc2 ../azetidinimines/kpc2/ $ligand 

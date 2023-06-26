@@ -23,19 +23,15 @@ idx=$SLURM_ARRAY_TASK_ID
 
 ligand_1=$1
 ligand_2=$2
-# lig_1=`echo $ligand_1 | sed "s/$ligand/ligand_$ligand/g"` 
-# lig_2=`echo $ligand_2 | sed "s/$ligand/ligand_$ligand/g"`
-
-lig_1="lig_"$1
-lig_2="lig_"$2
-
+lig_1=`echo $ligand_1 | sed "s/$ligand_1/lig_/g"` 
+lig_2=`echo $ligand_2 | sed "s/$ligand_2/lig_/g"`
 
 engine=$3
 lambdastring="$4"
-#echo "$lambdastring"
+
 IFS=' ' read -a lambdas <<< "$lambdastring"
 lambda=${lambdas[$idx]}
-#echo "$lambda"
+
 log_dir=$HOME/projects/metalloenzymes/slurm_logs/
 if [[ ! -d $log_dir ]]; then
 	mkdir $log_dir
@@ -44,9 +40,9 @@ fi
 for stage in "bound" "unbound"
 do
 
-    	min_dir=$HOME/projects/metalloenzymes/azetidinimines/kpc2/outputs/${engine}_1/$lig_1~$lig_2/$stage/minimisation/lambda_$lambda
+    	min_dir=$HOME/projects/metalloenzymes/vim_2/outputs/${engine}_1/$lig_1~$lig_2/$stage/minimisation/lambda_$lambda
     	echo $min_dir
-    	lambda_dir=$HOME/projects/metalloenzymes/azetidinimines/kpc2/outputs/${engine}_1/$lig_1~$lig_2/$stage/lambda_$lambda
+    	lambda_dir=$HOME/projects/metalloenzymes/vim_2/outputs/${engine}_1/$lig_1~$lig_2/$stage/lambda_$lambda
       
 	echo "using $engine for $lig_1 and $lig_2, at lambda $lambda"
 	echo "minimising"

@@ -1,4 +1,0 @@
-loadRestrt vim2_solv.inpcrd
-setOverwrite True
-add12_6_4 @%Zn2+ watermodel TIP3P
-outparm vim2_solv_1264.prmtop vim2_solv_1264.inpcrd

@@ -10,13 +10,13 @@ import functions as fn
 
 
 parser = argparse.ArgumentParser(description="solvate AFE systems")
-parser.add_argument("system",
-                     type=str,
-                     help="system name; this is used to find the folder containing input files")
+# parser.add_argument("system",
+#                      type=str,
+#                      help="system name; this is used to find the folder containing input files")
 
-parser.add_argument("protein",
-                    type=str,
-                    help="filename for .prm7 and .rst7 files in ../system/inputs/protein/")
+# parser.add_argument("protein",
+#                     type=str,
+#                     help="filename for .prm7 and .rst7 files in ../system/inputs/protein/")
 
 parser.add_argument("path",
                     type=str,
@@ -44,8 +44,8 @@ parser.add_argument("-fo",
                     default="AMBER")
 
 arguments = parser.parse_args()
-system_name = arguments.system
-protein_name = arguments.protein
+# system_name = arguments.system
+# protein_name = arguments.protein
 path = arguments.path
 output_filetype = arguments.fileoutput
 ligand_charge = arguments.charge
@@ -59,17 +59,17 @@ full_path = os.getcwd() + "/"
 if "scripts" in full_path:
     full_path = full_path.replace("/scripts/", "/")
 
-protein_path = full_path + system_name + "/inputs/protein/"
-protein_path = path + "/inputs/protein/"
-protein_file = protein_path + protein_name
+# protein_path = full_path + system_name + "/inputs/protein/"
+# protein_path = path + "/inputs/protein/"
+# protein_file = protein_path + protein_name
 filetype = arguments.fileinput
 
-afe_folder_path = full_path + system_name + "/afe/"
+# afe_folder_path = full_path + system_name + "/afe/"
 afe_folder_path = path + "/afe/"
 ligands_file = afe_folder_path + "ligands.dat"
 protocol_file = afe_folder_path + "protocol.dat"
-network_file = afe_folder_path + "network.dat"
-ligand_path = full_path + system_name + "/inputs/ligands/"
+# network_file = afe_folder_path + "network.dat"
+# ligand_path = full_path + system_name + "/inputs/ligands/"
 ligand_path = path + "/inputs/ligands/"
 #TODO check files exist!!!
 
@@ -90,34 +90,58 @@ box_type = protocol_lines[4].split()[-1]
 
 ligand_files = sorted(glob.glob(f"{ligand_path}*.{filetype}"))
 
-protein = bss.IO.readMolecules([protein_file + ".rst7", protein_file + ".prm7"])[0]
+# protein = bss.IO.readMolecules([protein_file + ".rst7", protein_file + ".prm7"])[0]
 ligands = [bss.IO.readMolecules(ligand_file)[0] for ligand_file in ligand_files]
 
 
 
-for i in range(n_ligands):
-    ligand_number = ligand_names[i].split("_")[-1]
-    print(f"working on ligand {ligand_number}")
+# for i in range(n_ligands):
+#     ligand_number = ligand_names[i].split("_")[-1]
+#     print(f"working on ligand {ligand_number}")
 
-    ligand_parameters = bss.Parameters.gaff2(ligands[i], net_charge=ligand_charge).getMolecule()
+#     ligand_parameters = bss.Parameters.gaff2(ligands[i], net_charge=ligand_charge).getMolecule()
 
-    box_min, box_max = ligand_parameters.getAxisAlignedBoundingBox()
-    box_size = [y - x for x, y in zip(box_min, box_max)]
-    box_sizes = [x + int(box_edges) * box_axis_unit for x in box_size] 
+#     box_min, box_max = ligand_parameters.getAxisAlignedBoundingBox()
+#     box_size = [y - x for x, y in zip(box_min, box_max)]
+#     box_sizes = [x + int(box_edges) * box_axis_unit for x in box_size] 
 
-    system = ligand_parameters + protein
+#     # system = ligand_parameters + protein
 
-    system_box_min, system_box_max = system.getAxisAlignedBoundingBox()
-    system_box_size = [y - x for x, y in zip(system_box_min, system_box_max)]
-    system_box_sizes = [x + int(box_edges) * box_axis_unit for x in system_box_size]
-    print("solvating unbound ligand")
-    box, angles = bss.Box.cubic(max(box_sizes))
-    ligand_solvated = bss.Solvent.solvate(solvent_force_field, molecule=ligand_parameters, box=box, angles=angles)
-    box, angles = bss.Box.cubic(max(system_box_sizes))
-    print("solvating bound system")
-    system_solvated = bss.Solvent.solvate(solvent_force_field, molecule=system, box=box, angles=angles)
+#     # system_box_min, system_box_max = system.getAxisAlignedBoundingBox()
+#     # system_box_size = [y - x for x, y in zip(system_box_min, system_box_max)]
+#     # system_box_sizes = [x + int(box_edges) * box_axis_unit for x in system_box_size]
+#     print("solvating unbound ligand")
+#     box, angles = bss.Box.cubic(max(box_sizes))
+#     ligand_solvated = bss.Solvent.solvate(solvent_force_field, molecule=ligand_parameters, box=box, angles=angles)
+#     # box, angles = bss.Box.cubic(max(system_box_sizes))
+#     # print("solvating bound system")
+#     # system_solvated = bss.Solvent.solvate(solvent_force_field, molecule=system, box=box, angles=angles)
 
-    ligand_savename = ligand_path + "ligand_" + ligand_number + "_solvated"
-    system_savename = protein_path+ "system_" + ligand_number + "_solvated"
-    bss.IO.saveMolecules(ligand_savename, ligand_solvated, output_filetypes)
-    bss.IO.saveMolecules(system_savename, system_solvated, output_filetypes)    
+#     ligand_savename = ligand_path + "ligand_" + ligand_number + "_solvated"
+#     # system_savename = protein_path+ "system_" + ligand_number + "_solvated"
+#     bss.IO.saveMolecules(ligand_savename, ligand_solvated, output_filetypes)
+#     # bss.IO.saveMolecules(system_savename, system_solvated, output_filetypes)    
+ligand_number = "8"
+print(f"working on ligand {ligand_number}")
+
+ligand_parameters = bss.Parameters.gaff2(bss.IO.readMolecules("/home/jguven/projects/metalloenzymes/vim_2/inputs/ligands/ligand_8.pdb")[0], net_charge=ligand_charge).getMolecule()
+
+box_min, box_max = ligand_parameters.getAxisAlignedBoundingBox()
+box_size = [y - x for x, y in zip(box_min, box_max)]
+box_sizes = [x + int(box_edges) * box_axis_unit for x in box_size] 
+
+# system = ligand_parameters + protein
+
+# system_box_min, system_box_max = system.getAxisAlignedBoundingBox()
+# system_box_size = [y - x for x, y in zip(system_box_min, system_box_max)]
+# system_box_sizes = [x + int(box_edges) * box_axis_unit for x in system_box_size]
+print("solvating unbound ligand")
+box, angles = bss.Box.cubic(max(box_sizes))
+ligand_solvated = bss.Solvent.solvate(solvent_force_field, molecule=ligand_parameters, box=box, angles=angles)
+# box, angles = bss.Box.cubic(max(system_box_sizes))
+# print("solvating bound system")
+# system_solvated = bss.Solvent.solvate(solvent_force_field, molecule=system, box=box, angles=angles)
+
+ligand_savename = ligand_path + "ligand_" + ligand_number + "_solvated"
+# system_savename = protein_path+ "system_" + ligand_number + "_solvated"
+bss.IO.saveMolecules(ligand_savename, ligand_solvated, output_filetypes)

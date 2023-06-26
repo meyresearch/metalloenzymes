@@ -2,7 +2,7 @@ import MDAnalysis as mda
 import glob
 
 paths = sorted(glob.glob("/home/jguven/projects/metalloenzymes/nonbonded_model_vim2/ligand_*/"))
-
+# paths = ["/home/jguven/projects/metalloenzymes/nonbonded_model_vim2/ligand_8/"]
 for path in paths:
 
     universe = mda.Universe(path + "vim2_solv.pdb")

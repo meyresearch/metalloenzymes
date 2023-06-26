@@ -1,6 +1,11 @@
 *.info
 *.rst
 flare_files/*
+*.dcd
+*.previous
+*.s3
+*.cfg
+*.pert
 *.txt
 *.pdb
 *.flr

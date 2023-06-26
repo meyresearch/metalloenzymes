@@ -9,9 +9,9 @@ import functions as fn
 
 
 parser = argparse.ArgumentParser(description="prepare AFE calculations")
-parser.add_argument("system",
-                     type=str,
-                     help="system name; this is used to find the folder containing input files")
+# parser.add_argument("system",
+#                      type=str,
+#                      help="system name; this is used to find the folder containing input files")
 parser.add_argument("path",
                      type=str,
                      help="path; this is used to find the folder containing input files")
@@ -21,16 +21,16 @@ parser.add_argument("network",
 
 arguments = parser.parse_args()
 
-system_name = arguments.system
+# system_name = arguments.system
 path = arguments.path
 network_file = arguments.network
 
-full_path = os.getcwd() + "/"
-if "scripts" in full_path:
-    full_path = full_path.replace("/scripts/", "/")
-elif system_name in full_path:
-    full_path = full_path.replace(f"/{system_name}/", "/")
-equilibration_path = full_path + system_name + "/equilibration/"
+# full_path = os.getcwd() + "/"
+# if "scripts" in full_path:
+#     full_path = full_path.replace("/scripts/", "/")
+# elif system_name in full_path:
+#     full_path = full_path.replace(f"/{system_name}/", "/")
+# equilibration_path = full_path + system_name + "/equilibration/"
 equilibration_path = path + "/equilibration/"
 if not os.path.isfile(network_file):
     print(f"The input file {network_file} does not exist")
@@ -53,7 +53,7 @@ n_transformations = len(first_ligands)
 lambda_values_string = [lambdas.split() for lambdas in windows]
 lambda_values = [[float(value) for value in lambda_list] for lambda_list in lambda_values_string]
 
-afe_folder_path = full_path + system_name + "/afe/"
+# afe_folder_path = full_path + system_name + "/afe/"
 afe_folder_path = path + "/afe/"
 
 protocol_file = afe_folder_path + "protocol.dat"
@@ -84,7 +84,7 @@ for i in range(n_transformations):
     ligand_1_number = get_ligand_number(first_ligands[i])
     ligand_2_number = get_ligand_number(second_ligands[i])
     unbound_path = equilibration_path + "unbound/"
-    bound_path = equilibration_path + "bound/"
+    bound_path = path + "inputs/protein/"
     print(f"progress: {counter}/{n_transformations}")
     print(f"ligand 1: {ligand_1_number}, ligand 2: {ligand_2_number}")
     engine = engines[i].rstrip()
@@ -94,10 +94,10 @@ for i in range(n_transformations):
     ligand_2_system = bss.IO.readMolecules([f"{unbound_path}/ligand_{ligand_2_number}/npt/ligand_{ligand_2_number}.prm7",
                                             f"{unbound_path}/ligand_{ligand_2_number}/npt/ligand_{ligand_2_number}.rst7"])
 
-    system_1 = bss.IO.readMolecules([f"{bound_path}/system_{ligand_1_number}/npt/system_{ligand_1_number}.prm7",
-                                        f"{bound_path}/system_{ligand_1_number}/npt/system_{ligand_1_number}.rst7"])
-    system_2 = bss.IO.readMolecules([f"{bound_path}/system_{ligand_2_number}/npt/system_{ligand_2_number}.prm7",
-                                        f"{bound_path}/system_{ligand_2_number}/npt/system_{ligand_2_number}.rst7"])
+    system_1 = bss.IO.readMolecules([f"{bound_path}/system_{ligand_1_number}.prm7",
+                                        f"{bound_path}/system_{ligand_1_number}.rst7"])
+    system_2 = bss.IO.readMolecules([f"{bound_path}/system_{ligand_2_number}.prm7",
+                                        f"{bound_path}/system_{ligand_2_number}.rst7"])
 
     ligand_1 = ligand_1_system.getMolecule(0)
     ligand_2 = ligand_2_system.getMolecule(0)
@@ -150,40 +150,41 @@ for i in range(n_transformations):
 
     free_energy_protocol = bss.Protocol.FreeEnergy(lam_vals=lambda_values[i], runtime=runtime*runtime_unit)
 
-    working_directory = f"{full_path}/{system_name}/outputs/{engines[i].strip()}_3/lig_{ligand_1_number}~lig_{ligand_2_number}"
-    working_directory = f"{path}/outputs/{engines[i].strip()}_3/lig_{ligand_1_number}~lig_{ligand_2_number}"
-    bound_directory = working_directory + "/bound/"
-    unbound_directory = working_directory + "/unbound/"
+    for j in range(3, 4, 1):
+        # working_directory = f"{full_path}/{system_name}/outputs/{engines[i].strip()}_{j}/lig_{ligand_1_number}~lig_{ligand_2_number}"
+        working_directory = f"{path}/outputs/{engines[i].strip()}_{j}/lig_{ligand_1_number}~lig_{ligand_2_number}"
+        bound_directory = working_directory + "/bound/"
+        unbound_directory = working_directory + "/unbound/"
 
-    bss.FreeEnergy.Relative(bound_system, free_energy_protocol, engine=engines[i].strip(), work_dir=bound_directory, setup_only=True)
-    bss.FreeEnergy.Relative(unbound_system, free_energy_protocol, engine=engines[i].strip(), work_dir=unbound_directory, setup_only=True)
+        bss.FreeEnergy.Relative(bound_system, free_energy_protocol, engine=engines[i].strip(), work_dir=bound_directory, setup_only=True)
+        bss.FreeEnergy.Relative(unbound_system, free_energy_protocol, engine=engines[i].strip(), work_dir=unbound_directory, setup_only=True)
 
-    bound_minimisation_directory = fn.create_dirs(bound_directory + "minimisation/")
-    unbound_minimisation_directory = fn.create_dirs(unbound_directory + "minimisation/")
+        bound_minimisation_directory = fn.create_dirs(bound_directory + "minimisation/")
+        unbound_minimisation_directory = fn.create_dirs(unbound_directory + "minimisation/")
 
-    bss.FreeEnergy.Relative(bound_system, free_energy_protocol, engine=engines[i].strip(), work_dir=bound_minimisation_directory, setup_only=True)
-    bss.FreeEnergy.Relative(unbound_system, free_energy_protocol, engine=engines[i].strip(), work_dir=unbound_minimisation_directory, setup_only=True)
+        bss.FreeEnergy.Relative(bound_system, free_energy_protocol, engine=engines[i].strip(), work_dir=bound_minimisation_directory, setup_only=True)
+        bss.FreeEnergy.Relative(unbound_system, free_energy_protocol, engine=engines[i].strip(), work_dir=unbound_minimisation_directory, setup_only=True)
 
-    bound_configuration_files = glob.glob(bound_minimisation_directory + "/*/*.cfg")
-    unbound_configuration_files = glob.glob(unbound_minimisation_directory + "/*/*.cfg")
+        bound_configuration_files = glob.glob(bound_minimisation_directory + "/*/*.cfg")
+        unbound_configuration_files = glob.glob(unbound_minimisation_directory + "/*/*.cfg")
 
-    minimisation_config = ["minimise = True\n", "minimise maximum iterations = 10000\n"]
+        minimisation_config = ["minimise = True\n", "minimise maximum iterations = 10000\n"]
 
-    for i in range(len(bound_configuration_files)):
-        with open(bound_configuration_files[i], "r") as file:
-            old_config = file.readlines()
-        with open(bound_configuration_files[i], "w") as file:
-            replaced_config = [setting.replace("ncycles = 5\n", "ncycles = 1\n").replace("nmoves = 200000", "nmoves = 50000") for setting in old_config]
-            for min_setting in minimisation_config:
-                replaced_config.append(min_setting)
-            file.writelines(replaced_config)
-        with open(unbound_configuration_files[i], "r") as file:
-            old_config = file.readlines()
-        with open(unbound_configuration_files[i], "w") as file:
-            replaced_config = [setting.replace("ncycles = 5\n", "ncycles = 1\n").replace("nmoves = 200000", "nmoves = 50000") for setting in old_config]
-            for min_setting in minimisation_config:
-                replaced_config.append(min_setting)
-            file.writelines(replaced_config)
+        for k in range(len(bound_configuration_files)):
+            with open(bound_configuration_files[k], "r") as file:
+                old_config = file.readlines()
+            with open(bound_configuration_files[k], "w") as file:
+                replaced_config = [setting.replace("ncycles = 5\n", "ncycles = 1\n").replace("nmoves = 200000", "nmoves = 50000") for setting in old_config]
+                for min_setting in minimisation_config:
+                    replaced_config.append(min_setting)
+                file.writelines(replaced_config)
+            with open(unbound_configuration_files[k], "r") as file:
+                old_config = file.readlines()
+            with open(unbound_configuration_files[k], "w") as file:
+                replaced_config = [setting.replace("ncycles = 5\n", "ncycles = 1\n").replace("nmoves = 200000", "nmoves = 50000") for setting in old_config]
+                for min_setting in minimisation_config:
+                    replaced_config.append(min_setting)
+                file.writelines(replaced_config)
 
     counter += 1
 
