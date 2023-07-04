@@ -1,5 +1,0 @@
-readdata ../3_relax/relax.out ../4_lower/lower.out ../6_bb_relax/bb_relax.out name cpptraj_output
-#list datasets
-writedata density.agr cpptraj_output[Density]
-writedata temperature.agr cpptraj_output[TEMP]
-writedata pressure.agr cpptraj_output[PRESS]
