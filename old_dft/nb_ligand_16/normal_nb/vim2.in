@@ -1,0 +1,15 @@
+original_pdb vim2.pdb
+group_name vim2
+cut_off 2.3
+ion_info ZN ZN Zn 2
+ion_paraset 12_6_4
+ion_ids 3454 3455
+ion_mol2files ZN1.mol2 ZN2.mol2
+naa_mol2files L8J.mol2 WT1.mol2 
+frcmod_files L8J.frcmod
+large_opt 1
+water_model tip3p
+software_version g16
+gaff 2
+force_field ff14SB
+

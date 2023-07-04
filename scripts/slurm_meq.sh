@@ -15,11 +15,18 @@
 # specify number of threads
 export OMP_NUM_THREADS=8
 
-ligand=$SLURM_ARRAY_TASK_ID
+ligand_file=$1
+
+readarray -t ligands < $ligand_file
+
+ligand=${ligands[$SLURM_ARRAY_TASK_ID]}
+
+echo $ligand
 
 slurm_logs_dir=/home/jguven/projects/metalloenzymes/slurm_logs/
 if [[ ! -d $slurm_logs_dir ]]; then
        mkdir $slurm_logs_dir
 fi
 
-srun python mequilibrafe.py kpc2 $ligand 
+python mequilibrafe.py /home/jguven/projects/metalloenzymes/vim_2/ $SLURM_ARRAY_TASK_ID
+#srun python mequilibrafe.py kpc2 ../azetidinimines/kpc2/ $ligand 

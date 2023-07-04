@@ -1,0 +1,23 @@
+╭─────────────────────────────── Traceback (most recent call last) ────────────────────────────────╮
+│ /home/jguven/projects/metalloenzymes/scripts/setup.py:179 in <module>                            │
+│                                                                                                  │
+│   176 ligand_files = sorted(glob.glob(f"{ligand_path}*.sdf"))                                    │
+│   177 ligands = [bss.IO.readMolecules(filepath)[0] for filepath in ligand_files]                 │
+│   178 ligand_names = [filepath.split("/")[-1].replace(".sdf","") for filepath in ligand_files]   │
+│ ❱ 179 transformations, lomap_scores = bss.Align.generateNetwork(ligands, plot_network=True, na   │
+│   180                                                                                            │
+│   181 perturbation_network_dict = {}                                                             │
+│   182 transformations_named = [(ligand_names[transf[0]], ligand_names[transf[1]]) for transf i   │
+│                                                                                                  │
+│ /home/jguven/Software/miniconda3/envs/obss/lib/python3.10/site-packages/BioSimSpace/Align/_align │
+│ .py:707 in generateNetwork                                                                       │
+│                                                                                                  │
+│    704 │   │   │   │   msg += ": " + getattr(e, "message", repr(e))                              │
+│    705 │   │   │   │   raise _AlignmentError(msg) from e                                         │
+│    706 │   │   │   else:                                                                         │
+│ ❱  707 │   │   │   │   raise _AlignmentError(msg) from None                                      │
+│    708 │                                                                                         │
+│    709 │   return edges, scores                                                                  │
+│    710                                                                                           │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+AlignmentError: Unable to create network plot!

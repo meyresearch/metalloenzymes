@@ -1,0 +1,25 @@
+
+ NSTEP =   999000   TIME(PS) =     999.000  TEMP(K) =   298.79  PRESS =     0.0
+ Etot   =    -59678.3200  EKtot   =     15739.6357  EPtot      =    -75417.9557
+ BOND   =       459.2480  ANGLE   =      1084.9507  DIHED      =      2650.0211
+ 1-4 NB =       909.6049  1-4 EEL =      9042.3243  VDWAALS    =      8251.1451
+ EELEC  =    -99247.0783  EHBOND  =         0.0000  RESTRAINT  =      1431.8285
+ EAMBER (non-restraint)  =    -76849.7842
+ NMR restraints: Bond =    3.386   Angle =     0.000   Torsion =     0.000
+===============================================================================
+ ------------------------------------------------------------------------------
+| Current Timing Info
+| -------------------
+| Total steps:   1000000 | Completed:    999000 ( 99.9%) | Remaining:      1000
+|
+| Average timings for last  162000 steps:
+|     Elapsed(s) =      59.78 Per Step(ms) =       0.37
+|         ns/day =     234.13   seconds/ns =     369.02
+|
+| Average timings for all steps:
+|     Elapsed(s) =     359.76 Per Step(ms) =       0.36
+|         ns/day =     239.92   seconds/ns =     360.12
+|
+|
+| Estimated time remaining:       0.4 seconds.
+ ------------------------------------------------------------------------------
