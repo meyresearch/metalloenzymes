@@ -13,9 +13,9 @@ import functions as fn
 
 parser = argparse.ArgumentParser(description="setup AFE calculations with tLEAP and LOMAP")
 
-parser.add_argument("system",
+parser.add_argument("group_name",
                      type=str,
-                     help="system name; this is used to find the folder containing input files")
+                     help="group name; name of system")
 
 parser.add_argument("protein",
                     type=str,
@@ -83,17 +83,17 @@ parser.add_argument("-t",
                     default="0.4")
 
 arguments = parser.parse_args()
-system = arguments.system
+group_name = arguments.group_name
 path = arguments.path
-full_path = os.getcwd() + "/"
-if "scripts" in full_path:
-    full_path = full_path.replace("/scripts/", "/")
+# full_path = os.getcwd() + "/"
+# if "scripts" in full_path:
+    # full_path = full_path.replace("/scripts/", "/")
 
-protein_path = full_path + system + "/inputs/protein/"
+# protein_path = full_path + system + "/inputs/protein/"
 protein_path = path + "/inputs/protein/"
 
 
-ligand_path = full_path + system + "/inputs/ligands/"
+# ligand_path = full_path + system + "/inputs/ligands/"
 ligand_path = path + "/inputs/ligands/"
 protein_file = arguments.protein
 fn.is_file(protein_path+protein_file)
@@ -175,7 +175,7 @@ elif forcefield.lower() == "ff14sb":
         tleap_in.write(f"source leaprc.protein.{forcefield}\n")
         tleap_in.write(f"source leaprc.water.{solvent}\n")
         tleap_in.write(f"complex = loadpdb {protein_path}{complex_file}.pdb\n")
-        tleap_in.write(f"saveamberparm complex {protein_path+system}_tleap.prm7 {protein_path+system}_tleap.rst7\n")
+        tleap_in.write(f"saveamberparm complex {protein_path+group_name}_tleap.prm7 {protein_path+group_name}_tleap.rst7\n")
         tleap_in.write("quit")
     tleap_command = f"tleap -s -f {tleap_file} > {protein_path}" + "tleap.out"
     os.system(tleap_command)
@@ -192,7 +192,7 @@ transformations_named = [(ligand_names[transf[0]], ligand_names[transf[1]]) for 
 for transformation, score in zip(transformations_named, lomap_scores):
     perturbation_network_dict[transformation] = score
 
-with open(ligand_path+f"/lomap_{system}.csv", "w") as lomap_out:
+with open(ligand_path+f"/lomap_{group_name}.csv", "w") as lomap_out:
     for key, value in perturbation_network_dict.items():
         lomap_out.write(f"{key}: {value}\n")
 
@@ -312,7 +312,7 @@ while adjust_network == True:
 
 
 adjusted_dict = dict(zip(edited_dataframe["perturbations"], edited_dataframe["score"]))
-production_directory = full_path + system + "/afe/"
+# production_directory = full_path + group_name + "/afe/"
 production_directory = path + "/afe/"
 pathlib.Path(production_directory).mkdir(parents=True, exist_ok=True)
 

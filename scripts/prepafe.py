@@ -84,7 +84,7 @@ for i in range(n_transformations):
     ligand_1_number = get_ligand_number(first_ligands[i])
     ligand_2_number = get_ligand_number(second_ligands[i])
     unbound_path = equilibration_path + "unbound/"
-    bound_path = path + "inputs/protein/"
+    bound_path = equilibration_path + "/bound/"
     print(f"progress: {counter}/{n_transformations}")
     print(f"ligand 1: {ligand_1_number}, ligand 2: {ligand_2_number}")
     engine = engines[i].rstrip()
@@ -94,10 +94,10 @@ for i in range(n_transformations):
     ligand_2_system = bss.IO.readMolecules([f"{unbound_path}/ligand_{ligand_2_number}/npt/ligand_{ligand_2_number}.prm7",
                                             f"{unbound_path}/ligand_{ligand_2_number}/npt/ligand_{ligand_2_number}.rst7"])
 
-    system_1 = bss.IO.readMolecules([f"{bound_path}/system_{ligand_1_number}.prm7",
-                                        f"{bound_path}/system_{ligand_1_number}.rst7"])
-    system_2 = bss.IO.readMolecules([f"{bound_path}/system_{ligand_2_number}.prm7",
-                                        f"{bound_path}/system_{ligand_2_number}.rst7"])
+    system_1 = bss.IO.readMolecules([f"{bound_path}/system_{ligand_1_number}/npt/system_{ligand_1_number}.prm7",
+                                        f"{bound_path}/system_{ligand_1_number}/npt/system_{ligand_1_number}.rst7"])
+    system_2 = bss.IO.readMolecules([f"{bound_path}/system_{ligand_2_number}/npt/system_{ligand_2_number}.prm7",
+                                        f"{bound_path}/system_{ligand_2_number}/npt/system_{ligand_2_number}.rst7"])
 
     ligand_1 = ligand_1_system.getMolecule(0)
     ligand_2 = ligand_2_system.getMolecule(0)
@@ -150,7 +150,7 @@ for i in range(n_transformations):
 
     free_energy_protocol = bss.Protocol.FreeEnergy(lam_vals=lambda_values[i], runtime=runtime*runtime_unit)
 
-    for j in range(3, 4, 1):
+    for j in range(1, 4, 1):
         # working_directory = f"{full_path}/{system_name}/outputs/{engines[i].strip()}_{j}/lig_{ligand_1_number}~lig_{ligand_2_number}"
         working_directory = f"{path}/outputs/{engines[i].strip()}_{j}/lig_{ligand_1_number}~lig_{ligand_2_number}"
         bound_directory = working_directory + "/bound/"

@@ -141,75 +141,75 @@ bss.IO.saveMolecules(filebase=ligand_npt_unbound_dir + f"/ligand_{ligand_number}
                      system=equilibrated_ligand,
                      fileformat=["PRM7", "RST7", "GroTop", "Gro87"])
 
-# print("Processing bound stage.")
+print("Processing bound stage.")
 
-# ligand_work_dir = fn.create_dirs(f"{path}/equilibration/bound/system_{ligand_number}/")
-# system_min_bound_dir = fn.create_dirs(f"{ligand_work_dir}/min") 
-# system_r_nvt_bound_dir = fn.create_dirs(f"{ligand_work_dir}/r_nvt")
-# system_bb_r_nvt_bound_dir = fn.create_dirs(f"{ligand_work_dir}/bb_r_nvt")  
-# system_r_npt_bound_dir = fn.create_dirs(f"{ligand_work_dir}/r_npt")
-# system_npt_bound_dir = fn.create_dirs(f"{ligand_work_dir}/npt")
-# system_nvt_bound_dir = fn.create_dirs(f"{ligand_work_dir}/nvt")  
+ligand_work_dir = fn.create_dirs(f"{path}/equilibration/bound/system_{ligand_number}/")
+system_min_bound_dir = fn.create_dirs(f"{ligand_work_dir}/min") 
+system_r_nvt_bound_dir = fn.create_dirs(f"{ligand_work_dir}/r_nvt")
+system_bb_r_nvt_bound_dir = fn.create_dirs(f"{ligand_work_dir}/bb_r_nvt")  
+system_r_npt_bound_dir = fn.create_dirs(f"{ligand_work_dir}/r_npt")
+system_npt_bound_dir = fn.create_dirs(f"{ligand_work_dir}/npt")
+system_nvt_bound_dir = fn.create_dirs(f"{ligand_work_dir}/nvt")  
 
-# solvated_system_files = glob.glob(protein_path + f"system_{ligand_number}_solvated.*")
-# solvated_system = bss.IO.readMolecules(solvated_system_files)
+solvated_system_files = glob.glob(protein_path + f"system_{ligand_number}_solvated.*")
+solvated_system = bss.IO.readMolecules(solvated_system_files)
 
-# system_minimisation_protocol = bss.Protocol.Minimisation(steps=minimisation_steps*10)
-# print("Minimisation")
-# minimised_system = fn.run_process(system=solvated_system,
-#                                   protocol=system_minimisation_protocol,
-#                                   process_name="min",
-#                                   working_directory=system_min_bound_dir,
-#                                   configuration=["emstep = 0.001", "emtol = 1000"]
-#                                   )
+system_minimisation_protocol = bss.Protocol.Minimisation(steps=minimisation_steps*10)
+print("Minimisation")
+minimised_system = fn.run_process(system=solvated_system,
+                                  protocol=system_minimisation_protocol,
+                                  process_name="min",
+                                  working_directory=system_min_bound_dir,
+                                  configuration=["emstep = 0.001", "emtol = 1000"]
+                                  )
 
-# system_r_nvt_protocol = bss.Protocol.Equilibration(runtime=runtime_short_nvt,
-#                                                    temperature_start=0*kelvin,
-#                                                    temperature_end=300*kelvin,
-#                                                    restraint="all")
-# print("R-NVT")
-# restrained_nvt_system = fn.run_process(system=minimised_system,
-#                                        protocol=system_r_nvt_protocol,
-#                                        process_name="r_nvt",
-#                                        working_directory=system_r_nvt_bound_dir,
-#                                        configuration=["dt = 0.0005"]
-#                                        )
+system_r_nvt_protocol = bss.Protocol.Equilibration(runtime=runtime_short_nvt,
+                                                   temperature_start=0*kelvin,
+                                                   temperature_end=300*kelvin,
+                                                   restraint="all")
+print("R-NVT")
+restrained_nvt_system = fn.run_process(system=minimised_system,
+                                       protocol=system_r_nvt_protocol,
+                                       process_name="r_nvt",
+                                       working_directory=system_r_nvt_bound_dir,
+                                       configuration=["dt = 0.0005"]
+                                       )
 
-# system_bb_restrained_protocol = bss.Protocol.Equilibration(runtime=runtime_nvt,
-#                                                            temperature=300*kelvin,
-#                                                            restraint="backbone") 
-# print("BB-R-NVT")
-# bb_restrained_system = fn.run_process(system=restrained_nvt_system,
-#                                       protocol=system_bb_restrained_protocol,
-#                                       process_name="bb_r_nvt",
-#                                       working_directory=system_bb_r_nvt_bound_dir)
+system_bb_restrained_protocol = bss.Protocol.Equilibration(runtime=runtime_nvt,
+                                                           temperature=300*kelvin,
+                                                           restraint="backbone") 
+print("BB-R-NVT")
+bb_restrained_system = fn.run_process(system=restrained_nvt_system,
+                                      protocol=system_bb_restrained_protocol,
+                                      process_name="bb_r_nvt",
+                                      working_directory=system_bb_r_nvt_bound_dir)
 
-# system_nvt_protocol = bss.Protocol.Equilibration(runtime=runtime_nvt, temperature=300*kelvin)
-# print("NVT")
-# nvt_system = fn.run_process(system=bb_restrained_system,
-#                             protocol=system_nvt_protocol,
-#                             process_name="nvt",
-#                             working_directory=system_nvt_bound_dir)
+system_nvt_protocol = bss.Protocol.Equilibration(runtime=runtime_nvt, temperature=300*kelvin)
+print("NVT")
+nvt_system = fn.run_process(system=bb_restrained_system,
+                            protocol=system_nvt_protocol,
+                            process_name="nvt",
+                            working_directory=system_nvt_bound_dir)
 
-# system_r_npt_protocol = bss.Protocol.Equilibration(runtime=runtime_npt,
-#                                                    pressure=1*atm,
-#                                                    temperature=300*kelvin,
-#                                                    restraint="heavy")
-# print("R-NPT")
-# restrained_npt_system = fn.run_process(system=nvt_system,
-#                                        protocol=system_r_npt_protocol,
-#                                        process_name="r_npt",
-#                                        working_directory=system_r_npt_bound_dir)                                                   
+system_r_npt_protocol = bss.Protocol.Equilibration(runtime=runtime_npt,
+                                                   pressure=1*atm,
+                                                   temperature=300*kelvin,
+                                                   restraint="heavy")
+print("R-NPT")
+restrained_npt_system = fn.run_process(system=nvt_system,
+                                       protocol=system_r_npt_protocol,
+                                       process_name="r_npt",
+                                       working_directory=system_r_npt_bound_dir)                                                   
 
-# system_npt_protocol = bss.Protocol.Equilibration(runtime=runtime_npt,
-#                                                  pressure=1*atm,
-#                                                  temperature=300*kelvin)    
-# print("NPT")                                  
-# equilibrated_system = fn.run_process(system=restrained_npt_system,
-#                                      protocol=system_npt_protocol,
-#                                      process_name="npt",
-#                                      working_directory=system_npt_bound_dir)
+system_npt_protocol = bss.Protocol.Equilibration(runtime=runtime_npt,
+                                                 pressure=1*atm,
+                                                 temperature=300*kelvin)    
+print("NPT")                                  
+equilibrated_system = fn.run_process(system=restrained_npt_system,
+                                     protocol=system_npt_protocol,
+                                     process_name="npt",
+                                     working_directory=system_npt_bound_dir)
 
-# bss.IO.saveMolecules(filebase=system_npt_bound_dir + f"/system_{ligand_number}",
-#                      system=equilibrated_system,
-#                      fileformat=["PRM7", "RST7", "GroTop", "Gro87"])
+bss.IO.saveMolecules(filebase=system_npt_bound_dir + f"/system_{ligand_number}",
+                     system=equilibrated_system,
+                     fileformat=["PRM7", "RST7", "GroTop", "Gro87"])

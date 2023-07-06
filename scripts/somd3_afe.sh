@@ -1,7 +1,7 @@
 #!/bin/bash
 # -o controls output. %A is replaced with job ID and %a with array index
-#SBATCH -o /home/jguven/projects/metalloenzymes/slurm_logs/somd_afe.%A.%a.slurm.out
-#SBATCH -e /home/jguven/projects/metalloenzymes//slurm_logs/somd_afe.%A.%a.slurm.err
+#SBATCH -o /home/jguven/projects/metalloenzymes/slurm_logs/somd3_afe.%A.%a.slurm.out
+#SBATCH -e /home/jguven/projects/metalloenzymes//slurm_logs/somd3_afe.%A.%a.slurm.err
 # Only launch a max of 1 task
 #SBATCH -n 1
 # allocate 1 gpu per job
@@ -41,9 +41,9 @@ fi
 for stage in "bound" "unbound"
 do
 
-    	min_dir=$HOME/projects/metalloenzymes/vim_2/outputs/${engine}_3/$lig_1~$lig_2/$stage/minimisation/lambda_$lambda
+    	min_dir=$HOME/projects/alchemistry/kpc2_deprotonated_ligand/outputs/${engine}_3/$lig_1~$lig_2/$stage/minimisation/lambda_$lambda
     	echo $min_dir
-    	lambda_dir=$HOME/projects/metalloenzymes/vim_2/outputs/${engine}_3/$lig_1~$lig_2/$stage/lambda_$lambda
+    	lambda_dir=$HOME/projects/alchemistry/kpc2_deprotonated_ligand/outputs/${engine}_3/$lig_1~$lig_2/$stage/lambda_$lambda
       
 		echo "using $engine for $lig_1 and $lig_2, at lambda $lambda"
 		echo "minimising"
