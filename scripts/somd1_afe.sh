@@ -23,8 +23,8 @@ idx=$SLURM_ARRAY_TASK_ID
 
 ligand_1=$1
 ligand_2=$2
-lig_1=`echo $ligand_1 | sed "s/$ligand_1/lig_/g"` 
-lig_2=`echo $ligand_2 | sed "s/$ligand_2/lig_/g"`
+lig_1=`echo $ligand_1 | sed "s/ligand_/lig_/g"` 
+lig_2=`echo $ligand_2 | sed "s/ligand_/lig_/g"`
 
 engine=$3
 lambdastring="$4"

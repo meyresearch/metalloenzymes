@@ -15,9 +15,10 @@ do
 	# ligpair[3]: lambda array
 	# ligpair[4]: engine
 	#sbatch --array=0-$(($n_windows-1)) somd_afe.sh ligand_1 ligand_4 ${ligpair[4]} ${ligpair[3]}
-	for i in 3 
+	for i in 1 2 # 3 
 	do
 		sbatch --array=0-$(($n_windows-1)) somd${i}_afe.sh ${ligpair[0]} ${ligpair[1]} ${ligpair[4]} "${ligpair[3]}"
+		#echo $i
 		sleep 1
 	done
 	# sbatch --array=0-$(($n_windows-1)) somd3_afe.sh ${ligpair[0]} ${ligpair[1]} ${ligpair[4]} "${ligpair[3]}"
