@@ -114,7 +114,30 @@ def get_ligand_files(ligand_path):
     return ligand_files
 
 
-def prepare_system(ligand_path, protein): # should probably separate to ligand and protein
+def write_tleap_setup_file(forcefield="ff14sb"):
+    """
+    Write tleap input file for setting up protein with given parameters
+    Parameters:
+    -----------
+    forcefield: str
+        protein force field, default is ff14sb
+    water_model: str
+        name of water model, default is tip3p
+    Return:
+    -------
+    tleap_command: str
+        tleap run command
+    """
+    # tleap_file = get either current working directory or user path
+    with open(tleap_file, "w") as tleap_in:
+        tleap_in.write(f"source leaprc.protein.{forcefield}\n")
+        tleap_in.write(f"source leaprc.water.{solvent}\n")
+        tleap_in.write(f"complex = loadpdb {protein_path}{complex_file}.pdb\n")
+        tleap_in.write(f"saveamberparm complex {protein_path+system}_tleap.prm7 {protein_path+system}_tleap.rst7\n")
+        tleap_in.write("quit")
+    tleap_command = f"tleap -s -f {tleap_file} > {protein_path}" + "tleap.out"
+
+def prepare_system(ligand_path, protein, forcefield): # should probably separate to ligand and protein
     """
     
     """
@@ -123,8 +146,11 @@ def prepare_system(ligand_path, protein): # should probably separate to ligand a
     ligand_names = [get_filenames(filepath) for filepath in ligand_files]
 
     network_dict = network.create_network(ligands, ligand_names, ligand_path)
-    network = network.edit_network(network_dict)
+    # network_dict = network.edit_network(ligand_path, network_dict)
     
+    # run tleap 
+
+
     # create afe production directory and add .dat files to it
 
     # create protocol and add to above directory
