@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 *.pdb
 *.flr
 *.DS_Store
@@ -16,14 +17,36 @@
 *.bk
 *.prmtop
 *.inpcrd
+=======
+>>>>>>> ba345cdf3b334385f3d905e2dab554607a26dba5
 *.prm7
 *.rst7
+*.prmtop
+*.inpcrd
+*.pdb
+*.sdf
 *.mol2
+<<<<<<< HEAD
 *.xyz
 *.top
+=======
+*.pyc
+>>>>>>> ba345cdf3b334385f3d905e2dab554607a26dba5
 *.gro
+*.top
+*.chk
+*.log
+*.dat
+*.fchk
+*.com
+*.swp
+*.xyz
+*.out
+*.flr
+*.csv
 *.trr
 *.xtc
+<<<<<<< HEAD
 *.ppm
 *.dat
 *.lock
@@ -43,3 +66,19 @@
 stdout_*
 */__pycache__/*
 *.rst
+=======
+*.png
+*.edr
+*.cpt
+*.tpr
+*.err
+*.po*
+*.pe*
+*.o*
+*.pickle
+kpc2/outputs
+kpc2/equilibration
+dft/ligand_*
+meze/__pycache__
+azetidinimines/kpc2/inputs/ligands/images
+>>>>>>> ba345cdf3b334385f3d905e2dab554607a26dba5
