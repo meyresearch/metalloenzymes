@@ -7,7 +7,7 @@ import argparse
 import os
 import glob
 import functions as fn
-
+bss.setVerbose(True)
 
 parser = argparse.ArgumentParser(description="solvate AFE systems")
 # parser.add_argument("system",
@@ -118,6 +118,6 @@ for i in range(n_ligands):
     system_solvated = bss.Solvent.solvate(solvent_force_field, molecule=system, box=box, angles=angles)
 
     ligand_savename = ligand_path + "ligand_" + ligand_number + "_solvated"
-    system_savename =  + "system_" + ligand_number + "_solvated"
+    system_savename = protein_path + "system_" + ligand_number + "_solvated"
     bss.IO.saveMolecules(ligand_savename, ligand_solvated, output_filetypes)
     bss.IO.saveMolecules(system_savename, system_solvated, output_filetypes)    
