@@ -18,10 +18,10 @@ def clean_arguments(arguments):
     cleaned Namespace of arguments
     
     """
-    if arguments.workdir is None:
-        arguments.workdir = os.getcwd()
-    elif not os.path.isdir(arguments.workdir):
-        raise argparse.ArgumentTypeError(f"{arguments.workdir} does not exist")
+    if arguments.working_directory is None:
+        arguments.working_directory = os.getcwd()
+    elif not os.path.isdir(arguments.working_directory):
+        raise argparse.ArgumentTypeError(f"{arguments.working_directory} does not exist")
     return arguments
 
 
@@ -79,7 +79,7 @@ def main():
 
     parser.add_argument("-lf",
                         "--ligand-forcefield",
-                        dest="ligand_ff",
+                        dest="ligand_forcefield",
                         help="ligand force field",
                         default="gaff2")
     
@@ -122,6 +122,7 @@ def main():
                                    box_shape=arguments.box_shape)
 
     functions.prepare_system(protein=protein, ligands=ligands, afe=afe)
+
 
 if __name__ == "__main__":
     main()
