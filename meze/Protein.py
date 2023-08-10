@@ -22,33 +22,9 @@ def get_water_file(working_directory, name="water.pdb"):
     return functions.file_exists(water_file)
 
 
-# def add_xtal_waters(protein_file, water_file, working_directory):
-#     """
-#     Combine protein file with crystallographic waters
-
-#     Parameters:
-#     -----------
-#     protein: str
-#         protein pdb file
-#     water: str
-#         xtal water pdb file
-
-#     Return:
-#     -------
-#     pdb_file: str
-#         pdb file with water and protein combined
-#     """
-#     protein = bss.IO.readMolecules(protein_file)
-#     water = bss.IO.readMolecules(water_file)
-#     output = working_directory + "/protein_water_complex"
-#     complex = protein + water
-#     bss.IO.saveMolecules(output, complex, fileformat="pdb")
-#     return output + ".pdb"
-
-
 class Protein(object):
     """
-    _summary_
+    Protein object for AFE preparation
 
     Attributes:
     -----------
@@ -75,7 +51,7 @@ class Protein(object):
     """
     def __init__(self, name, protein_file, path, forcefield, water_model):
         """
-        Constructor for the Protein class object
+        Class constructor
         """
         self.name = name
         self.path = functions.path_exists(path)
