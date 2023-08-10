@@ -44,7 +44,7 @@ class AlchemicalFreeEnergy(object):
         self.home = directory
         return directory        
     
-    def create_dat_file(self, Protein, Ligands):
+    def create_dat_file(self, Protein, Network):
         """
         Create protocol.dat file for AFE runs
 
@@ -60,8 +60,7 @@ class AlchemicalFreeEnergy(object):
         protocol_file: str
             protocol datafile
         """
-
-        protocol = [f"ligand forcefield = {Ligands.forcefield}", 
+        protocol = [f"ligand forcefield = {Network.forcefield}", 
                     f"protein forcefield = {Protein.forcefield}", 
                     f"solvent = {Protein.water_model}", 
                     f"box edges = {self.box[0]}*angstrom", 
@@ -69,13 +68,13 @@ class AlchemicalFreeEnergy(object):
                     f"protocol = default",
                     f"sampling = {self.time}*ns",
                     f"engine = {self.engine}"]
-        protocol_file = self.home + "/protocol.dat"
+        self.protocol_file = self.home + "/protocol.dat"
 
-        with open(protocol_file, "w") as protocol_file:
-            writer = csv.writer(protocol_file)
+        with open(self.protocol_file, "w") as file:
+            writer = csv.writer(file)
             for protocol_line in protocol:
                 writer.writerow([protocol_line])
-        return protocol_file    
+ 
     
 
 def main():

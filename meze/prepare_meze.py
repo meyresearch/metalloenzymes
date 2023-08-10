@@ -2,8 +2,9 @@ import functions
 import argparse
 import os
 import Protein
-import Ligands
+import Ligand 
 import AlchemicalFreeEnergy as AFE
+import Network
 
 def clean_arguments(arguments):
     """
@@ -64,6 +65,12 @@ def main():
                         dest="ligand_directory",
                         help="path to ligands preparation directory, default: $CWD + /inputs/ligands/",
                         default=os.getcwd()+"/inputs/ligands/")
+   
+    parser.add_argument("-c",
+                        "--ligand-charge",
+                        dest="ligand_charge",
+                        help="ligand charge",
+                        default=0)
 
     parser.add_argument("-pwd",
                         "--project-working-directory",
@@ -112,8 +119,13 @@ def main():
                               forcefield=arguments.forcefield,
                               water_model=arguments.water_model)
 
-    ligands = Ligands.Ligands(path=arguments.ligand_directory,
-                              forcefield=arguments.ligand_forcefield)
+    # change this to Network: this will create a Network object consisting
+    # of individual Ligand objects
+    network = Network.Network(path=arguments.ligand_directory,
+                              forcefield=arguments.ligand_forcefield,
+                              charge=arguments.ligand_charge)
+
+
 
     afe = AFE.AlchemicalFreeEnergy(path=arguments.working_directory,
                                    engine=arguments.engine,
@@ -121,7 +133,7 @@ def main():
                                    box_edges=arguments.box_edges,
                                    box_shape=arguments.box_shape)
 
-    functions.prepare_system(protein=protein, ligands=ligands, afe=afe)
+    functions.prepare(Protein=protein, Network=network, AFE=afe)
 
 
 if __name__ == "__main__":

@@ -7,7 +7,7 @@ import BioSimSpace as bss
 import pathlib
 import csv
 import numpy as np
-import network
+import Network 
 from definitions import ROOT_DIRECTORY
 
 
@@ -106,35 +106,37 @@ def get_filenames(path):
     return file_name.replace("." + extension, "")
 
 
-def prepare_system(protein, ligands, afe): 
+def prepare(Protein, Network, AFE): 
     """
     Prepare ligands and protein for AFE calculations.
 
     Parameters:
     -----------
-    working_directory: str
-        project working directory
-    protein: 
-        input pdb file for metalloenzyme/protein
+    Protein: Protein
+        Protein class object
+    Ligands: Ligands
+        Ligands class object
+    AFE: AlchemicalFreeEnergy
+        AlchemicalFreeEnergy class object
 
     Return:
     -------
     """
-    # ligand prep
-    ligand_molecules = ligands.get_molecules()
-    ligand_names = ligands.get_names()
-    network_dict = network.create_network(ligand_molecules, ligand_names, ligands.path)
+    protein_water_complex_file = Protein.create_complex()
+    tleap_command = Protein.write_tleap_input(protein_water_complex_file)
+    Protein.tleap(tleap_command)
 
-    # protein prep
-    protein_water_complex = protein.create_complex()
-    tleap_command = protein.write_tleap_input(protein_water_complex)
-    protein.tleap(tleap_command)
+    afe_directory = AFE.create_directory()
+    Network.create_ligand_dat_file(afe_directory)
+    Network.create_network_files(AFE.engine)
+    AFE.create_dat_file(Protein=Protein, Network=Network)
 
-    # create afe production directory and add .dat files to it
-    afe_directory = afe.create_directory()
-    ligands_dat_file = ligands.create_dat_file(afe_directory)
-    forward_network_dat_file, backward_network_dat_file = network.create_network_files(afe_directory, network_dict, afe.engine)
-    protocol_dat_file = afe.create_dat_file(Protein=protein, Ligands=ligands)
 
+# def solvate(Protein, Ligands):
+
+#     for i in range(Ligands.n_ligands()):
+#         ligand_number = Ligands.names[i].split("_")[-1]
+#         print(f"Solvating ligand {ligand_number}")
+#         ligand_parameters = bss.Parameters.gaff2(Ligands.molecules[i], net_charge=Ligands.charge).getMolecule()
 
 
