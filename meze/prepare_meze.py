@@ -100,7 +100,7 @@ def main():
                         "--box-shape",
                         dest="box_shape",
                         help="box shape",
-                        default="orthorhombic") 
+                        default="cubic") 
 
     parser.add_argument("-st",
                         "--sampling-time",
@@ -111,21 +111,15 @@ def main():
     arguments = parser.parse_args()
     arguments = clean_arguments(arguments)
     
-    # this should be somehow an object where all the arguments are attributes 
-    # then i can access them from every function in an easy way
     protein = Protein.Protein(name=arguments.group_name, 
                               protein_file=arguments.protein, 
                               path=arguments.protein_directory,
                               forcefield=arguments.forcefield,
                               water_model=arguments.water_model)
 
-    # change this to Network: this will create a Network object consisting
-    # of individual Ligand objects
     network = Network.Network(path=arguments.ligand_directory,
                               forcefield=arguments.ligand_forcefield,
                               charge=arguments.ligand_charge)
-
-
 
     afe = AFE.AlchemicalFreeEnergy(path=arguments.working_directory,
                                    engine=arguments.engine,
@@ -134,7 +128,7 @@ def main():
                                    box_shape=arguments.box_shape)
 
     functions.prepare(Protein=protein, Network=network, AFE=afe)
-
+    functions.solvate(Protein=protein, Network=network, AFE=afe)
 
 if __name__ == "__main__":
     main()

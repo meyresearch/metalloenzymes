@@ -80,14 +80,19 @@ class Protein(object):
         bss.IO.saveMolecules(output, complex, fileformat="pdb")
         return output + ".pdb"
 
-    def write_tleap_input(self, complex_file):
-        """
-        Write tleap input file for setting up protein with given parameters
 
+    def tleap(self, complex_file):
+        """
+        Run tleap for protein-water complex
+        
+        Parameters:
+        -----------
+        complex_file: str
+            protein-water complex pdb file
         Return:
         -------
-        tleap_command: str
-            tleap run command
+        save_file: str
+            name of prepared protein-water system
         """
         tleap_input_file = self.path + "/tleap.in"
         tleap_output_file = self.path + "/tleap.out"
@@ -98,23 +103,22 @@ class Protein(object):
             tleap_in.write(f"complex = loadpdb {complex_file}\n")
             tleap_in.write(f"saveamberparm complex {save_file}_tleap.prm7 {save_file}_tleap.rst7\n")
             tleap_in.write("quit")
-        return f"tleap -s -f {tleap_input_file} > {tleap_output_file}"
+        os.system(f"tleap -s -f {tleap_input_file} > {tleap_output_file}")
+        self.prepared = save_file + "_tleap"
+        return self.prepared
 
 
-    def tleap(self, command):
+    def get_prepared_protein(self):
         """
-        Run tleap for water-protein complex.
-
-        Parameters:
-        -----------
-        command: str
-            tleap command-line command
+        Return a bss.Molecule object of the prepared protein-water complex
 
         Return:
         -------
+        bss.Molecule: 
+            prepared molecule 
         """
-        os.system(command)
-
+        return bss.IO.readMolecules([f"{self.prepared}.rst7", f"{self.prepared}.prm7"])[0]
+        
 
 def main():
     prot = Protein(name="test", 

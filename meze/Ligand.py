@@ -47,7 +47,6 @@ class Ligand(object):
     def get_name(self):
         """
         Get ligand names in path.
-        Set names attribute.
 
         Return:
         -------
@@ -57,10 +56,15 @@ class Ligand(object):
         return names
     
 
-    def parameterise(self):
-
-        if self.forcefield == "gaff":
-            self.parameters = bss.Parameters.gaff(self.molecules)  
+    def parameterise(self, forcefield, charge):
+        self.parameters = None
+        if forcefield == "gaff":
+            self.parameters = bss.Parameters.gaff(molecule=self.molecule, net_charge=charge).getMolecule()
+        elif forcefield == "gaff2":
+            self.parameters = bss.Parameters.gaff2(molecule=self.molecule, net_charge=charge).getMolecule()
+        else:
+            print(f"Forcefield {forcefield} is not supported for ligands.")
+        return self.parameters  
 
 
 def main():

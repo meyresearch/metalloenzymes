@@ -99,11 +99,10 @@ class Network(object):
         self.ligands = [Ligand.Ligand(file) for file in self.files]
         self.ligand_molecules = [ligand.get_molecule() for ligand in self.ligands]
         self.names = [ligand.get_name() for ligand in self.ligands]
-        self.dictionary = self.create_dictionary()
-        self.dataframe = self.dict_to_df()
         self.threshold = threshold
         self.n_normal = n_normal
         self.n_difficult = n_difficult
+        self.n_ligands = self.get_n_ligands()
 
 
     def create_dictionary(self):
@@ -126,7 +125,7 @@ class Network(object):
         with open(self.path+f"/meze_network.csv", "w") as lomap_out:
             for key, value in network_dict.items():
                 lomap_out.write(f"{key}: {value}\n")
-        
+        self.dictionary = network_dict
         return network_dict
     
 
@@ -147,7 +146,7 @@ class Network(object):
         return ligand_files
 
 
-    def n_ligands(self):
+    def get_n_ligands(self):
         """
         Get number of ligands
 
@@ -260,6 +259,8 @@ class Network(object):
         
         Return:
         -------
+        tuple:
+            forward and backward network.dat files
         """
         self.forward = self.path + "network_fwd.dat"
         self.backward = self.path + "network_bwd.dat"
@@ -273,9 +274,8 @@ class Network(object):
                 self.n_windows = self.set_n_windows(lomap_score)
                 lambda_array_bash = self.create_lambda_list_bash()
                 network_file.write(f"{transformation[1]}, {transformation[0]}, {self.n_windows}, {lambda_array_bash}, {engine}\n")
-
+        return self.forward, self.backward
     
-
     def create_ligand_dat_file(self, afe_directory):
         """
         Create ligands.dat file
@@ -295,6 +295,7 @@ class Network(object):
             writer = csv.writer(ligands_file)
             for ligand in self.names:
                 writer.writerow([ligand])  
+        return self.ligands_dat
 
 
     def dict_to_df(self):
@@ -311,7 +312,8 @@ class Network(object):
         pd.DataFrame
             LOMAP network as a df
         """
-        dataframe_from_dict = pd.DataFrame.from_dict(self.dictionary, "index")
+        dictionary = self.create_dictionary()
+        dataframe_from_dict = pd.DataFrame.from_dict(dictionary, "index")
         network_dataframe = dataframe_from_dict.reset_index().rename(columns={"index":"transformations",
                                                                             0:"score"})
         network_dataframe.index.name = "index"

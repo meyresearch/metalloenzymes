@@ -122,21 +122,38 @@ def prepare(Protein, Network, AFE):
     Return:
     -------
     """
+    network_dictionary = Network.create_dictionary()
+    #TODO Edit dictionary?
     protein_water_complex_file = Protein.create_complex()
-    tleap_command = Protein.write_tleap_input(protein_water_complex_file)
-    Protein.tleap(tleap_command)
+    prepared_protein_file = Protein.tleap(protein_water_complex_file)
 
     afe_directory = AFE.create_directory()
-    Network.create_ligand_dat_file(afe_directory)
-    Network.create_network_files(AFE.engine)
-    AFE.create_dat_file(Protein=Protein, Network=Network)
+    ligands_datfile = Network.create_ligand_dat_file(afe_directory)
+    network_forward, network_backward = Network.create_network_files(AFE.engine)
+    protocol_file = AFE.create_dat_file(Protein=Protein, Network=Network)
 
 
-# def solvate(Protein, Ligands):
-
-#     for i in range(Ligands.n_ligands()):
-#         ligand_number = Ligands.names[i].split("_")[-1]
-#         print(f"Solvating ligand {ligand_number}")
-#         ligand_parameters = bss.Parameters.gaff2(Ligands.molecules[i], net_charge=Ligands.charge).getMolecule()
-
+def solvate(Protein, Network, AFE):
+    
+    ligands = Network.ligands
+    for i in range(Network.n_ligands):
+        ligand_number = Network.names[i].split("_")[-1]
+        print(f"Solvating unbound ligand {ligand_number}")
+        ligand_parameters = ligands[i].parameterise(Network.forcefield, Network.charge)
+        unbound_box, unbound_box_angles = AFE.create_box(ligand_parameters)
+        solvated_ligand = bss.Solvent.solvate(model=Protein.water_model, 
+                                              molecule=ligand_parameters, 
+                                              box=unbound_box,
+                                              angles=unbound_box_angles)
+        print(f"Solvating bound ligand {ligand_number}")        
+        system_parameters = ligand_parameters + Protein.get_prepared_protein()
+        bound_box, bound_box_angles = AFE.create_box(system_parameters)
+        solvated_system = bss.Solvent.solvate(model=Protein.water_model,
+                                              molecule=system_parameters,
+                                              box=bound_box,
+                                              angles=bound_box_angles)
+        ligand_savename = Network.path + "ligand_" + ligand_number + "_solvated"
+        system_savename = Protein.path + "system_" + ligand_number + "_solvated"
+        bss.IO.saveMolecules(ligand_savename, solvated_ligand, ["PRM7", "RST7"])
+        bss.IO.saveMolecules(system_savename, solvated_system, ["PRM7", "RST7"])
 
