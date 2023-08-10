@@ -60,7 +60,7 @@ class Protein(object):
         self.water_model = water_model
         self.xtal_water = bss.IO.readMolecules(get_water_file(self.path))
     
-
+    
     def create_complex(self):
         """
         Combine protein file with crystallographic waters.

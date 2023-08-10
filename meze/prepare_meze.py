@@ -1,6 +1,9 @@
 import functions
 import argparse
 import os
+import Protein
+import Ligands
+import AlchemicalFreeEnergy as AFE
 
 def clean_arguments(arguments):
     """
@@ -38,24 +41,36 @@ def main():
                         help="group name for system, e.g. vim2/kpc2/ndm1/etc",
                         default="meze")
 
-    parser.add_argument("-wd",
-                        "--working_directory",
-                        dest="workdir",
-                        help="project working directory",
-                        default=os.getcwd())
-    
+    parser.add_argument("-ppd",
+                        "--protein-prep-directory",
+                        dest="protein_directory",
+                        help="path to protein preparation directory, default: $CWD + /inputs/protein/",
+                        default=os.getcwd()+"/inputs/protein/")
+
     parser.add_argument("-ff",
                         "--force-field",
                         dest="forcefield",
-                        help="protein force field",
+                        help="protein force field, default is ff14SB",
                         default="ff14SB")
     
     parser.add_argument("-w",
                         "--water-model",
                         dest="water_model",
-                        help="water model",
+                        help="water model, default is tip3p",
                         default="tip3p")
     
+    parser.add_argument("-lpd",
+                        "--ligand-prep-directory",
+                        dest="ligand_directory",
+                        help="path to ligands preparation directory, default: $CWD + /inputs/ligands/",
+                        default=os.getcwd()+"/inputs/ligands/")
+
+    parser.add_argument("-pwd",
+                        "--project-working-directory",
+                        dest="working_directory",
+                        help="working directory for the project",
+                        default=os.getcwd())
+
     parser.add_argument("-e",
                         "--engine",
                         dest="engine",
@@ -91,16 +106,22 @@ def main():
     
     # this should be somehow an object where all the arguments are attributes 
     # then i can access them from every function in an easy way
-    functions.prepare_system(arguments.group_name,
-                             arguments.workdir, 
-                             arguments.protein, 
-                             arguments.forcefield,
-                             arguments.water_model,
-                             arguments.engine,
-                             arguments.ligand_ff,
-                             arguments.box_edges,
-                             arguments.box_shape,
-                             arguments.sampling_time)
+    protein = Protein.Protein(name=arguments.group_name, 
+                              protein_file=arguments.protein, 
+                              path=arguments.protein_directory,
+                              forcefield=arguments.forcefield,
+                              water_model=arguments.water_model)
+
+    ligands = Ligands.Ligands(path=arguments.ligand_directory,
+                              forcefield=arguments.ligand_forcefield)
+
+    afe = AFE.AlchemicalFreeEnergy(path=arguments.working_directory,
+                                   engine=arguments.engine,
+                                   sampling_time=arguments.sampling_time,
+                                   box_edges=arguments.box_edges,
+                                   box_shape=arguments.box_shape)
+
+    functions.prepare_system(protein=protein, ligands=ligands, afe=afe)
 
 if __name__ == "__main__":
     main()

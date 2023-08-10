@@ -4,6 +4,7 @@ Ligands class object
 import functions
 import BioSimSpace as bss
 import network
+import csv
 
 class Ligands(object):
     """
@@ -25,8 +26,8 @@ class Ligands(object):
         Class constructor
         """
         self.path = functions.path_exists(path)
-        self.forcefiedl = forcefield
-
+        self.forcefield = forcefield
+        self.files = self.get_files()
 
     def get_files(self):
         """
@@ -79,12 +80,33 @@ class Ligands(object):
         names = [functions.get_filenames(file) for file in self.files]
         self.names = names
         return names
+    
+
+    def create_dat_file(self, afe_directory):
+        """
+        Create ligands.dat file
+
+        Parameters:
+        -----------
+        afe_directory: 
+            AFE working directory
+
+        Return:
+        -------
+        ligands_dat: str
+            ligands datafile
+        """
+        ligands_dat = afe_directory + "ligands.dat"
+        with open(ligands_dat, "w") as ligands_file:
+            writer = csv.writer(ligands_file)
+            for ligand in self.names:
+                writer.writerow([ligand])
+        return ligands_dat    
 
 
 def main():
     ligs = Ligands(path="/home/jguven/projects/alchemistry/add_caps_to_kpc2/inputs/ligands",
                    forcefield="gaff2")
-    files = ligs.get_files()
     mols = ligs.get_molecules()
     names = ligs.get_names()
     ntwrk = network.create_network(mols, names, ligs.path)

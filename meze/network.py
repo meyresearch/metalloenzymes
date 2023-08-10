@@ -383,6 +383,89 @@ def edit_network(ligand_path, network):
             continue
     return dict(zip(edited_dataframe["transformations"], edited_dataframe["score"]))
     
+
+def set_n_windows(lomap_score, threshold=0.4, n_normal=11, n_difficult=17):
+    """
+    Set the number of lambda windows for given transformation depending on lomap score
+
+    Parameters:
+    -----------
+    lomap_score: float
+        lomap score for transformation
+    threshold: float
+        threshold value of lomap score to define difficult transformations
+    n_normal: int
+        number of lambda windows for a "normal" transformation
+    n_difficult: int
+        number of lambda windows for difficult transfromations
+
+    Return:
+    -------
+    n_windows: int
+        number of lambda windows for given 
+    """
+    if lomap_score == None or lomap_score < float(threshold):
+        n_windows = n_difficult
+    else:
+        n_windows = n_normal
+    return n_windows
+
+
+def create_lambda_list_bash(n_windows):
+    """
+    Create a bash-readable list of evenly spaced lambda values between 0 and n_windows
+
+    Parameters:
+    -----------
+    n_windows: 
+        number of lambda windows
+
+    Return:
+    -------
+    bash_list: str
+        a bash-readable list of lambda values
+    """
+    lambda_list_numpy = list(np.linspace(0, 1, int(n_windows)))
+    lambda_list = [format(item, ".4f") for item in lambda_list_numpy]
+    return " ".join(lambda_list)
+
+
+
+def create_network_files(working_directory, network_dict, engine):
+    """
+    _summary_
+
+    Parameters:
+    -----------
+    working_directory: str 
+        project working directory
+    network: dict
+        lomap network
+    engine: str
+        MD engine
+    
+    Return:
+    -------
+    networks: tuple
+        forward transformation network, backward transformation network
+    """
+    forward = working_directory + "network_fwd.dat"
+    backward = working_directory + "network_bwd.dat"
+
+    with open(forward, "w") as network_file:
+        for transformation, lomap_score in network_dict.items():
+            n_windows = set_n_windows(lomap_score)
+            lambda_array_bash = create_lambda_list_bash(n_windows)
+            network_file.write(f"{transformation[0]}, {transformation[1]}, {n_windows}, {lambda_array_bash}, {engine}\n")
+    with open(backward, "w") as network_file:
+        for transformation, lomap_score in network_dict.items():
+            n_windows = set_n_windows(lomap_score)
+            lambda_array_bash = create_lambda_list_bash(n_windows)
+            network_file.write(f"{transformation[1]}, {transformation[0]}, {n_windows}, {lambda_array_bash}, {engine}\n")
+    
+    return forward, backward
+
+
 def main():
 
     parser = argparse.ArgumentParser(description="MEZE: MEtalloenZymE FF-builder for alchemistry\nCreate and edit a LOMAP network.",
