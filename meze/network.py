@@ -16,10 +16,12 @@ def directories_exist(paths):
     """
     Check if LOMAP directories (images, inputs, outputs) already exist in ligand_path.
     Raises a warning in each case.
+
     Parameters:
     -----------
     paths: list
         list of ligand_path + images/inputs/outputs
+        
     Return:
     -------
     bool
@@ -36,10 +38,12 @@ def directories_exist(paths):
 def remove_lomap_directories(paths):
     """
     Remove LOMAP directories (images, inputs, outputs) in ligand_path.
+
     Parameters:
     -----------
     paths: list
         list of ligand_path + images/inputs/outputs
+
     Return:
     -------
     """
@@ -52,10 +56,12 @@ def remove_lomap_directories(paths):
 def create_new_lomap_directory(ligand_path):
     """
     Create a lomap directory in ligand path 
+
     Parameters:
     -----------
     ligand_path: str
         path to ligand files
+
     Return:
     -------
     str
@@ -73,10 +79,12 @@ def create_new_lomap_directory(ligand_path):
 def check_lomap_directory(ligand_path):
     """
     This is work-around to avoid the network plotting failing if the directories already exist. 
+
     Parameters:
     -----------
     ligand_path: str
         path to ligand files
+
     Return:
     -------
     str
@@ -105,6 +113,7 @@ def check_lomap_directory(ligand_path):
 def create_network(ligands, ligand_names, ligand_path):
     """
     Create a transformation network with LOMAP
+
     Parameters:
     -----------
     ligands: list
@@ -113,6 +122,7 @@ def create_network(ligands, ligand_names, ligand_path):
         list of ligand names, can be empty
     ligand_path: str
         path to ligand files
+
     Return:
     -------
     dictionary
@@ -136,10 +146,12 @@ def create_network(ligands, ligand_names, ligand_path):
 def network_to_df(dictionary):
     """
     Convert transformation network from dictionary to Pandas dataframe
+
     Parameters:
     -----------
     dictionary: dict
         LOMAP network
+
     Return:
     -------
     pd.DataFrame
@@ -157,6 +169,7 @@ def network_to_df(dictionary):
 def adjust():
     """
     Ask user if they want to edit the LOMAP network
+
     Parameters:
     -----------
     Return:
@@ -190,6 +203,7 @@ def adjust():
 def print_options():
     """
     Print available user options for adjusting the network
+
     Parameters:
     -----------
     Return:
@@ -203,6 +217,7 @@ def print_options():
 def get_user_options():
     """    
     Extract user options
+
     Parameters:
     -----------
     Return:
@@ -217,6 +232,7 @@ def get_user_options():
 def delete_transformation(edited_dataframe, options, first_index, last_index):
     """
     Delete transformation as specified by user
+
     Parameters:
     -----------
     edited_dataframe: pd.DataFrame
@@ -227,6 +243,7 @@ def delete_transformation(edited_dataframe, options, first_index, last_index):
         first index of the original dataframe
     last_index: int
         last index of the original dataframe
+
     Return:
     -------
     pd.DataFrame
@@ -250,6 +267,7 @@ def delete_transformation(edited_dataframe, options, first_index, last_index):
 def edit_transformation(edited_dataframe, options, first_index, last_index):
     """
     Edit transformation score as specified by user
+
     Parameters:
     -----------
     edited_dataframe: pd.DataFrame
@@ -260,6 +278,7 @@ def edit_transformation(edited_dataframe, options, first_index, last_index):
         first index of the original dataframe
     last_index: int
         last index of the original dataframe
+
     Return:
     -------
     pd.DataFrame
@@ -285,6 +304,7 @@ def edit_transformation(edited_dataframe, options, first_index, last_index):
 def add_transformation(edited_dataframe, options, last_index):
     """
     Edit transformation score as specified by user
+
     Parameters:
     -----------
     edited_dataframe: pd.DataFrame
@@ -293,6 +313,7 @@ def add_transformation(edited_dataframe, options, last_index):
         list of user specified option(s)
     last_index: int
         last index of the original dataframe
+
     Return:
     -------
     pd.DataFrame
@@ -315,12 +336,14 @@ def add_transformation(edited_dataframe, options, last_index):
 def edit_network(ligand_path, network):
     """
     Edit LOMAP network
+
     Parameters:
     -----------
     ligand_path: str
         path to ligand files
     network: dict
         LOMAP network as a dictionary
+
     Return:
     -------
     dict

@@ -1,0 +1,156 @@
+"""
+Protein class object
+"""
+import os
+import functions
+import BioSimSpace as bss
+
+
+def get_water_file(working_directory, name="water.pdb"):
+    """
+    Get water.pdb file from current working directory and check it exists
+    #TODO maybe get it as input at least the name of the file
+
+    Parameters:
+    -----------
+    Return:
+    -------
+    water_pdb: str
+        crystal waters in pdb file
+    """
+    water_file = working_directory + "/" + name
+    return functions.file_exists(water_file)
+
+
+# def add_xtal_waters(protein_file, water_file, working_directory):
+#     """
+#     Combine protein file with crystallographic waters
+
+#     Parameters:
+#     -----------
+#     protein: str
+#         protein pdb file
+#     water: str
+#         xtal water pdb file
+
+#     Return:
+#     -------
+#     pdb_file: str
+#         pdb file with water and protein combined
+#     """
+#     protein = bss.IO.readMolecules(protein_file)
+#     water = bss.IO.readMolecules(water_file)
+#     output = working_directory + "/protein_water_complex"
+#     complex = protein + water
+#     bss.IO.saveMolecules(output, complex, fileformat="pdb")
+#     return output + ".pdb"
+
+
+class Protein(object):
+    """
+    _summary_
+
+    Attributes:
+    -----------
+    name: str
+        name of the protein: used for saving meze output files
+    protein_file: str
+        prepared protein file
+    path: str
+        path to protein prep directory
+    forcefield: str
+        protein forcefield, default is ff14SB
+    water_model: str
+        water model, default is tip3p
+        
+    Methods:
+    -------
+    create_complex() -> str:
+        Combine protein file with crystallographic waters.
+        Set complex attribute.
+    write_tleap_input() -> str:
+        Write tleap input file for setting up protein with given parameters
+    tleap() -> None:
+        Run tleap for water-protein complex.
+    """
+    def __init__(self, name, protein_file, path, forcefield, water_model):
+        """
+        Constructor for the Protein class object
+        """
+        self.name = name
+        self.path = functions.path_exists(path)
+        self.molecule = bss.IO.readMolecules(functions.file_exists(protein_file))
+        self.forcefield = forcefield
+        self.water_model = water_model
+        self.xtal_water = bss.IO.readMolecules(get_water_file(self.path))
+    
+
+    def create_complex(self):
+        """
+        Combine protein file with crystallographic waters.
+        Set complex attribute.
+
+        Parameters:
+        -----------
+        Return:
+        -------
+        pdb_file: str
+            pdb file with water and protein combined
+        """
+
+        output = self.path + "/protein_water_complex"
+        complex = self.molecule + self.xtal_water
+        self.complex = complex
+        bss.IO.saveMolecules(output, complex, fileformat="pdb")
+        return output + ".pdb"
+
+    def write_tleap_input(self, complex_file):
+        """
+        Write tleap input file for setting up protein with given parameters
+
+        Return:
+        -------
+        tleap_command: str
+            tleap run command
+        """
+        tleap_input_file = self.path + "/tleap.in"
+        tleap_output_file = self.path + "/tleap.out"
+        save_file = self.path + "/" + self.name
+        with open(tleap_input_file, "w") as tleap_in:
+            tleap_in.write(f"source leaprc.protein.{self.forcefield}\n")
+            tleap_in.write(f"source leaprc.water.{self.water_model}\n")
+            tleap_in.write(f"complex = loadpdb {complex_file}\n")
+            tleap_in.write(f"saveamberparm complex {save_file}_tleap.prm7 {save_file}_tleap.rst7\n")
+            tleap_in.write("quit")
+        return f"tleap -s -f {tleap_input_file} > {tleap_output_file}"
+
+
+    def tleap(self, command):
+        """
+        Run tleap for water-protein complex.
+
+        Parameters:
+        -----------
+        command: str
+            tleap command-line command
+
+        Return:
+        -------
+        """
+        os.system(command)
+
+
+def main():
+    prot = Protein(name="test", 
+                   protein_file="/home/jguven/projects/alchemistry/add_caps_to_kpc2/inputs/protein/kpc2.input.pdb",
+                   path="/home/jguven/projects/alchemistry/add_caps_to_kpc2/inputs/protein/",
+                   forcefield="ff14SB",
+                   water_model="tip3p")
+    complex = prot.create_complex()
+    command = prot.write_tleap_input(complex_file=complex)
+    prot.tleap(command)
+
+
+if __name__ == "__main__":
+    main()
+    
