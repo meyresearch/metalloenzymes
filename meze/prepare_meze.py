@@ -107,6 +107,17 @@ def main():
                         dest="sampling_time",
                         help="sampling time in nanoseconds",
                         default="4") 
+    
+    parser.add_argument("-ms",
+                        "--minimisation-steps",
+                        help="number of minimisation steps for equilibration stage",
+                        type=functions.check_positive_integer(),
+                        default=500)
+    
+    parser.add_argument("-st",
+                        "--short-nvt-runtime",
+                        help="runtime in ps for short NVT equilibration",
+                        type=functions.check_positive_float()) # split check positive to check integer and check float 
 
     arguments = parser.parse_args()
     arguments = clean_arguments(arguments)
@@ -129,6 +140,7 @@ def main():
 
     functions.prepare(Protein=protein, Network=network, AFE=afe)
     functions.solvate(Protein=protein, Network=network, AFE=afe)
+
 
 if __name__ == "__main__":
     main()

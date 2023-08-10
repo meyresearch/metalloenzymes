@@ -134,7 +134,21 @@ def prepare(Protein, Network, AFE):
 
 
 def solvate(Protein, Network, AFE):
-    
+    """
+    Solvate unbound and bound systems.
+
+    Parameters:
+    -----------
+    Protein: 
+        Protein class object
+    Network: 
+        Network class object
+    AFE: 
+        AlchemicalFreeEnergy class object
+
+    Return:
+    -------
+    """
     ligands = Network.ligands
     for i in range(Network.n_ligands):
         ligand_number = Network.names[i].split("_")[-1]
@@ -157,3 +171,6 @@ def solvate(Protein, Network, AFE):
         bss.IO.saveMolecules(ligand_savename, solvated_ligand, ["PRM7", "RST7"])
         bss.IO.saveMolecules(system_savename, solvated_system, ["PRM7", "RST7"])
 
+
+def equilibrate():
+    pass
