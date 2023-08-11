@@ -9,5 +9,8 @@
 
 idx=$SLURM_ARRAY_TASK_ID
 
-python ~/projects/metalloenzymes/meze/meze.py --step 2 --group-name kpc2 --input-pdb-file inputs/protein/kpc2.input.pdb --ligand-charge -1 --ligand-index $idx  
+# python ~/projects/metalloenzymes/meze/meze.py --step 1 --group-name kpc2 --input-pdb-file inputs/protein/kpc2.input.pdb --ligand-charge -1 --ligand-index $idx  
 
+# python ~/projects/metalloenzymes/meze/meze.py --step 2 --group-name kpc2 --input-pdb-file inputs/protein/kpc2.input.pdb --ligand-charge -1 --ligand-index $idx  
+
+python ~/projects/metalloenzymes/meze/meze.py --step 3 --group-name kpc2 --input-pdb-file inputs/protein/kpc2.input.pdb --ligand-charge -1 --ligand-index $idx  

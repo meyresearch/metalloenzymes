@@ -7,6 +7,7 @@ import AlchemicalFreeEnergy as AFE
 import Network
 import prepare
 import solvate
+import equilibrate
 import logging
 logger = logging.getLogger()
 logger.setLevel(logging.CRITICAL)
@@ -25,12 +26,13 @@ def clean_arguments(arguments):
     cleaned Namespace of arguments
     
     """
-    if arguments.working_directory is None:
-        arguments.working_directory = os.getcwd()
-    elif not os.path.isdir(arguments.working_directory):
-        raise argparse.ArgumentTypeError(f"{arguments.working_directory} does not exist")
-    
-    # type=functions.check_positive(functions.check_int(arguments.min))
+    check_integers = lambda arg: functions.check_positive(functions.check_int(arg))
+    check_integers(arguments.min_steps)
+    check_floats = lambda arg: functions.check_positive(functions.check_float(arg))
+    check_floats(arguments.short_nvt)
+    check_floats(arguments.nvt)
+    check_floats(arguments.npt)
+
     return arguments
 
 
@@ -97,6 +99,7 @@ def main():
     parser.add_argument("-pwd",
                         "--project-working-directory",
                         dest="working_directory",
+                        type=functions.path_exists,
                         help="working directory for the project",
                         default=os.getcwd())
 
@@ -130,27 +133,39 @@ def main():
                         help="sampling time in nanoseconds",
                         default="4") 
     
-    # parser.add_argument("-min",
-    #                     "--minimisation-steps",
-    #                     dest=
-    #                     help="number of minimisation steps for equilibration stage",
-    #                     default=500)
+    parser.add_argument("-min",
+                        "--minimisation-steps",
+                        dest="min_steps",
+                        help="number of minimisation steps for equilibration stage",
+                        default=500)
     
-    # parser.add_argument("-snvt",
-    #                     "--short-nvt-runtime",
-    #                     help="runtime in ps for short NVT equilibration",
-    #                     type=functions.check_positive(functions.check_float())) 
+    parser.add_argument("-snvt",
+                        "--short-nvt-runtime",
+                        dest="short_nvt",
+                        help="runtime in ps for short NVT equilibration",
+                        default=5) 
     
-    # parser.add_argument("-nvt",
-    #                     "--nvt-runtime",
-    #                     type=functions.check_positive(functions.check_float()),
-    #                     help="runtime in ps for NVT equilibration")
+    parser.add_argument("-nvt",
+                        "--nvt-runtime",
+                        dest="nvt",
+                        help="runtime in ps for NVT equilibration",
+                        default=50)
 
-    # parser.add_argument("-npt",
-    #                     "--npt-runtime",
-    #                     type=functions.check_positive(functions.check_float()),
-    #                     help="runtime in ps for NPT equilibration",
-    #                     default=200)
+    parser.add_argument("-npt",
+                        "--npt-runtime",
+                        dest="npt",
+                        help="runtime in ps for NPT equilibration",
+                        default=200)
+    
+    parser.add_argument("--em-step",
+                        dest="emstep",
+                        help="Step size for energy minimisation",
+                        default="0.01")
+    
+    parser.add_argument("--em-tolerance",
+                        dest="emtol",
+                        help="kJ mol-1 nm-1, Maximum force tolerance for energy minimisation",
+                        default="1000")
 
     arguments = parser.parse_args()
     arguments = clean_arguments(arguments)
@@ -169,13 +184,22 @@ def main():
                                    engine=arguments.engine,
                                    sampling_time=arguments.sampling_time,
                                    box_edges=arguments.box_edges,
-                                   box_shape=arguments.box_shape)
+                                   box_shape=arguments.box_shape,
+                                   min=arguments.min_steps,
+                                   short_nvt=arguments.short_nvt,
+                                   nvt=arguments.nvt,
+                                   npt=arguments.npt,
+                                   em_step=arguments.emstep,
+                                   em_tolerance=arguments.emtol)
 
     if arguments.step == "1":
         prepare.prepare_meze(Protein=protein, Network=network, AFE=afe)
     elif arguments.step == "2":
-        solvate.solvate_meze(idx=arguments.idx, Protein=protein, Network=network, AFE=afe)
-
+        # update Protein, Network and AFE in solvate_meze
+        # output these to variables
+        # use those variables as the input to heat_meze
+        protein, network, afe = solvate.solvate_meze(idx=arguments.idx, Protein=protein, Network=network, AFE=afe)
+        # equilibrate.heat_meze()
 
 if __name__ == "__main__":
     main()

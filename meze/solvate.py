@@ -22,11 +22,11 @@ def solvate_meze(idx, Protein, Network, AFE):
     Return:
     -------
     """
-    ligands = Network.ligands
+    ligand = Network.ligands[idx]
     names = Network.names
     ligand_number = Network.names[idx].split("_")[-1]
     print(f"Solvating unbound ligand {ligand_number}")
-    ligand_parameters = ligands[idx].parameterise(Network.forcefield, Network.charge)
+    ligand_parameters = ligand.parameterise(Network.forcefield, Network.charge)
     unbound_box, unbound_box_angles = AFE.create_box(ligand_parameters)
     solvated_ligand = bss.Solvent.solvate(model=Protein.water_model, 
                                             molecule=ligand_parameters, 
@@ -43,3 +43,13 @@ def solvate_meze(idx, Protein, Network, AFE):
     system_savename = Protein.path + "system_" + ligand_number + "_solvated"
     bss.IO.saveMolecules(ligand_savename, solvated_ligand, ["PRM7", "RST7"])
     bss.IO.saveMolecules(system_savename, solvated_system, ["PRM7", "RST7"])
+    Network.ligands[idx] = solvated_ligand
+    Protein.complex = solvated_system
+    return Protein, Network, AFE
+
+def main():
+    pass
+
+
+if __name__ == "__main__":
+    main()

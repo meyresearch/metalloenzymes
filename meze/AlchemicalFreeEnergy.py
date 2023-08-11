@@ -4,7 +4,7 @@ Alchemical Free Energy class for free energy simulations
 import pathlib
 import csv
 import BioSimSpace as bss
-from definitions import ANGSTROM
+from definitions import ANGSTROM, PICOSECOND
 import functions 
 
 
@@ -20,35 +20,41 @@ class AlchemicalFreeEnergy(object):
     Methods:
     -------
     """
-    def __init__(self, path, engine, sampling_time, box_edges, box_shape):
+    def __init__(self, path, engine, sampling_time, box_edges, box_shape, min, short_nvt, nvt, npt, em_step, em_tolerance):
         self.path = functions.path_exists(path)
         self.engine = engine
         self.time = sampling_time
         self.box_shape = box_shape
         self.box_edges = box_edges
-        self.box = (box_edges, box_shape)
+        self.min_steps = min
+        self.short_nvt = functions.convert_to_units(short_nvt, PICOSECOND)
+        self.nvt = functions.convert_to_units(nvt, PICOSECOND)
+        self.npt = functions.convert_to_units(npt, PICOSECOND)
+        self.emstep = em_step
+        self.emtol = em_tolerance
+        self.afe_dir = self.create_directory(self.path + "/afe/")
+        self.equilibration_dir = self.create_directory(self.path + "/equilibration/")
 
 
-    def create_directory(self):
+    def create_directory(self, directory):
         """
         Create AFE working directory in path.
-        Set home attribute.
 
         Parameters:
         -----------
+        name: str
+            name of new directory
         Return:
         -------
         directory: str
             full path to afe directory
         """
         try:
-            directory = self.path + "/afe/"
             pathlib.Path(directory).mkdir(parents=False, exist_ok=False)
         except FileNotFoundError as e:
-            print(f"Could not create afe directory. Pathlib raised error: {e}")
+            print(f"Could not create directory {directory}. Pathlib raised error: {e}")
         except FileExistsError as e:
-            print(f"Could not create afe directory. Pathlib raised error: {e}")
-        self.home = directory
+            print(f"Could not create directory {directory}. Pathlib raised error: {e}")
         return directory        
     
     

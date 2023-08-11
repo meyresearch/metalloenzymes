@@ -8,7 +8,7 @@ import pathlib
 import csv
 import numpy as np
 import Network 
-from definitions import ROOT_DIRECTORY
+from definitions import ROOT_DIRECTORY, PICOSECOND
 
 
 def file_exists(file):
@@ -190,5 +190,19 @@ def get_filenames(path):
     return file_name.replace("." + extension, "")
 
 
-def equilibrate():
-    pass
+def convert_to_units(value, units):
+    """
+    Convert given value to given units
+
+    Parameters:
+    -----------
+    value: any
+        measure of time, temperature, length, etc.
+    units: constant
+        one of bss.Units defined in definitions.py
+
+    Return:
+    -------
+    One of bss.Units
+    """
+    return value * units
