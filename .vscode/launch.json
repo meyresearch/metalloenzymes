@@ -6,6 +6,8 @@
     "configurations": [
 
 
+
+
         {
             "name": "Python: Current File",
             "type": "python",
@@ -13,10 +15,10 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": false,
-            "args": ["-i", "/home/jguven/projects/alchemistry/add_caps_to_kpc2/inputs/protein/kpc2.input.pdb", "-g", "kpc2", 
+            "args": ["-if", "/home/jguven/projects/alchemistry/add_caps_to_kpc2/inputs/protein/kpc2.input.pdb", "-g", "kpc2", 
             "-ppd", "/home/jguven/projects/alchemistry/add_caps_to_kpc2/inputs/protein/",
             "-lpd", "/home/jguven/projects/alchemistry/add_caps_to_kpc2/inputs/ligands/",
-            "-c", "-1"]
+            "-c", "-1", "-s", "2"]
         }
     ]
 }

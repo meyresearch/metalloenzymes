@@ -4,6 +4,8 @@ Alchemical Free Energy class for free energy simulations
 import pathlib
 import csv
 import BioSimSpace as bss
+from definitions import ANGSTROM
+import functions 
 
 
 class AlchemicalFreeEnergy(object):
@@ -19,12 +21,13 @@ class AlchemicalFreeEnergy(object):
     -------
     """
     def __init__(self, path, engine, sampling_time, box_edges, box_shape):
-        self.path = path
+        self.path = functions.path_exists(path)
         self.engine = engine
         self.time = sampling_time
         self.box_shape = box_shape
         self.box_edges = box_edges
         self.box = (box_edges, box_shape)
+
 
     def create_directory(self):
         """
@@ -99,7 +102,7 @@ class AlchemicalFreeEnergy(object):
 
         box_min, box_max = molecule.getAxisAlignedBoundingBox()
         box_size = [y - x for x, y in zip(box_min, box_max)]
-        box_area = [x + int(self.box_edges) * bss.Units.Length.angstrom for x in box_size]
+        box_area = [x + int(self.box_edges) * ANGSTROM for x in box_size]
         self.box, self.box_angles = None, None
         if self.box_shape == "cubic":
             self.box, self.box_angles = bss.Box.cubic(max(box_area))
@@ -113,8 +116,6 @@ class AlchemicalFreeEnergy(object):
             print(f"Box shape {self.box_shape} not supported.")
         return self.box, self.box_angles
 
-
-    
 
 def main():
     pass

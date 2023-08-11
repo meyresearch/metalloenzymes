@@ -59,7 +59,7 @@ class Protein(object):
         self.forcefield = forcefield
         self.water_model = water_model
         self.xtal_water = bss.IO.readMolecules(get_water_file(self.path))
-    
+        self.prepared = self.path + "/" + self.name+ "_tleap"
     
     def create_complex(self):
         """
@@ -103,9 +103,11 @@ class Protein(object):
             tleap_in.write(f"complex = loadpdb {complex_file}\n")
             tleap_in.write(f"saveamberparm complex {save_file}_tleap.prm7 {save_file}_tleap.rst7\n")
             tleap_in.write("quit")
+        work_dir = os.getcwd()
+        os.chdir(self.path)
         os.system(f"tleap -s -f {tleap_input_file} > {tleap_output_file}")
-        self.prepared = save_file + "_tleap"
-        return self.prepared
+        os.chdir(work_dir)
+        return save_file + "_tleap"
 
 
     def get_prepared_protein(self):

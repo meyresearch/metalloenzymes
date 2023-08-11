@@ -5,6 +5,12 @@ import Protein
 import Ligand 
 import AlchemicalFreeEnergy as AFE
 import Network
+import prepare
+import solvate
+import logging
+logger = logging.getLogger()
+logger.setLevel(logging.CRITICAL)
+
 
 def clean_arguments(arguments):
     """
@@ -23,17 +29,33 @@ def clean_arguments(arguments):
         arguments.working_directory = os.getcwd()
     elif not os.path.isdir(arguments.working_directory):
         raise argparse.ArgumentTypeError(f"{arguments.working_directory} does not exist")
+    
+    # type=functions.check_positive(functions.check_int(arguments.min))
     return arguments
 
 
 def main():
     parser = argparse.ArgumentParser(description="MEZE: MetalloEnZymE FF-builder for alchemistry")
-   
+
+    parser.add_argument("-s",
+                        "--step",
+                        dest="step",
+                        required=True,
+                        help="workflow step number: 1: prep, 2: solvate, 3: equilbrate",
+                        choices=["1", "2", "3", "4"])
+
     parser.add_argument("-i",
-                        "--input-pdb",
+                        "--ligand-index",
+                        dest="idx",
+                        type=functions.check_int,
+                        help="ligand index for sorting through Network.names",
+                        default=0)
+
+    parser.add_argument("-if",
+                        "--input-pdb-file",
                         dest="protein",
-                        required=True, 
                         type=functions.file_exists,
+                        required=True,
                         help="input pdb file for the metalloenzyme/protein")
     
     parser.add_argument("-g",
@@ -108,16 +130,27 @@ def main():
                         help="sampling time in nanoseconds",
                         default="4") 
     
-    parser.add_argument("-ms",
-                        "--minimisation-steps",
-                        help="number of minimisation steps for equilibration stage",
-                        type=functions.check_positive_integer(),
-                        default=500)
+    # parser.add_argument("-min",
+    #                     "--minimisation-steps",
+    #                     dest=
+    #                     help="number of minimisation steps for equilibration stage",
+    #                     default=500)
     
-    parser.add_argument("-st",
-                        "--short-nvt-runtime",
-                        help="runtime in ps for short NVT equilibration",
-                        type=functions.check_positive_float()) # split check positive to check integer and check float 
+    # parser.add_argument("-snvt",
+    #                     "--short-nvt-runtime",
+    #                     help="runtime in ps for short NVT equilibration",
+    #                     type=functions.check_positive(functions.check_float())) 
+    
+    # parser.add_argument("-nvt",
+    #                     "--nvt-runtime",
+    #                     type=functions.check_positive(functions.check_float()),
+    #                     help="runtime in ps for NVT equilibration")
+
+    # parser.add_argument("-npt",
+    #                     "--npt-runtime",
+    #                     type=functions.check_positive(functions.check_float()),
+    #                     help="runtime in ps for NPT equilibration",
+    #                     default=200)
 
     arguments = parser.parse_args()
     arguments = clean_arguments(arguments)
@@ -138,8 +171,10 @@ def main():
                                    box_edges=arguments.box_edges,
                                    box_shape=arguments.box_shape)
 
-    functions.prepare(Protein=protein, Network=network, AFE=afe)
-    functions.solvate(Protein=protein, Network=network, AFE=afe)
+    if arguments.step == "1":
+        prepare.prepare_meze(Protein=protein, Network=network, AFE=afe)
+    elif arguments.step == "2":
+        solvate.solvate_meze(idx=arguments.idx, Protein=protein, Network=network, AFE=afe)
 
 
 if __name__ == "__main__":

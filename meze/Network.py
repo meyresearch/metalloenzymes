@@ -181,7 +181,6 @@ class Network(object):
         This is work-around to avoid the network plotting failing if 
         the directories already exist. 
 
-
         Return:
         -------
         str
@@ -193,17 +192,21 @@ class Network(object):
 
         exists = directories_exist(lomap_directories)
 
-        while exists:
-            delete = input("\nDo you want to over-write them? [y]es/[n]o: ").lower()
-            if delete == "yes" or delete == "y":
-                remove_lomap_directories(lomap_directories)
-                break
-            elif delete == "no" or delete == "n":
-                self.create_new_lomap_directory()
-                break
-            else:
-                print("Invalid option.")
-                continue
+        if exists:
+            remove_lomap_directories(lomap_directories)
+
+
+        # while exists:
+        #     delete = input("\nDo you want to over-write them? [y]es/[n]o: ").lower()
+        #     if delete == "yes" or delete == "y":
+        #         remove_lomap_directories(lomap_directories)
+        #         break
+        #     elif delete == "no" or delete == "n":
+        #         self.create_new_lomap_directory()
+        #         break
+        #     else:
+        #         print("Invalid option.")
+        #         continue
         return lomap_work_directory
 
 

@@ -51,6 +51,70 @@ def path_exists(path):
     return path
 
 
+def check_int(input):
+    """
+    Check if given input is an integer
+
+    Parameters:
+    -----------
+    input: any
+        user input
+
+    Return:
+    -------
+    value: int
+        user input converted to int
+    """
+    try:
+        value = int(input)
+    except ValueError:
+        print("Error: number of minimisation steps and/or runtime should be integer.")
+    return value
+
+
+def check_float(input):
+    """
+    Check if given input is a float
+
+    Parameters:
+    -----------
+    input: any
+        user input
+
+    Return:
+    -------
+    value: float
+        user input converted to float
+    """
+    try:
+        value = float(input)
+    except ValueError:
+        print("Error: number of minimisation steps and/or runtime should be a number.")
+    return value
+
+
+def check_positive(number):
+    """
+    Check that given number is positive.
+
+    Parameters:
+    -----------
+    number: int/float
+        user inputted number
+
+    Return:
+    -------
+    value: int/float
+        positive integer value
+    """
+    try:
+        if number <= 0:
+            raise argparse.ArgumentTypeError(f"{number} is an invalid positive integer value")
+    except argparse.ArgumentTypeError as message:
+        print(message)
+    return number
+
+
 def get_absolute_path(path):
     """
     Take a path, check it exists and convert it to absolute 
@@ -68,6 +132,26 @@ def get_absolute_path(path):
     correct_path = path_exists(path)
     clean_path = correct_path.replace("..", "")
     return ROOT_DIRECTORY + clean_path
+
+
+def mkdir(directory):
+    """
+    Create directory
+
+    Parameters:
+    -----------
+    directory: str
+        full path to directory to be created
+
+    Return:
+    -------
+    directory: str
+        newly created directory
+    """
+    path_exists = os.path.exists(directory)
+    if not path_exists:
+        os.makedirs(directory)
+    return directory
 
 
 def read_files(path):
@@ -104,72 +188,6 @@ def get_filenames(path):
     file_name = path.split("/")[-1]
     extension = file_name.split(".")[-1]
     return file_name.replace("." + extension, "")
-
-
-def prepare(Protein, Network, AFE): 
-    """
-    Prepare ligands and protein for AFE calculations.
-
-    Parameters:
-    -----------
-    Protein: Protein
-        Protein class object
-    Ligands: Ligands
-        Ligands class object
-    AFE: AlchemicalFreeEnergy
-        AlchemicalFreeEnergy class object
-
-    Return:
-    -------
-    """
-    network_dictionary = Network.create_dictionary()
-    #TODO Edit dictionary?
-    protein_water_complex_file = Protein.create_complex()
-    prepared_protein_file = Protein.tleap(protein_water_complex_file)
-
-    afe_directory = AFE.create_directory()
-    ligands_datfile = Network.create_ligand_dat_file(afe_directory)
-    network_forward, network_backward = Network.create_network_files(AFE.engine)
-    protocol_file = AFE.create_dat_file(Protein=Protein, Network=Network)
-
-
-def solvate(Protein, Network, AFE):
-    """
-    Solvate unbound and bound systems.
-
-    Parameters:
-    -----------
-    Protein: 
-        Protein class object
-    Network: 
-        Network class object
-    AFE: 
-        AlchemicalFreeEnergy class object
-
-    Return:
-    -------
-    """
-    ligands = Network.ligands
-    for i in range(Network.n_ligands):
-        ligand_number = Network.names[i].split("_")[-1]
-        print(f"Solvating unbound ligand {ligand_number}")
-        ligand_parameters = ligands[i].parameterise(Network.forcefield, Network.charge)
-        unbound_box, unbound_box_angles = AFE.create_box(ligand_parameters)
-        solvated_ligand = bss.Solvent.solvate(model=Protein.water_model, 
-                                              molecule=ligand_parameters, 
-                                              box=unbound_box,
-                                              angles=unbound_box_angles)
-        print(f"Solvating bound ligand {ligand_number}")        
-        system_parameters = ligand_parameters + Protein.get_prepared_protein()
-        bound_box, bound_box_angles = AFE.create_box(system_parameters)
-        solvated_system = bss.Solvent.solvate(model=Protein.water_model,
-                                              molecule=system_parameters,
-                                              box=bound_box,
-                                              angles=bound_box_angles)
-        ligand_savename = Network.path + "ligand_" + ligand_number + "_solvated"
-        system_savename = Protein.path + "system_" + ligand_number + "_solvated"
-        bss.IO.saveMolecules(ligand_savename, solvated_ligand, ["PRM7", "RST7"])
-        bss.IO.saveMolecules(system_savename, solvated_system, ["PRM7", "RST7"])
 
 
 def equilibrate():

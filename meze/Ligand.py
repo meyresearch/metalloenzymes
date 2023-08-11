@@ -26,7 +26,7 @@ class Ligand(object):
         """
         Class constructor
         """
-        self.file = file
+        self.file = functions.file_exists(file)
         self.molecule = self.get_molecule()
         self.name = self.get_name()
 
