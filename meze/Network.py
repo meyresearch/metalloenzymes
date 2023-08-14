@@ -103,6 +103,7 @@ class Network(object):
         self.n_normal = n_normal
         self.n_difficult = n_difficult
         self.n_ligands = self.get_n_ligands()
+        self.bound = [None] * self.n_ligands
 
 
     def create_dictionary(self):

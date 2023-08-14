@@ -50,7 +50,7 @@ class AlchemicalFreeEnergy(object):
             full path to afe directory
         """
         try:
-            pathlib.Path(directory).mkdir(parents=False, exist_ok=False)
+            pathlib.Path(directory).mkdir(parents=True, exist_ok=False)
         except FileNotFoundError as e:
             print(f"Could not create directory {directory}. Pathlib raised error: {e}")
         except FileExistsError as e:

@@ -195,11 +195,8 @@ def main():
     if arguments.step == "1":
         prepare.prepare_meze(Protein=protein, Network=network, AFE=afe)
     elif arguments.step == "2":
-        # update Protein, Network and AFE in solvate_meze
-        # output these to variables
-        # use those variables as the input to heat_meze
-        protein, network, afe = solvate.solvate_meze(idx=arguments.idx, Protein=protein, Network=network, AFE=afe)
-        # equilibrate.heat_meze()
+        solvated_protein, solvated_network, solvated_afe = solvate.solvate_meze(idx=arguments.idx, Protein=protein, Network=network, AFE=afe)
+        _, equilibrated_network, _ = equilibrate.heat_meze(idx=arguments.idx, Protein=solvated_protein, Network=solvated_network, AFE=solvated_afe)
 
 if __name__ == "__main__":
     main()

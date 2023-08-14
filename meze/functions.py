@@ -8,7 +8,7 @@ import pathlib
 import csv
 import numpy as np
 import Network 
-from definitions import ROOT_DIRECTORY, PICOSECOND
+from definitions import ROOT_DIRECTORY
 
 
 def file_exists(file):
