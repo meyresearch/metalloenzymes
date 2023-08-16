@@ -7,7 +7,6 @@ import BioSimSpace as bss
 import AlchemicalFreeEnergy as afe
 
 
-
 def unbound(idx, Network, AFE):
 
 

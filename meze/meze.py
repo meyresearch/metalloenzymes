@@ -21,6 +21,7 @@ def clean_arguments(arguments):
     -----------
     arguments: Namespace
         command-line arguments
+    
     Return:
     -------
     cleaned Namespace of arguments
@@ -174,24 +175,33 @@ def main():
     arguments = parser.parse_args()
     arguments = clean_arguments(arguments)
     
-    protein = Protein.Protein(name=arguments.group_name, 
-                              protein_file=arguments.protein, 
-                              path=arguments.protein_directory,
-                              forcefield=arguments.forcefield,
-                              water_model=arguments.water_model)
+    # protein = Protein.Protein(name=arguments.group_name, 
+    #                           protein_file=arguments.protein, 
+    #                           path=arguments.protein_directory,
+    #                           forcefield=arguments.forcefield,
+    #                           water_model=arguments.water_model)
 
     network = Network.Network(path=arguments.ligand_directory,
-                              forcefield=arguments.ligand_forcefield,
-                              charge=arguments.ligand_charge)
+                              group_name=arguments.group_name,
+                              protein_file=arguments.protein,
+                              protein_path=arguments.protein_directory,
+                              water_model=arguments.water_model,
+                              protein_ff=arguments.forcefield,
+                              ligand_ff=arguments.ligand_forcefield,
+                              ligand_charge=arguments.ligand_charge)
 
-    afe = AFE.Simulation(path=arguments.working_directory,
-                         engine=arguments.engine,
-                         sampling_time=arguments.sampling_time,
-                         box_edges=arguments.box_edges,
-                         box_shape=arguments.box_shape)
+    afe = AFE.AlchemicalFreeEnergy(path=arguments.working_directory,
+                                   min=arguments.min_steps,
+                                   short_nvt=arguments.short_nvt,
+                                   nvt=arguments.nvt,
+                                   npt=arguments.npt,
+                                   engine=arguments.engine,
+                                   sampling_time=arguments.sampling_time,
+                                   box_edges=arguments.box_edges,
+                                   box_shape=arguments.box_shape)
 
     if arguments.step == "1":
-        prepare.prepare_meze(Protein=protein, Network=network, AFE=afe)
+        prepare.prepare_meze(Network=network, AFE=afe)
     elif arguments.step == "2":
         solvated_protein, solvated_network, solvated_afe = solvate.solvate_meze(idx=arguments.idx, Protein=protein, Network=network, AFE=afe)
         _, equilibrated_network, _ = equilibrate.unbound(idx=arguments.idx, Network=solvated_network, AFE=solvated_afe)

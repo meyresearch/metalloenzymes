@@ -12,6 +12,7 @@ import os
 import logging
 import Ligand
 import csv
+import Protein
 
 
 def check_charge(value):
@@ -88,22 +89,66 @@ class Network(object):
     Return:
     -------
     """
-    def __init__(self, path, forcefield, charge, threshold=0.4, n_normal=11, n_difficult=17):
+    def __init__(self, path, group_name, protein_file, protein_path, water_model, ligand_ff, protein_ff, ligand_charge, threshold=0.4, n_normal=11, n_difficult=17):
         """
         Class constructor
         """
         self.path = functions.path_exists(path)
-        self.forcefield = forcefield
+        self.ligand_forcefield = ligand_ff
+        self.water_model = water_model
         self.files = self.get_files()
-        self.charge = check_charge(charge)
+        self.ligand_charge = check_charge(ligand_charge)
         self.ligands = [Ligand.Ligand(file) for file in self.files]
         self.ligand_molecules = [ligand.get_molecule() for ligand in self.ligands]
         self.names = [ligand.get_name() for ligand in self.ligands]
+        
+        self.protein_forcefield = protein_ff
+        self.group_name = group_name
+        self.protein_file = protein_file
+        self.protein_path = protein_path
+        self.protein = Protein.Protein(name=self.group_name,
+                                       protein_file=self.protein_file,
+                                       path=self.protein_path,
+                                       forcefield=self.protein_forcefield,
+                                       water_model=self.water_model)
+        self.protein_water_complex = self.protein.create_complex()
+        self.prepared_protein = self.protein.tleap(self.protein_water_complex)
         self.threshold = threshold
         self.n_normal = n_normal
         self.n_difficult = n_difficult
         self.n_ligands = self.get_n_ligands()
         self.bound = [None] * self.n_ligands
+
+
+
+    def solvate_meze(self, idx, Network, AFE):
+        """
+        Solvate unbound and bound systems.
+
+        Parameters:
+        -----------
+        idx: int
+            Ligand index for sorting through Network.names
+        Protein: 
+            Protein class object
+        Network: 
+            Network class object
+        AFE: 
+            AlchemicalFreeEnergy class object
+
+        Return:
+        -------
+        """
+        ligand = Network.ligands[idx]
+        names = Network.names
+        ligand_number = Network.names[idx].split("_")[-1]
+        print(f"Solvating unbound ligand {ligand_number}")
+        ligand_parameters = ligand.parameterise(Network.forcefield, Network.charge)
+        unbound_box, unbound_box_angles = AFE.create_box(ligand_parameters)
+        solvated_ligand = bss.Solvent.solvate(model=Protein.water_model, 
+                                                molecule=ligand_parameters, 
+                                                box=unbound_box,
+                                                angles=unbound_box_angles)
 
 
     def create_dictionary(self):

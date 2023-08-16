@@ -4,7 +4,7 @@ Alchemical Free Energy class for free energy simulations
 import pathlib
 import csv
 import BioSimSpace as bss
-from definitions import ANGSTROM
+from definitions import ANGSTROM, PICOSECOND
 import functions 
 
 
@@ -27,9 +27,9 @@ class AlchemicalFreeEnergy(object):
         self.box_shape = box_shape
         self.box_edges = box_edges
         self.min_steps = min
-        self.short_nvt = functions.convert_to_units(short_nvt)
-        self.nvt = functions.convert_to_units(nvt)
-        self.npt = functions.convert_to_units(npt)
+        self.short_nvt = functions.convert_to_units(short_nvt, PICOSECOND)
+        self.nvt = functions.convert_to_units(nvt, PICOSECOND)
+        self.npt = functions.convert_to_units(npt, PICOSECOND)
         self.afe_dir = self.create_directory("/afe/")
         self.equilibration_dir = self.create_directory("/equilibration/")
         
@@ -57,31 +57,29 @@ class AlchemicalFreeEnergy(object):
         return directory        
     
     
-    def create_dat_file(self, Protein, Network):
+    def create_dat_file(self, Network):
         """
         Create protocol.dat file for AFE runs
 
         Parameters:
         -----------
-        Protein: Protein
-            Protein class object
-        Ligands: Ligands
-            Ligands class object
+        Network: Network
+            Network class object
 
         Return:
         -------
         protocol_file: str
             protocol datafile
         """
-        protocol = [f"ligand forcefield = {Network.forcefield}", 
-                    f"protein forcefield = {Protein.forcefield}", 
-                    f"solvent = {Protein.water_model}", 
+        protocol = [f"ligand forcefield = {Network.ligand_forcefield}", 
+                    f"protein forcefield = {Network.protein_forcefield}", 
+                    f"solvent = {Network.water_model}", 
                     f"box edges = {self.box_edges}*angstrom", 
                     f"box shape = {self.box_shape}", 
                     f"protocol = default",
                     f"sampling = {self.time}*ns",
                     f"engine = {self.engine}"]
-        self.protocol_file = self.home + "/protocol.dat"
+        self.protocol_file = self.path + "/protocol.dat"
 
         with open(self.protocol_file, "w") as file:
             writer = csv.writer(file)

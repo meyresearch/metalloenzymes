@@ -61,6 +61,7 @@ class Protein(object):
         self.xtal_water = bss.IO.readMolecules(get_water_file(self.path))
         self.prepared = self.path + "/" + self.name+ "_tleap"
     
+    
     def create_complex(self):
         """
         Combine protein file with crystallographic waters.
