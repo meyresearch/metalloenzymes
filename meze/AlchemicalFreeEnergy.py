@@ -4,7 +4,7 @@ Alchemical Free Energy class for free energy simulations
 import pathlib
 import csv
 import BioSimSpace as bss
-from definitions import ANGSTROM, PICOSECOND
+from definitions import ANGSTROM
 import functions 
 
 
@@ -20,23 +20,21 @@ class AlchemicalFreeEnergy(object):
     Methods:
     -------
     """
-    def __init__(self, path, engine, sampling_time, box_edges, box_shape, min, short_nvt, nvt, npt, em_step, em_tolerance):
+    def __init__(self, path, engine, sampling_time, box_edges, box_shape, min, short_nvt, nvt, npt):
         self.path = functions.path_exists(path)
         self.engine = engine
         self.time = sampling_time
         self.box_shape = box_shape
         self.box_edges = box_edges
         self.min_steps = min
-        self.short_nvt = functions.convert_to_units(short_nvt, PICOSECOND)
-        self.nvt = functions.convert_to_units(nvt, PICOSECOND)
-        self.npt = functions.convert_to_units(npt, PICOSECOND)
-        self.emstep = em_step
-        self.emtol = em_tolerance
-        self.afe_dir = self.create_directory(self.path + "/afe/")
-        self.equilibration_dir = self.create_directory(self.path + "/equilibration/")
+        self.short_nvt = functions.convert_to_units(short_nvt)
+        self.nvt = functions.convert_to_units(nvt)
+        self.npt = functions.convert_to_units(npt)
+        self.afe_dir = self.create_directory("/afe/")
+        self.equilibration_dir = self.create_directory("/equilibration/")
+        
 
-
-    def create_directory(self, directory):
+    def create_directory(self, name):
         """
         Create AFE working directory in path.
 
@@ -50,7 +48,8 @@ class AlchemicalFreeEnergy(object):
             full path to afe directory
         """
         try:
-            pathlib.Path(directory).mkdir(parents=True, exist_ok=False)
+            directory = self.path + str(name)
+            pathlib.Path(directory).mkdir(parents=False, exist_ok=False)
         except FileNotFoundError as e:
             print(f"Could not create directory {directory}. Pathlib raised error: {e}")
         except FileExistsError as e:

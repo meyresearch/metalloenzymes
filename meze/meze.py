@@ -119,7 +119,8 @@ def main():
                         "--box-edges",
                         dest="box_edges",
                         help="box edges in angstroms",
-                        default="20") 
+                        type=float,
+                        default=20) 
     
     parser.add_argument("-bs",
                         "--box-shape",
@@ -131,7 +132,8 @@ def main():
                         "--sampling-time",
                         dest="sampling_time",
                         help="sampling time in nanoseconds",
-                        default="4") 
+                        type=float,
+                        default=4) 
     
     parser.add_argument("-min",
                         "--minimisation-steps",
@@ -160,12 +162,14 @@ def main():
     parser.add_argument("--em-step",
                         dest="emstep",
                         help="Step size for energy minimisation",
-                        default="0.01")
+                        type=float,
+                        default=0.01)
     
     parser.add_argument("--em-tolerance",
                         dest="emtol",
                         help="kJ mol-1 nm-1, Maximum force tolerance for energy minimisation",
-                        default="1000")
+                        type=float,
+                        default=1000)
 
     arguments = parser.parse_args()
     arguments = clean_arguments(arguments)
@@ -180,23 +184,18 @@ def main():
                               forcefield=arguments.ligand_forcefield,
                               charge=arguments.ligand_charge)
 
-    afe = AFE.AlchemicalFreeEnergy(path=arguments.working_directory,
-                                   engine=arguments.engine,
-                                   sampling_time=arguments.sampling_time,
-                                   box_edges=arguments.box_edges,
-                                   box_shape=arguments.box_shape,
-                                   min=arguments.min_steps,
-                                   short_nvt=arguments.short_nvt,
-                                   nvt=arguments.nvt,
-                                   npt=arguments.npt,
-                                   em_step=arguments.emstep,
-                                   em_tolerance=arguments.emtol)
+    afe = AFE.Simulation(path=arguments.working_directory,
+                         engine=arguments.engine,
+                         sampling_time=arguments.sampling_time,
+                         box_edges=arguments.box_edges,
+                         box_shape=arguments.box_shape)
 
     if arguments.step == "1":
         prepare.prepare_meze(Protein=protein, Network=network, AFE=afe)
     elif arguments.step == "2":
         solvated_protein, solvated_network, solvated_afe = solvate.solvate_meze(idx=arguments.idx, Protein=protein, Network=network, AFE=afe)
-        _, equilibrated_network, _ = equilibrate.heat_meze(idx=arguments.idx, Protein=solvated_protein, Network=solvated_network, AFE=solvated_afe)
+        _, equilibrated_network, _ = equilibrate.unbound(idx=arguments.idx, Network=solvated_network, AFE=solvated_afe)
+
 
 if __name__ == "__main__":
     main()

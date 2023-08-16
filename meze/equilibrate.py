@@ -4,114 +4,32 @@ Minimise and equilibrate bound and unbound stages.
 from definitions import PICOSECOND, KELVIN, ATM
 import functions
 import BioSimSpace as bss
+import AlchemicalFreeEnergy as afe
 
 
-def run_process(system, protocol, process, working_directory, configuration=None):
-    """
-    Run a Gromacs minimisation or equilibration process 
-    Adapted from https://tinyurl.com/BSSligprep
 
-    Parameters:
-    -----------
-    system: bss.System
-        run system
-    protocol: bss.Protocol 
-        minimisation or equilibration
-    process: name 
-        process name for saving process output
-    working_directory: str
-        save output into this directory
-
-    Return:
-    -------
-    system: bss.System
-        equilibrated or minimised system
-    """
-    process = bss.Process.Gromacs(system, protocol, name=process, work_dir=working_directory)
-    config = process.getConfig()
-    if configuration:
-        for setting in configuration:
-            key = setting.split()[0]
-            try:
-                index = [i for i, string in enumerate(config) if key in string][0]
-                config[index] = setting
-                process.setConfig(config)
-            except IndexError:
-                process.addToConfig(setting)
-                config = process.getConfig()
-    process.setArg("-ntmpi", 1)
-    process.start()
-    process.wait()
-    if process.isError():
-        print(process.stdout())
-        print(process.stderr())
-        raise bss._Exceptions.ThirdPartyError("The process exited with an error!")
-    system = process.getSystem()
-    return system
+def unbound(idx, Network, AFE):
 
 
-def minimise(system, workdir, AFE):
-    """
-    Minimise the system using Gromacs
+    ligand_number = Network.names[idx].split("_")[-1]
+    solvated_ligand = Network.ligands[idx]
+    
+    unbound_directory = functions.mkdir(AFE.path + f"/equilibration/unbound/ligand_{ligand_number}/")
+    
 
-    Parameters:
-    -----------
-    system: bss.System
-        system to be minimised
-    workdir: str
-        current working dir
-    AFE: AlchemicalFreeEnergy
-        AFE class object
+    equilibration = afe.EquilibrationSimulation(path=unbound_directory)
+    minimised_system = equilibration.minimise(system=solvated_ligand)
 
-    Return:
-    -------
-    minimsed_system: bss.System
-        minimised system
-    """
-    print("Minimisation")
-    protocol = bss.Protocol.Minimisation(steps=AFE.min_steps)
-    minimised_system = run_process(system, protocol, "min", workdir, configuration=[f"emstep = {AFE.emstep}", f"emtol = {AFE.emtol}"])
-    return minimised_system
+    equilibration.set_name("r_nvt")
+    equilibration.set_restraints("all")
+    equilibration.set_configuration(["dt = 0.0005"])
+    restrained_nvt = equilibration.equilibrate(system=minimised_system)
+    
 
 
-def equilibrate(system, workdir, name, runtime, config=None, start_t=300, end_t=300, temperature=None, pressure=None, restraints=None):
-    """
-    Run NVT or NPT equilibration
 
-    Parameters:
-    -----------
-    system: bss.System
-        system to be equilibrated
-    workdir: str
-        working directory for equilibration step
-    name: str
-        process name
-    runtime: str/float
-        runtime for equilibration
 
-    Return:
-    -------
-    equilibrated_system: bss.System
-        equilibrated system
-    """
-    print(f"{name.upper()}")
-    start_t = functions.convert_to_units(start_t, KELVIN)
-    end_t = functions.convert_to_units(end_t, KELVIN)
-    if temperature:
-        temperature = functions.convert_to_units(temperature, KELVIN)
-    if pressure:
-        pressure = functions.convert_to_units(pressure, ATM)
-
-    protocol = bss.Protocol.Equilibration(runtime=runtime,
-                                          temperature_start=start_t,
-                                          temperature_end=end_t,
-                                          temperature=temperature,
-                                          pressure=pressure,
-                                          restraint=restraints)
-    equilibrated_system = run_process(system, protocol, name, workdir, config)
-    return equilibrated_system
-
-def heat_meze(idx, Protein, Network, AFE):
+def heat_meze_serial(idx, Protein, Network, AFE):
     """
     Run minimisation and equilibration in unbound and bound stages
 
@@ -129,6 +47,7 @@ def heat_meze(idx, Protein, Network, AFE):
     Return:
     -------
     """
+
     ligand_number = Network.names[idx].split("_")[-1]
     unbound_directory = AFE.create_directory(AFE.equilibration_dir + f"/unbound/ligand_{ligand_number}/")
     solvated_ligand = Network.ligands[idx]
@@ -213,7 +132,8 @@ def heat_meze(idx, Protein, Network, AFE):
     bound_savename = bound_npt + f"/system_{ligand_number}"
     bss.IO.saveMolecules(filebase=bound_savename, system=equilibrated_system, fileformat=["PRM7", "RST7"])
     Network.bound[idx] = equilibrated_system
-    return Protein, Network, AFE
+
+    return Network
 
 def main():
     pass
