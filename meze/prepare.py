@@ -2,7 +2,7 @@
 Prepare ligands and protein for AFE calculations
 """
 
-def prepare_meze(Network, AFE): 
+def prepare_meze(Network): 
     """
     Prepare ligands and protein for AFE calculations.
 
@@ -20,11 +20,10 @@ def prepare_meze(Network, AFE):
     """
     network_dictionary = Network.create_dictionary()
     #TODO Edit dictionary?
-
-    ligands_datfile = Network.create_ligand_dat_file(AFE.afe_dir)
-    network_forward, network_backward = Network.create_network_files(AFE.engine)
-    protocol_file = AFE.create_dat_file(Network=Network)
-
+    ligands_datfile = Network.create_ligand_dat_file()
+    network_forward, network_backward = Network.create_network_files()
+    protocol_file = Network.create_dat_file()
+    return Network
 
 def main():
     pass

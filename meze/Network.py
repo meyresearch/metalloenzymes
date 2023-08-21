@@ -5,7 +5,7 @@ import functions
 from argparse import RawTextHelpFormatter
 import pandas as pd
 import sys
-from definitions import ADJUST_OPTIONS
+from definitions import ADJUST_OPTIONS, PICOSECOND
 import numpy as np
 import shutil
 import os
@@ -13,6 +13,7 @@ import logging
 import Ligand
 import csv
 import Protein
+import pathlib
 
 
 def check_charge(value):
@@ -89,11 +90,13 @@ class Network(object):
     Return:
     -------
     """
-    def __init__(self, path, group_name, protein_file, protein_path, water_model, ligand_ff, protein_ff, ligand_charge, threshold=0.4, n_normal=11, n_difficult=17):
+    def __init__(self, workdir, ligand_path, group_name, protein_file, protein_path, water_model, ligand_ff, protein_ff, ligand_charge, 
+                 engine, sampling_time, box_edges, box_shape, min_steps, short_nvt, nvt, npt, 
+                 threshold=0.4, n_normal=11, n_difficult=17):
         """
         Class constructor
         """
-        self.path = functions.path_exists(path)
+        self.ligand_path = functions.path_exists(ligand_path) # ligand directory (change name?)
         self.ligand_forcefield = ligand_ff
         self.water_model = water_model
         self.files = self.get_files()
@@ -101,7 +104,7 @@ class Network(object):
         self.ligands = [Ligand.Ligand(file) for file in self.files]
         self.ligand_molecules = [ligand.get_molecule() for ligand in self.ligands]
         self.names = [ligand.get_name() for ligand in self.ligands]
-        
+
         self.protein_forcefield = protein_ff
         self.group_name = group_name
         self.protein_file = protein_file
@@ -113,12 +116,47 @@ class Network(object):
                                        water_model=self.water_model)
         self.protein_water_complex = self.protein.create_complex()
         self.prepared_protein = self.protein.tleap(self.protein_water_complex)
+        
         self.threshold = threshold
         self.n_normal = n_normal
         self.n_difficult = n_difficult
         self.n_ligands = self.get_n_ligands()
         self.bound = [None] * self.n_ligands
 
+        self.workding_directory = functions.path_exists(workdir)
+        self.md_engine = engine
+        self.md_time = sampling_time,
+        self.box_shape = box_shape
+        self.box_edges = box_edges
+        self.min_steps = min_steps
+        self.short_nvt = functions.convert_to_units(short_nvt, PICOSECOND)
+        self.nvt = functions.convert_to_units(nvt, PICOSECOND)
+        self.npt = functions.convert_to_units(npt, PICOSECOND)
+        self.afe_directory = self.create_directory("/afe/")
+        self.equilibration_direcotry = self.create_directory("/equilibration/")
+
+
+    def create_directory(self, name):
+        """
+        Create AFE working directory in path.
+
+        Parameters:
+        -----------
+        name: str
+            name of new directory
+        Return:
+        -------
+        directory: str
+            full path to afe directory
+        """
+        try:
+            directory = self.workding_directory + str(name)
+            pathlib.Path(directory).mkdir(parents=False, exist_ok=False)
+        except FileNotFoundError as e:
+            print(f"Could not create directory {directory}. Pathlib raised error: {e}")
+        except FileExistsError as e:
+            print(f"Could not create directory {directory}. Pathlib raised error: {e}")
+        return directory   
 
 
     def solvate_meze(self, idx, Network, AFE):
@@ -146,9 +184,9 @@ class Network(object):
         ligand_parameters = ligand.parameterise(Network.forcefield, Network.charge)
         unbound_box, unbound_box_angles = AFE.create_box(ligand_parameters)
         solvated_ligand = bss.Solvent.solvate(model=Protein.water_model, 
-                                                molecule=ligand_parameters, 
-                                                box=unbound_box,
-                                                angles=unbound_box_angles)
+                                              molecule=ligand_parameters, 
+                                              box=unbound_box,
+                                              angles=unbound_box_angles)
 
 
     def create_dictionary(self):
@@ -168,7 +206,7 @@ class Network(object):
         for transformation, score in zip(named_transformations, lomap_scores):
             network_dict[transformation] = score
 
-        with open(self.path+f"/meze_network.csv", "w") as lomap_out:
+        with open(self.ligand_path+f"/meze_network.csv", "w") as lomap_out:
             for key, value in network_dict.items():
                 lomap_out.write(f"{key}: {value}\n")
         self.dictionary = network_dict
@@ -185,10 +223,10 @@ class Network(object):
             list of ligand filenames
         """
         # Adapted from dbmol.py:
-        ligand_files = functions.read_files(f"{self.path}/*.sdf")
-        ligand_files += functions.read_files(f"{self.path}/*.mol2")        
+        ligand_files = functions.read_files(f"{self.ligand_path}/*.sdf")
+        ligand_files += functions.read_files(f"{self.ligand_path}/*.mol2")        
         if len(ligand_files) < 2:
-            raise IOError(f"Path {self.path} must contain at least two sdf or mol2 files.")
+            raise IOError(f"Path {self.ligand_path} must contain at least two sdf or mol2 files.")
         return ligand_files
 
 
@@ -213,7 +251,7 @@ class Network(object):
         str
             new LOMAP working directory 
         """
-        new_lomap_directory = self.path + "/lomap/"
+        new_lomap_directory = self.ligand_path + "/lomap/"
         print(f"Creating new directory {new_lomap_directory}")
         if not os.path.exists(new_lomap_directory):
             os.mkdir(new_lomap_directory)
@@ -232,9 +270,9 @@ class Network(object):
         str
             updated working directory to be input into bss.generateNetwork
         """
-        lomap_work_directory = self.path
+        lomap_work_directory = self.ligand_path
         lomap_names = ["/images/", "/inputs/", "/outputs/"]
-        lomap_directories = [self.path + name for name in lomap_names]
+        lomap_directories = [self.ligand_path + name for name in lomap_names]
 
         exists = directories_exist(lomap_directories)
 
@@ -297,7 +335,7 @@ class Network(object):
         return " ".join(lambda_list)
 
 
-    def create_network_files(self, engine):
+    def create_network_files(self):
         """
         _summary_
 
@@ -311,21 +349,22 @@ class Network(object):
         tuple:
             forward and backward network.dat files
         """
-        self.forward = self.path + "network_fwd.dat"
-        self.backward = self.path + "network_bwd.dat"
+        self.forward = self.ligand_path + "network_fwd.dat"
+        self.backward = self.ligand_path + "network_bwd.dat"
         with open(self.forward, "w") as network_file:
             for transformation, lomap_score in self.dictionary.items():
                 self.n_windows = self.set_n_windows(lomap_score)
                 lambda_array_bash = self.create_lambda_list_bash()
-                network_file.write(f"{transformation[0]}, {transformation[1]}, {self.n_windows}, {lambda_array_bash}, {engine}\n")
+                network_file.write(f"{transformation[0]}, {transformation[1]}, {self.n_windows}, {lambda_array_bash}, {self.md_engine}\n")
         with open(self.backward, "w") as network_file:
             for transformation, lomap_score in self.dictionary.items():
                 self.n_windows = self.set_n_windows(lomap_score)
                 lambda_array_bash = self.create_lambda_list_bash()
-                network_file.write(f"{transformation[1]}, {transformation[0]}, {self.n_windows}, {lambda_array_bash}, {engine}\n")
+                network_file.write(f"{transformation[1]}, {transformation[0]}, {self.n_windows}, {lambda_array_bash}, {self.md_engine}\n")
         return self.forward, self.backward
     
-    def create_ligand_dat_file(self, afe_directory):
+
+    def create_ligand_dat_file(self):
         """
         Create ligands.dat file
 
@@ -339,13 +378,44 @@ class Network(object):
         ligands_dat: str
             ligands datafile
         """
-        self.ligands_dat = afe_directory + "ligands.dat"
+        self.ligands_dat = self.afe_directory + "ligands.dat"
         with open(self.ligands_dat, "w") as ligands_file:
             writer = csv.writer(ligands_file)
             for ligand in self.names:
                 writer.writerow([ligand])  
         return self.ligands_dat
 
+
+    def create_dat_file(self):
+        """
+        Create protocol.dat file for AFE runs
+
+        Parameters:
+        -----------
+        Network: Network
+            Network class object
+
+        Return:
+        -------
+        protocol_file: str
+            protocol datafile
+        """
+        protocol = [f"ligand forcefield = {self.ligand_forcefield}", 
+                    f"protein forcefield = {self.protein_forcefield}", 
+                    f"solvent = {self.water_model}", 
+                    f"box edges = {self.box_edges}*angstrom", 
+                    f"box shape = {self.box_shape}", 
+                    f"protocol = default",
+                    f"sampling = {self.md_time}*ns",
+                    f"engine = {self.md_engine}"]
+        self.protocol_file = self.workding_directory + "/protocol.dat"
+
+        with open(self.protocol_file, "w") as file:
+            writer = csv.writer(file)
+            for protocol_line in protocol:
+                writer.writerow([protocol_line])
+        return self.protocol_file
+    
 
     def dict_to_df(self):
         """
@@ -563,7 +633,7 @@ class Network(object):
                 edited_dataframe = self.add_transformation()
                 last_index = edited_dataframe.last_valid_index()
             elif self.options[0] == "s":
-                edited_dataframe.to_csv(self.path+"/meze_adjusted_network.csv", sep=":", header=None, index=False)
+                edited_dataframe.to_csv(self.ligand_path+"/meze_adjusted_network.csv", sep=":", header=None, index=False)
                 break
             elif n_inputs == 1 and self.options[0].lower() != "q":
                 print("Error: expected index")
