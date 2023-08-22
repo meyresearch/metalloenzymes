@@ -5,7 +5,7 @@ import functions
 from argparse import RawTextHelpFormatter
 import pandas as pd
 import sys
-from definitions import ADJUST_OPTIONS, PICOSECOND
+from definitions import ADJUST_OPTIONS, PICOSECOND, ANGSTROM
 import numpy as np
 import shutil
 import os
@@ -121,7 +121,7 @@ class Network(object):
         self.n_normal = n_normal
         self.n_difficult = n_difficult
         self.n_ligands = self.get_n_ligands()
-        self.bound = [None] * self.n_ligands
+        self.bound_ligands = [None] * self.n_ligands
 
         self.workding_directory = functions.path_exists(workdir)
         self.md_engine = engine
@@ -159,35 +159,91 @@ class Network(object):
         return directory   
 
 
-    def solvate_meze(self, idx, Network, AFE):
+    def solvate_unbound(self, index):
         """
-        Solvate unbound and bound systems.
+        Solvate unbound systems.
 
         Parameters:
         -----------
-        idx: int
-            Ligand index for sorting through Network.names
-        Protein: 
-            Protein class object
-        Network: 
-            Network class object
-        AFE: 
-            AlchemicalFreeEnergy class object
-
+        index: list
+            Ligand indices for sorting through Network.names and Network.ligands
         Return:
         -------
         """
-        ligand = Network.ligands[idx]
-        names = Network.names
-        ligand_number = Network.names[idx].split("_")[-1]
+        ligand = self.ligands[index]
+        names = self.names
+        ligand_number = self.names[index].split("_")[-1]
         print(f"Solvating unbound ligand {ligand_number}")
-        ligand_parameters = ligand.parameterise(Network.forcefield, Network.charge)
-        unbound_box, unbound_box_angles = AFE.create_box(ligand_parameters)
-        solvated_ligand = bss.Solvent.solvate(model=Protein.water_model, 
+        ligand_parameters = ligand.parameterise(self.ligand_forcefield, self.ligand_charge)
+        unbound_box, unbound_box_angles = self.create_box(ligand_parameters)
+        solvated_ligand = bss.Solvent.solvate(model=self.protein.water_model, 
                                               molecule=ligand_parameters, 
                                               box=unbound_box,
                                               angles=unbound_box_angles)
+        ligand_savename = self.ligand_path + "ligand_" + ligand_number + "_solvated"
+        bss.IO.saveMolecules(ligand_savename, solvated_ligand, ["PRM7", "RST7"])
+        return solvated_ligand
+        
 
+    def solvate_bound(self, index):
+        """
+        Solvate unbound systems.
+
+        Parameters:
+        -----------
+        index: list
+            Ligand indices for sorting through Network.names and Network.ligands
+        Return:
+        -----
+        """
+        ligand = self.ligands[index]
+        names = self.names
+        ligand_number = self.names[index].split("_")[-1]
+        ligand_parameters = ligand.parameterise(self.ligand_forcefield, self.ligand_charge)
+        print(f"Solvating bound ligand {ligand_number}")        
+        system_parameters = ligand_parameters + self.protein.get_prepared_protein()
+        bound_box, bound_box_angles = self.create_box(system_parameters)
+        solvated_system = bss.Solvent.solvate(model=self.protein.water_model,
+                                                molecule=system_parameters,
+                                                box=bound_box,
+                                                angles=bound_box_angles)
+        
+        system_savename = self.protein_path + "system_" + ligand_number + "_solvated"
+        bss.IO.saveMolecules(system_savename, solvated_system, ["PRM7", "RST7"])
+        return solvated_system
+
+
+    def create_box(self, molecule):
+        """
+        Create a bss.Box object for solvation.
+
+        Parameters:
+        -----------
+        molecule: 
+            bss.Molecule: usually either a protein or a ligand
+
+        Return:
+        -------
+        tuple: 
+            bss.Box and angles
+        """
+
+        box_min, box_max = molecule.getAxisAlignedBoundingBox()
+        box_size = [y - x for x, y in zip(box_min, box_max)]
+        box_area = [x + int(self.box_edges) * ANGSTROM for x in box_size]
+        self.box, self.box_angles = None, None
+        if self.box_shape == "cubic":
+            self.box, self.box_angles = bss.Box.cubic(max(box_area))
+        elif self.box_shape == "rhombicDodecahedronHexagon":
+            self.box, self.box_angles = bss.Box.rhombicDodecahedronHexagon(max(box_area))
+        elif self.box_shape == "rhombicDodecahedronSquare":
+            self.box, self.box_angles = bss.Box.rhombicDodecahedronSquare(max(box_area))
+        elif self.box_shape == "truncatedOctahedron":
+            self.box, self.box_angles = bss.Box.truncatedOctahedron(max(box_area))
+        else:
+            print(f"Box shape {self.box_shape} not supported.")
+        return self.box, self.box_angles
+    
 
     def create_dictionary(self):
         """

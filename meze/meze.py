@@ -9,6 +9,8 @@ import prepare
 import solvate
 import equilibrate
 import logging
+import multiprocessing
+import multiprocessing.pool
 logger = logging.getLogger()
 logger.setLevel(logging.CRITICAL)
 
@@ -40,12 +42,12 @@ def clean_arguments(arguments):
 def main():
     parser = argparse.ArgumentParser(description="MEZE: MetalloEnZymE FF-builder for alchemistry")
 
-    parser.add_argument("-s",
-                        "--step",
-                        dest="step",
-                        required=True,
-                        help="workflow step number: 1: prep, 2: solvate, 3: equilbrate",
-                        choices=["1", "2", "3", "4"])
+    # parser.add_argument("-s",
+    #                     "--step",
+    #                     dest="step",
+    #                     required=True,
+    #                     help="workflow step number: 1: prep, 2: solvate, 3: equilbrate",
+    #                     choices=["1", "2", "3", "4"])
 
     parser.add_argument("-i",
                         "--ligand-index",
@@ -174,12 +176,6 @@ def main():
 
     arguments = parser.parse_args()
     arguments = clean_arguments(arguments)
-    
-    # protein = Protein.Protein(name=arguments.group_name, 
-    #                           protein_file=arguments.protein, 
-    #                           path=arguments.protein_directory,
-    #                           forcefield=arguments.forcefield,
-    #                           water_model=arguments.water_model)
 
     network = Network.Network(workdir=arguments.working_directory,
                               ligand_path=arguments.ligand_directory,
@@ -199,21 +195,19 @@ def main():
                               nvt=arguments.nvt,
                               npt=arguments.npt)
 
-    # afe = AFE.AlchemicalFreeEnergy(path=arguments.working_directory,
-    #                                min=arguments.min_steps,
-    #                                short_nvt=arguments.short_nvt,
-    #                                nvt=arguments.nvt,
-    #                                npt=arguments.npt,
-    #                                engine=arguments.engine,
-    #                                sampling_time=arguments.sampling_time,
-    #                                box_edges=arguments.box_edges,
-    #                                box_shape=arguments.box_shape)
-
 
     prepared_network = prepare.prepare_meze(Network=network)
+    prepared_ligands = prepared_network.ligands
 
-    solvated_protein, solvated_network, solvated_afe = solvate.solvate_meze(idx=arguments.idx, Network=network, AFE=afe)
-    _, equilibrated_network, _ = equilibrate.unbound(idx=arguments.idx, Network=solvated_network, AFE=solvated_afe)
+    with multiprocessing.pool.Pool() as pool:
+        solvated_ligands = pool.map(prepared_network.solvate_unbound, range(len(prepared_ligands)))
+        solvated_systems = pool.map(prepared_network.solvate_bound, range(len(prepared_ligands)))
+    
+    solvated_network = prepared_network
+    solvated_network.ligands = solvated_ligands
+    solvated_network.bound_ligands = solvated_systems
+    print("here")
+    # _, equilibrated_network, _ = equilibrate.unbound(idx=arguments.idx, Network=solvated_network, AFE=solvated_afe)
 
 
 if __name__ == "__main__":
