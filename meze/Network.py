@@ -5,7 +5,7 @@ import functions
 from argparse import RawTextHelpFormatter
 import pandas as pd
 import sys
-from definitions import ADJUST_OPTIONS, PICOSECOND, ANGSTROM
+from definitions import ADJUST_OPTIONS, PICOSECOND, ANGSTROM, KELVIN, ATM
 import numpy as np
 import shutil
 import os
@@ -79,6 +79,50 @@ def remove_lomap_directories(paths):
             shutil.rmtree(directory)
 
 
+def run_process(system, protocol, process, working_directory, configuration=None):
+    """
+    Run a Gromacs minimisation or equilibration process 
+    Adapted from https://tinyurl.com/BSSligprep
+
+    Parameters:
+    -----------
+    system: bss.System
+        run system
+    protocol: bss.Protocol 
+        minimisation or equilibration
+    process: name 
+        process name for saving process output
+    working_directory: str
+        save output into this directory
+
+    Return:
+    -------
+    system: bss.System
+        equilibrated or minimised system
+    """
+    process = bss.Process.Gromacs(system, protocol, name=process, work_dir=working_directory, exe="/usr/local/gromacs/bin/gmx_mpi")
+    config = process.getConfig()
+    if configuration:
+        for setting in configuration:
+            key = setting.split()[0]
+            try:
+                index = [i for i, string in enumerate(config) if key in string][0]
+                config[index] = setting
+                process.setConfig(config)
+            except IndexError:
+                process.addToConfig(setting)
+                config = process.getConfig()
+    process.setArg("-ntmpi", 1)
+    process.start()
+    process.wait()
+    if process.isError():
+        print(process.stdout())
+        print(process.stderr())
+        raise bss._Exceptions.ThirdPartyError("The process exited with an error!")
+    system = process.getSystem()
+    return system
+
+
 class Network(object):
     """
     Network class object
@@ -93,7 +137,7 @@ class Network(object):
     """
     def __init__(self, workdir, ligand_path, group_name, protein_file, protein_path, water_model, ligand_ff, protein_ff, ligand_charge, 
                  engine, sampling_time, box_edges, box_shape, min_steps, short_nvt, nvt, npt, 
-                 threshold=0.4, n_normal=11, n_difficult=17):
+                 min_dt, min_tol, temperature=300, pressure=1, threshold=0.4, n_normal=11, n_difficult=17):
         """
         Class constructor
         """
@@ -133,8 +177,12 @@ class Network(object):
         self.short_nvt = functions.convert_to_units(short_nvt, PICOSECOND)
         self.nvt = functions.convert_to_units(nvt, PICOSECOND)
         self.npt = functions.convert_to_units(npt, PICOSECOND)
+        self.min_dt = min_dt
+        self.min_tol = min_tol
+        self.temperature = functions.convert_to_units(temperature, KELVIN)
+        self.pressure = functions.convert_to_units(pressure, ATM)
         self.afe_directory = self.create_directory("/afe/")
-        self.equilibration_direcotry = self.create_directory("/equilibration/")
+        self.equilibration_directory = self.create_directory("/equilibration/")
 
 
     def create_directory(self, name):
@@ -177,6 +225,7 @@ class Network(object):
         self.protocol_file = self.create_protocol_file()
         return self
 
+
     def solvation(self):
         """
         Use multiprocessing to solvate unbound and bound legs
@@ -192,6 +241,24 @@ class Network(object):
         with multiprocessing.pool.Pool() as pool:
             self.ligand_molecules = pool.map(self.solvate_unbound, range(self.n_ligands))
             self.bound_ligands = pool.map(self.solvate_bound, range(self.n_ligands))
+        return self
+    
+
+    def equilibration(self):
+        """
+        Use multiprocessing to equilibrate unbound and bound legs
+
+        Parameters:
+        -----------
+
+        Return:
+        -------
+        self: Network
+            (solvated) Network object
+        """
+        with multiprocessing.pool.Pool() as pool:
+            self.ligand_molecules = pool.map(self.heat_unbound, range(self.n_ligands))
+            self.bound_ligands = pool.map(self.heat_bound, range(self.n_ligands))
         return self
 
 
@@ -247,6 +314,177 @@ class Network(object):
         system_savename = self.protein_path + "system_" + ligand_number + "_solvated"
         bss.IO.saveMolecules(system_savename, solvated_system, ["PRM7", "RST7"])
         return solvated_system
+
+
+    def minimise(self, system, workdir):
+        """
+        Minimise the system using Gromacs
+
+        Parameters:
+        -----------
+        system: bss.System
+            system to be minimised
+        working_directory: str
+            current working dir
+
+        Return:
+        -------
+        minimsed_system: bss.System
+            minimised system
+        """
+        print("Minimisation")
+
+        protocol = bss.Protocol.Minimisation(steps=self.minimisation_steps)
+        configuration = [f"emstep = {self.min_dt}", f"emtol = {self.min_tol}"]
+        minimised_system = run_process(system, protocol, "min", workdir)
+        return minimised_system        
+
+
+    def equilibrate(self, system, name, workdir, time, start_t, end_t, temperature=None, pressure=None, configuration=None, restraints=None):
+        """
+        Run NVT or NPT equilibration
+
+        Parameters:
+        -----------
+        system: bss.System
+            system to be equilibrated
+
+        Return:
+        -------
+        equilibrated_system: bss.System
+            equilibrated system
+        """
+
+        print(f"{name.upper()}")
+
+        protocol = bss.Protocol.Equilibration(runtime=time,
+                                              temperature_start=start_t,
+                                              temperature_end=end_t,
+                                              temperature=temperature,
+                                              pressure=pressure,
+                                              restraint=restraints)
+        equilibrated_system = run_process(system, protocol, name, workdir, configuration)
+        return equilibrated_system
+
+
+    def heat_unbound(self, index):
+        """
+        Perform minimisation and NVT and NPT equilibrations on ligand
+
+        Parameters:
+        -----------
+        index: int
+            ligand index
+
+        Return:
+        -------
+        equilibrated_ligand: bss.System
+            equilibrated ligand object
+        """
+        ligand_number = self.names[index].split("_")[-1]
+        directory = self.create_directory(self.equilibration_directory + f"/unbound/ligand_{ligand_number}/")
+        solvated_ligand = self.ligand_molecules[index]
+
+        directories = lambda step: functions.mkdir(directory+step)
+        min_directory = directories("min")
+        r_nvt_directory = directories("r_nvt")
+        nvt_directory = directories("nvt")
+        r_npt_directory = directories("r_npt")
+        npt_directory = directories("npt")
+
+        minimised_ligand = self.minimise(system=solvated_ligand, workdir=min_directory)
+        start_temp = functions.convert_to_units(0, KELVIN)
+        restrained_nvt = self.equilibrate(system=minimised_ligand,
+                                          name="r_nvt",
+                                          workdir=r_nvt_directory,
+                                          time=self.short_nvt,
+                                          start_t=start_temp, end_t=self.temperature,
+                                          configuration=["dt = 0.0005"], # need to be able to change
+                                          restraints="all")
+        nvt = self.equilibrate(system=restrained_nvt,
+                               name="nvt",
+                               workdir=nvt_directory,
+                               time=self.nvt,
+                               temperature=self.temperature)
+        restrained_npt = self.equilibrate(system=nvt,
+                                          name="r_npt",
+                                          workdir=r_npt_directory,
+                                          time=self.npt,
+                                          pressure=self.pressure,
+                                          temperature=self.temperature,
+                                          restraints="heavy")
+        equilibrated_ligand = self.equilibrate(system=restrained_npt,
+                                               name="npt",
+                                               workdir=npt_directory,
+                                               time=self.npt,
+                                               pressure=self.pressure,
+                                               temperature=self.temperature)
+        unbound_savename = npt_directory + f"/ligand_{ligand_number}"
+        bss.IO.saveMolecules(filebase=unbound_savename, system=equilibrated_ligand, fileformat=["PRM7", "RST7"])        
+        return equilibrated_ligand
+    
+
+    def heat_bound(self, index):
+        """
+        Perform minimisation and NVT and NPT equilibrations on bound ligand 
+
+        Parameters:
+        -----------
+        index: int
+            ligand index
+
+        Return:
+        -------
+        equilibrated_system: bss.System
+            equilibrated system object
+        """        
+        ligand_number = self.names[index].split("_")[-1]
+        solvated_system = self.bound_ligands[index]
+        directory = self.create_directory(self.equilibration_directory+f"/bound/ligand_{ligand_number}")
+        directories = lambda step: functions.mkdir(directory+step)
+        min_dir = directories("min")
+        r_nvt_dir = directories("r_nvt")
+        bb_r_nvt_dir = directories("bb_r_nvt")
+        nvt_dir = directories("nvt")
+        r_npt_dir = directories("r_npt")
+        npt_dir = directories("npt")     
+        start_temp = functions.convert_to_units(0, KELVIN)
+
+        minimised_system = self.minimise(system=solvated_system, workdir=min_dir)
+        restrained_nvt = self.equilibrate(system=minimised_system,
+                                          workdir=r_nvt_dir,
+                                          name="r_nvt",
+                                          time=self.short_nvt,
+                                          start_t=start_temp, end_t=self.temperature,
+                                          restraints="all",
+                                          configuration=["dt = 0.0005"]) # need to be able to change
+        backbone_restrained_nvt = self.equilibrate(system=restrained_nvt,
+                                                   name="bb_r_nvt",
+                                                   workdir=bb_r_nvt_dir,
+                                                   time=self.nvt,
+                                                   temperature=self.temperature,
+                                                   restraints="backbone")
+        nvt = self.equilibrate(system=backbone_restrained_nvt,
+                               name="nvt",
+                               workdir=nvt_dir,
+                               time=self.nvt,
+                               temperature=self.temperature)
+        restrained_npt = self.equilibrate(system=nvt,
+                                          name="r_npt",
+                                          workdir=npt_dir,
+                                          time=self.npt,
+                                          pressure=self.pressure,
+                                          temperature=self.temperature,
+                                          restraints="heavy")
+        equilibrated_system = self.equilibrate(system=restrained_npt,
+                                               name="npt",
+                                               workdir=npt_dir,
+                                               time=self.npt,
+                                               pressure=self.pressure,
+                                               temperature=self.temperature)
+        bound_savename = npt_dir + f"/system_{ligand_number}"
+        bss.IO.saveMolecules(filebase=bound_savename, system=equilibrated_system, fileformat=["PRM7", "RST7"])     
+        return equilibrated_system
 
 
     def create_box(self, molecule):
