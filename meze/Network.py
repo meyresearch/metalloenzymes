@@ -14,6 +14,7 @@ import Ligand
 import csv
 import Protein
 import pathlib
+import multiprocessing.pool
 
 
 def check_charge(value):
@@ -159,6 +160,41 @@ class Network(object):
         return directory   
 
 
+    def prepare_meze(self):
+        """
+        Prepare AFE calculations by creating network dictionary, ligand and protocol dat files.
+
+        Parameters:
+        -----------
+
+        Return:
+        -------
+        self: Network
+            (prepared) Network object
+        """
+        self.dictionary = self.create_dictionary()
+        self.ligands_dat_file = self.create_ligand_dat_file()
+        self.protocol_file = self.create_protocol_file()
+        return self
+
+    def solvation(self):
+        """
+        Use multiprocessing to solvate unbound and bound legs
+
+        Parameters:
+        -----------
+
+        Return:
+        -------
+        self: Network
+            (solvated) Network object
+        """
+        with multiprocessing.pool.Pool() as pool:
+            self.ligand_molecules = pool.map(self.solvate_unbound, range(self.n_ligands))
+            self.bound_ligands = pool.map(self.solvate_bound, range(self.n_ligands))
+        return self
+
+
     def solvate_unbound(self, index):
         """
         Solvate unbound systems.
@@ -265,7 +301,6 @@ class Network(object):
         with open(self.ligand_path+f"/meze_network.csv", "w") as lomap_out:
             for key, value in network_dict.items():
                 lomap_out.write(f"{key}: {value}\n")
-        self.dictionary = network_dict
         return network_dict
     
 
@@ -434,15 +469,15 @@ class Network(object):
         ligands_dat: str
             ligands datafile
         """
-        self.ligands_dat = self.afe_directory + "ligands.dat"
-        with open(self.ligands_dat, "w") as ligands_file:
+        ligands_dat = self.afe_directory + "ligands.dat"
+        with open(ligands_dat, "w") as ligands_file:
             writer = csv.writer(ligands_file)
             for ligand in self.names:
                 writer.writerow([ligand])  
-        return self.ligands_dat
+        return ligands_dat
 
 
-    def create_dat_file(self):
+    def create_protocol_file(self):
         """
         Create protocol.dat file for AFE runs
 
@@ -464,13 +499,13 @@ class Network(object):
                     f"protocol = default",
                     f"sampling = {self.md_time}*ns",
                     f"engine = {self.md_engine}"]
-        self.protocol_file = self.workding_directory + "/protocol.dat"
+        protocol_file = self.workding_directory + "/protocol.dat"
 
-        with open(self.protocol_file, "w") as file:
+        with open(protocol_file, "w") as file:
             writer = csv.writer(file)
             for protocol_line in protocol:
                 writer.writerow([protocol_line])
-        return self.protocol_file
+        return protocol_file
     
 
     def dict_to_df(self):
