@@ -1,16 +1,9 @@
 import functions
 import argparse
 import os
-import Protein
-import Ligand 
-import AlchemicalFreeEnergy as AFE
 import Network
-import prepare
-import solvate
-import equilibrate
 import logging
-import multiprocessing
-import multiprocessing.pool
+import time
 logger = logging.getLogger()
 logger.setLevel(logging.CRITICAL)
 
@@ -193,19 +186,20 @@ def main():
                               min_steps=arguments.min_steps,
                               short_nvt=arguments.short_nvt,
                               nvt=arguments.nvt,
-                              npt=arguments.npt)
+                              npt=arguments.npt,
+                              min_dt=arguments.emstep,
+                              min_tol=arguments.emtol)
 
+    start_prep = time.time()
+    prepared_network = network.prepare_meze()
+    print(f"\t Prepare meze took {time.time() - start_prep} s")
+    start_solv = time.time()
+    solvated_network = prepared_network.solvation()
+    print(f"\t Solvating meze took {time.time() - start_solv} s")   
+    start_equil = time.time()
+    equilibrated_network = solvated_network.equilibration() # make this slurm-able? 
+    print(f"\t Heating meze took {time.time() - start_equil} s")
 
-    prepared_network = prepare.prepare_meze(Network=network)
-    prepared_ligands = prepared_network.ligands
-
-    with multiprocessing.pool.Pool() as pool:
-        solvated_ligands = pool.map(prepared_network.solvate_unbound, range(len(prepared_ligands)))
-        solvated_systems = pool.map(prepared_network.solvate_bound, range(len(prepared_ligands)))
-    
-    solvated_network = prepared_network
-    solvated_network.ligands = solvated_ligands
-    solvated_network.bound_ligands = solvated_systems
     print("here")
     # _, equilibrated_network, _ = equilibrate.unbound(idx=arguments.idx, Network=solvated_network, AFE=solvated_afe)
 

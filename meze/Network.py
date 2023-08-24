@@ -15,6 +15,7 @@ import csv
 import Protein
 import pathlib
 import multiprocessing.pool
+import time
 
 
 def check_charge(value):
@@ -112,7 +113,7 @@ def run_process(system, protocol, process, working_directory, configuration=None
             except IndexError:
                 process.addToConfig(setting)
                 config = process.getConfig()
-    process.setArg("-ntmpi", 1)
+    # process.setArg("-ntmpi", 1)
     process.start()
     process.wait()
     if process.isError():
@@ -256,9 +257,22 @@ class Network(object):
         self: Network
             (solvated) Network object
         """
-        with multiprocessing.pool.Pool() as pool:
-            self.ligand_molecules = pool.map(self.heat_unbound, range(self.n_ligands))
-            self.bound_ligands = pool.map(self.heat_bound, range(self.n_ligands))
+        # start_equil = time.time()
+        # with multiprocessing.pool.Pool() as pool:
+        #     self.ligand_molecules = pool.map(self.heat_unbound, range(self.n_ligands))
+        # print(f"\t Heating unbound took {time.time() - start_equil} s")
+        # start_equil = time.time()
+        # with multiprocessing.pool.Pool() as pool:
+        #     self.bound_ligands = pool.map(self.heat_bound, range(self.n_ligands))
+        # print(f"\t Heating bound took {time.time() - start_equil} s")
+
+        start_equil = time.time()
+        self.ligand_molecules = [self.heat_unbound(i) for i in range(self.n_ligands)]
+        print(f"\t Heating unbound took {time.time() - start_equil} s")
+        start_equil = time.time()
+        self.bound_ligands = [self.heat_bound(i) for i in range(self.n_ligands)]
+        print(f"\t Heating bound took {time.time() - start_equil} s")
+
         return self
 
 
@@ -332,15 +346,14 @@ class Network(object):
         minimsed_system: bss.System
             minimised system
         """
-        print("Minimisation")
-
-        protocol = bss.Protocol.Minimisation(steps=self.minimisation_steps)
+        protocol = bss.Protocol.Minimisation(steps=self.min_steps)
         configuration = [f"emstep = {self.min_dt}", f"emtol = {self.min_tol}"]
-        minimised_system = run_process(system, protocol, "min", workdir)
+        minimised_system = run_process(system, protocol, "min", workdir, configuration=configuration)
         return minimised_system        
 
 
-    def equilibrate(self, system, name, workdir, time, start_t, end_t, temperature=None, pressure=None, configuration=None, restraints=None):
+                                                     # for start_t, end_t need to convert the default vals to Kelvin
+    def equilibrate(self, system, name, workdir, time, start_t=300, end_t=300, temperature=None, pressure=None, configuration=None, restraints=None):
         """
         Run NVT or NPT equilibration
 
@@ -354,9 +367,6 @@ class Network(object):
         equilibrated_system: bss.System
             equilibrated system
         """
-
-        print(f"{name.upper()}")
-
         protocol = bss.Protocol.Equilibration(runtime=time,
                                               temperature_start=start_t,
                                               temperature_end=end_t,
@@ -382,9 +392,9 @@ class Network(object):
             equilibrated ligand object
         """
         ligand_number = self.names[index].split("_")[-1]
-        directory = self.create_directory(self.equilibration_directory + f"/unbound/ligand_{ligand_number}/")
+        directory = functions.mkdir(self.equilibration_directory + f"/unbound/ligand_{ligand_number}/")
         solvated_ligand = self.ligand_molecules[index]
-
+        print(f"Equilibrating unbound ligand {ligand_number}")
         directories = lambda step: functions.mkdir(directory+step)
         min_directory = directories("min")
         r_nvt_directory = directories("r_nvt")
@@ -440,7 +450,7 @@ class Network(object):
         """        
         ligand_number = self.names[index].split("_")[-1]
         solvated_system = self.bound_ligands[index]
-        directory = self.create_directory(self.equilibration_directory+f"/bound/ligand_{ligand_number}")
+        directory = functions.mkdir(self.equilibration_directory+f"/bound/ligand_{ligand_number}/")
         directories = lambda step: functions.mkdir(directory+step)
         min_dir = directories("min")
         r_nvt_dir = directories("r_nvt")
@@ -449,7 +459,7 @@ class Network(object):
         r_npt_dir = directories("r_npt")
         npt_dir = directories("npt")     
         start_temp = functions.convert_to_units(0, KELVIN)
-
+        print(f"Equilibrating bound ligand {ligand_number}")
         minimised_system = self.minimise(system=solvated_system, workdir=min_dir)
         restrained_nvt = self.equilibrate(system=minimised_system,
                                           workdir=r_nvt_dir,
@@ -471,7 +481,7 @@ class Network(object):
                                temperature=self.temperature)
         restrained_npt = self.equilibrate(system=nvt,
                                           name="r_npt",
-                                          workdir=npt_dir,
+                                          workdir=r_npt_dir,
                                           time=self.npt,
                                           pressure=self.pressure,
                                           temperature=self.temperature,
