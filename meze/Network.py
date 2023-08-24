@@ -148,7 +148,7 @@ class Network(object):
         self.files = self.get_files()
         self.ligand_charge = check_charge(ligand_charge)
         self.ligands = [Ligand.Ligand(file) for file in self.files]
-        self.ligand_molecules = [ligand.get_molecule() for ligand in self.ligands]
+        self.ligand_molecules = [ligand.get_ligand() for ligand in self.ligands]
         self.names = [ligand.get_name() for ligand in self.ligands]
 
         self.protein_forcefield = protein_ff
@@ -221,7 +221,8 @@ class Network(object):
         self: Network
             (prepared) Network object
         """
-        self.dictionary = self.create_dictionary()
+        self.dictionary_fwd, self.dictionary_bwd = self.create_dictionary()
+        self.forward, self.backward = self.create_network_files() # possibly do not need
         self.ligands_dat_file = self.create_ligand_dat_file()
         self.protocol_file = self.create_protocol_file()
         return self
@@ -239,9 +240,18 @@ class Network(object):
         self: Network
             (solvated) Network object
         """
+        # For testing only
+        # ligs = []
+        # mols = []
+        # for i in range(self.n_ligands):
+        #     ligs.append(self.solvate_bound(i))
+        #     mols.append(ligs[i].get_system())
+
         with multiprocessing.pool.Pool() as pool:
-            self.ligand_molecules = pool.map(self.solvate_unbound, range(self.n_ligands))
-            self.bound_ligands = pool.map(self.solvate_bound, range(self.n_ligands))
+            self.ligands = pool.map(self.solvate_unbound, range(self.n_ligands))
+            self.ligand_molecules = [ligand.get_system() for ligand in self.ligands]
+            self.ligands = pool.map(self.solvate_bound, range(self.n_ligands))
+            self.bound_ligands = [ligand.get_system() for ligand in self.ligands] 
         return self
     
 
@@ -276,6 +286,26 @@ class Network(object):
         return self
 
 
+    def afe_prep(self):
+
+        for transformation, lomap_score in self.dictionary_fwd.items():
+            ligand_1, ligand_2 = transformation[0], transformation[1]
+            get_ligand_number = lambda ligand_name: ligand_name.split("_")[-1]
+            ligand_1_number = get_ligand_number(ligand_1)
+            ligand_2_number = get_ligand_number(ligand_2)   
+            
+
+
+            print(f"lig {ligand_1_number} ----> lig {ligand_2_number}")
+
+        # for transformation, lomap_score in self.dictionary_bwd.items():
+        #     ligand_1, ligand_2 = transformation[0], transformation[1]
+        #     get_ligand_number = lambda ligand_name: ligand_name.split("_")[-1]
+        #     ligand_1_number = get_ligand_number(ligand_1)
+        #     ligand_2_number = get_ligand_number(ligand_2)            
+
+        #     print(f"lig {ligand_1_number} ----> lig {ligand_2_number}")
+
     def solvate_unbound(self, index):
         """
         Solvate unbound systems.
@@ -286,19 +316,22 @@ class Network(object):
             Ligand indices for sorting through Network.names and Network.ligands
         Return:
         -------
-        """
+        solvated_ligand: Ligand
+            (solvated) Ligand object whose file attribute is the prm7 and rst7 files 
+        """ 
         ligand = self.ligands[index]
         names = self.names
         ligand_number = self.names[index].split("_")[-1]
         print(f"Solvating unbound ligand {ligand_number}")
         ligand_parameters = ligand.parameterise(self.ligand_forcefield, self.ligand_charge)
         unbound_box, unbound_box_angles = self.create_box(ligand_parameters)
-        solvated_ligand = bss.Solvent.solvate(model=self.protein.water_model, 
+        solvated_molecule = bss.Solvent.solvate(model=self.protein.water_model, 
                                               molecule=ligand_parameters, 
                                               box=unbound_box,
                                               angles=unbound_box_angles)
         ligand_savename = self.ligand_path + "ligand_" + ligand_number + "_solvated"
-        bss.IO.saveMolecules(ligand_savename, solvated_ligand, ["PRM7", "RST7"])
+        solvated_files = bss.IO.saveMolecules(ligand_savename, solvated_molecule, ["PRM7", "RST7"])
+        solvated_ligand = Ligand.Ligand(file=solvated_files, parameterised=True)
         return solvated_ligand
         
 
@@ -308,10 +341,12 @@ class Network(object):
 
         Parameters:
         -----------
-        index: list
+        index: int
             Ligand indices for sorting through Network.names and Network.ligands
         Return:
         -----
+        solvated_ligand: Ligand
+            (solvated) Ligand object whose file attribute is the prm7 and rst7 files         
         """
         ligand = self.ligands[index]
         names = self.names
@@ -320,13 +355,14 @@ class Network(object):
         print(f"Solvating bound ligand {ligand_number}")        
         system_parameters = ligand_parameters + self.protein.get_prepared_protein()
         bound_box, bound_box_angles = self.create_box(system_parameters)
-        solvated_system = bss.Solvent.solvate(model=self.protein.water_model,
+        solvated_molecules = bss.Solvent.solvate(model=self.protein.water_model,
                                                 molecule=system_parameters,
                                                 box=bound_box,
                                                 angles=bound_box_angles)
         
         system_savename = self.protein_path + "system_" + ligand_number + "_solvated"
-        bss.IO.saveMolecules(system_savename, solvated_system, ["PRM7", "RST7"])
+        solvated_files = bss.IO.saveMolecules(system_savename, solvated_molecules, ["PRM7", "RST7"])
+        solvated_system = Ligand.Ligand(file=solvated_files, parameterised=True)
         return solvated_system
 
 
@@ -540,16 +576,19 @@ class Network(object):
         """
         lomap_work_directory = self.check_lomap_directory()
         transformations, lomap_scores = bss.Align.generateNetwork(self.ligand_molecules, plot_network=True, names=self.names, work_dir=lomap_work_directory)
-        network_dict = {}
-        named_transformations = [(self.names[transformation[0]], self.names[transformation[1]]) for transformation in transformations]
-        
-        for transformation, score in zip(named_transformations, lomap_scores):
-            network_dict[transformation] = score
+        network_dict_fwd, network_dict_bwd = {}, {}
+        named_transformations_fwd = [(self.names[transformation[0]], self.names[transformation[1]]) for transformation in transformations]
+        named_transformations_bwd = [(self.names[transformation[1]], self.names[transformation[0]]) for transformation in transformations]
+
+        for transformation, score in zip(named_transformations_fwd, lomap_scores):
+            network_dict_fwd[transformation] = score
+        for transformation, score in zip(named_transformations_bwd, lomap_scores):
+            network_dict_bwd[transformation] = score
 
         with open(self.ligand_path+f"/meze_network.csv", "w") as lomap_out:
-            for key, value in network_dict.items():
+            for key, value in network_dict_fwd.items():
                 lomap_out.write(f"{key}: {value}\n")
-        return network_dict
+        return network_dict_fwd, network_dict_bwd
     
 
     def get_files(self):
@@ -688,19 +727,19 @@ class Network(object):
         tuple:
             forward and backward network.dat files
         """
-        self.forward = self.ligand_path + "network_fwd.dat"
-        self.backward = self.ligand_path + "network_bwd.dat"
-        with open(self.forward, "w") as network_file:
-            for transformation, lomap_score in self.dictionary.items():
+        forward = self.workding_directory + "network_fwd.dat"
+        backward = self.workding_directory + "network_bwd.dat"
+        with open(forward, "w") as network_file:
+            for transformation, lomap_score in self.dictionary_fwd.items():
                 self.n_windows = self.set_n_windows(lomap_score)
                 lambda_array_bash = self.create_lambda_list_bash()
                 network_file.write(f"{transformation[0]}, {transformation[1]}, {self.n_windows}, {lambda_array_bash}, {self.md_engine}\n")
-        with open(self.backward, "w") as network_file:
-            for transformation, lomap_score in self.dictionary.items():
+        with open(backward, "w") as network_file:
+            for transformation, lomap_score in self.dictionary_bwd.items():
                 self.n_windows = self.set_n_windows(lomap_score)
                 lambda_array_bash = self.create_lambda_list_bash()
-                network_file.write(f"{transformation[1]}, {transformation[0]}, {self.n_windows}, {lambda_array_bash}, {self.md_engine}\n")
-        return self.forward, self.backward
+                network_file.write(f"{transformation[0]}, {transformation[1]}, {self.n_windows}, {lambda_array_bash}, {self.md_engine}\n")
+        return forward, backward
     
 
     def create_ligand_dat_file(self):
