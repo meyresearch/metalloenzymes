@@ -198,10 +198,10 @@ def main():
     solvated_network = prepared_network.solvation()
     # print(f"\t Solvating meze took {time.time() - start_solv} s")   
     # start_equil = time.time()
-    afe = solvated_network.afe_prep()
+
     # equilibrated_network = solvated_network.equilibration() # make this slurm-able? 
     # print(f"\t Heating meze took {time.time() - start_equil} s")
-
+    afe = solvated_network.afe_prep()
 
     # _, equilibrated_network, _ = equilibrate.unbound(idx=arguments.idx, Network=solvated_network, AFE=solvated_afe)
 

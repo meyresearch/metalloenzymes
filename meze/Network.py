@@ -16,6 +16,7 @@ import Protein
 import pathlib
 import multiprocessing.pool
 import time
+from BioSimSpace import _Exceptions
 
 
 def check_charge(value):
@@ -101,7 +102,8 @@ def run_process(system, protocol, process, working_directory, configuration=None
     system: bss.System
         equilibrated or minimised system
     """
-    process = bss.Process.Gromacs(system, protocol, name=process, work_dir=working_directory, exe="/usr/local/gromacs/bin/gmx_mpi")
+    process = bss.Process.Gromacs(system, protocol, name=process, work_dir=working_directory, #exe="/usr/local/gromacs/bin/gmx_mpi"
+                                  )
     config = process.getConfig()
     if configuration:
         for setting in configuration:
@@ -122,6 +124,86 @@ def run_process(system, protocol, process, working_directory, configuration=None
         raise bss._Exceptions.ThirdPartyError("The process exited with an error!")
     system = process.getSystem()
     return system
+
+
+def combine_unbound_ligands(system_1, system_2):
+    """
+    Take two unbound bss.Systems and combine the ligands' systems
+
+    Parameters:
+    -----------
+    system_1: bss.System 
+    system_2: bss.System
+
+    Return:
+    -------
+    system_1: bss.System
+        system with combined ligand topologies
+    """
+    ligand_1, ligand_2 = system_1.getMolecule(0), system_2.getMolecule(0)
+    merged_ligands = merge_ligands(ligand_1, ligand_2)
+    system_1.removeMolecules(ligand_1)
+    system_1.addMolecules(merged_ligands)
+    return system_1
+
+
+def combine_bound_ligands(system_1, system_2):
+    """
+    Take two bound bss.Systems and combine the ligands' systems
+
+    Parameters:
+    -----------
+    system_1: bss.System 
+    system_2: bss.System
+
+    Return:
+    -------
+    system_1: bss.System
+        system with combined ligand topologies
+    """
+    ligand_1 = None
+    protein = None
+    n_residues = [molecule.nResidues() for molecule in system_1]
+    n_atoms = [molecule.nAtoms() for molecule in system_1]
+    for j, (n_residues, n_atoms) in enumerate(zip(n_residues[:20], n_atoms[:20])):
+        if n_residues == 1 and n_atoms > 5:  
+            ligand_1 = system_1.getMolecule(j)
+        elif n_residues > 1:
+            protein = system_1.getMolecules(j)
+    ligand_2 = None
+    n_residues = [molecule.nResidues() for molecule in system_2]
+    n_atoms = [molecule.nAtoms() for molecule in system_2]   
+    for j, (n_residues, n_atoms) in enumerate(zip(n_residues, n_atoms)):
+        if n_residues == 1 and n_atoms > 5:
+            ligand_2 = system_2.getMolecule(j)
+    if ligand_1 and ligand_2 and protein:
+        pass
+    else:
+        raise _Exceptions.AlignmentError("Could not extract ligands or protein from input systems.")
+    merged_ligands = merge_ligands(ligand_1, ligand_2)
+    system_1.removeMolecules(ligand_1)
+    system_1.addMolecules(merged_ligands)
+    return system_1
+
+
+def merge_ligands(ligand_1, ligand_2):
+    """
+    Take two ligands and merge their topologies
+
+    Parameters:
+    -----------
+    ligand_1: bss.Molecule
+    ligand_2: bss.Molecule
+
+    Return:
+    -------
+    merged_ligands: bss.Molecule
+    """
+    mapping = bss.Align.matchAtoms(ligand_1, ligand_2, complete_rings_only=True)
+    inverse_mapping = {value:key for key, value in mapping.items()}
+    aligned_ligand_2 = bss.Align.rmsdAlign(ligand_2, ligand_1, inverse_mapping)
+    return bss.Align.merge(ligand_1, aligned_ligand_2, mapping, allow_ring_breaking=True, allow_ring_size_change=True)
+
 
 
 class Network(object):
@@ -145,9 +227,9 @@ class Network(object):
         self.ligand_path = functions.path_exists(ligand_path) # ligand directory (change name?)
         self.ligand_forcefield = ligand_ff
         self.water_model = water_model
-        self.files = self.get_files()
+        self.input_files = self.get_files()
         self.ligand_charge = check_charge(ligand_charge)
-        self.ligands = [Ligand.Ligand(file) for file in self.files]
+        self.ligands = [Ligand.Ligand(file) for file in self.input_files]
         self.ligand_molecules = [ligand.get_ligand() for ligand in self.ligands]
         self.names = [ligand.get_name() for ligand in self.ligands]
 
@@ -166,6 +248,7 @@ class Network(object):
         self.threshold = threshold
         self.n_normal = n_normal
         self.n_difficult = n_difficult
+        self.n_windows = []
         self.n_ligands = self.get_n_ligands()
         self.bound_ligands = [None] * self.n_ligands
 
@@ -248,9 +331,9 @@ class Network(object):
         #     mols.append(ligs[i].get_system())
 
         with multiprocessing.pool.Pool() as pool:
-            self.ligands = pool.map(self.solvate_unbound, range(self.n_ligands))
+            self.ligands = pool.map(self.solvate_unbound, range(2))
             self.ligand_molecules = [ligand.get_system() for ligand in self.ligands]
-            self.ligands = pool.map(self.solvate_bound, range(self.n_ligands))
+            self.ligands = pool.map(self.solvate_bound, range(2))
             self.bound_ligands = [ligand.get_system() for ligand in self.ligands] 
         return self
     
@@ -267,6 +350,7 @@ class Network(object):
         self: Network
             (solvated) Network object
         """
+        # multiprocessing - takes up a lot of RAM!
         # start_equil = time.time()
         # with multiprocessing.pool.Pool() as pool:
         #     self.ligand_molecules = pool.map(self.heat_unbound, range(self.n_ligands))
@@ -277,26 +361,39 @@ class Network(object):
         # print(f"\t Heating bound took {time.time() - start_equil} s")
 
         start_equil = time.time()
-        self.ligand_molecules = [self.heat_unbound(i) for i in range(self.n_ligands)]
+        self.ligands = [self.heat_unbound(i) for i in range(2)]
+        self.ligand_molecules = [ligand.get_system() for ligand in self.ligands]
         print(f"\t Heating unbound took {time.time() - start_equil} s")
         start_equil = time.time()
-        self.bound_ligands = [self.heat_bound(i) for i in range(self.n_ligands)]
+        self.ligands = [self.heat_bound(i) for i in range(2)]
+        self.bound_ligands = [ligand.get_system() for ligand in self.ligands]
         print(f"\t Heating bound took {time.time() - start_equil} s")
-
         return self
 
 
     def afe_prep(self):
 
         for transformation, lomap_score in self.dictionary_fwd.items():
-            ligand_1, ligand_2 = transformation[0], transformation[1]
-            get_ligand_number = lambda ligand_name: ligand_name.split("_")[-1]
-            ligand_1_number = get_ligand_number(ligand_1)
-            ligand_2_number = get_ligand_number(ligand_2)   
-            
+            ligand_1_name, ligand_2_name = transformation[0], transformation[1]
+            # get_ligand_number = lambda ligand_name: ligand_name.split("_")[-1]
+            # ligand_1_number = get_ligand_number(ligand_1_name)
+            # ligand_2_number = get_ligand_number(ligand_2_name)   
+            # self.ligands: list of Ligand objects
+            unbound_ligand_1_system = self.match_name_to_system(self.ligands, ligand_1_name)
+            unbound_ligand_2_system = self.match_name_to_system(self.ligands, ligand_2_name)
+            bound_ligand_1_system = self.match_name_to_system(self.bound_ligands, ligand_1_name)
+            bound_ligand_2_system = self.match_name_to_system(self.bound_ligands, ligand_2_name)
+
+            unbound = combine_unbound_ligands(unbound_ligand_1_system, unbound_ligand_2_system)
+            bound = combine_bound_ligands(bound_ligand_1_system, bound_ligand_2_system)
+
+            free_energy_protocol = bss.Protocol.FreeEnergy()
 
 
-            print(f"lig {ligand_1_number} ----> lig {ligand_2_number}")
+
+
+
+            # print(f"lig {ligand_1_number} ----> lig {ligand_2_number}")
 
         # for transformation, lomap_score in self.dictionary_bwd.items():
         #     ligand_1, ligand_2 = transformation[0], transformation[1]
@@ -413,6 +510,27 @@ class Network(object):
         return equilibrated_system
 
 
+    def match_name_to_system(self, objects, name):
+        """
+        Take ligand name and return bss.System with that name
+
+        Parameters:
+        -----------
+        name: str
+            ligand name
+        objects: list
+            list of unbound/bound objects
+        
+        Return:
+        -------
+        bss.System: 
+            system with the given name
+        """
+        for i in range(2):
+            if objects[i].name == name:
+                return objects[i].get_system()
+
+
     def heat_unbound(self, index):
         """
         Perform minimisation and NVT and NPT equilibrations on ligand
@@ -459,14 +577,15 @@ class Network(object):
                                           pressure=self.pressure,
                                           temperature=self.temperature,
                                           restraints="heavy")
-        equilibrated_ligand = self.equilibrate(system=restrained_npt,
+        equilibrated_molecule = self.equilibrate(system=restrained_npt,
                                                name="npt",
                                                workdir=npt_directory,
                                                time=self.npt,
                                                pressure=self.pressure,
                                                temperature=self.temperature)
         unbound_savename = npt_directory + f"/ligand_{ligand_number}"
-        bss.IO.saveMolecules(filebase=unbound_savename, system=equilibrated_ligand, fileformat=["PRM7", "RST7"])        
+        equilibrated_files = bss.IO.saveMolecules(filebase=unbound_savename, system=equilibrated_molecule, fileformat=["PRM7", "RST7"])        
+        equilibrated_ligand = Ligand.Ligand(file=equilibrated_files, parameterised=True)
         return equilibrated_ligand
     
 
@@ -522,14 +641,15 @@ class Network(object):
                                           pressure=self.pressure,
                                           temperature=self.temperature,
                                           restraints="heavy")
-        equilibrated_system = self.equilibrate(system=restrained_npt,
+        equilibrated_protein = self.equilibrate(system=restrained_npt,
                                                name="npt",
                                                workdir=npt_dir,
                                                time=self.npt,
                                                pressure=self.pressure,
                                                temperature=self.temperature)
         bound_savename = npt_dir + f"/system_{ligand_number}"
-        bss.IO.saveMolecules(filebase=bound_savename, system=equilibrated_system, fileformat=["PRM7", "RST7"])     
+        equilibrated_files = bss.IO.saveMolecules(filebase=bound_savename, system=equilibrated_protein, fileformat=["PRM7", "RST7"])     
+        equilibrated_system = Ligand.Ligand(file=equilibrated_files, parameterised=True)
         return equilibrated_system
 
 
@@ -617,7 +737,7 @@ class Network(object):
         len(self.files): int
             number of ligands
         """
-        return(len(self.files))
+        return(len(self.input_files))
 
 
     def create_new_lomap_directory(self):
@@ -685,16 +805,16 @@ class Network(object):
         Return:
         -------
         n_windows: int
-            number of lambda windows for given 
+            number of lambda windows for given transformation
         """
         if lomap_score == None or lomap_score < float(self.threshold):
-            self.n_windows = self.n_difficult
+            n_windows = self.n_difficult
         else:
-            self.n_windows = self.n_normal
-        return self.n_windows
+            n_windows = self.n_normal
+        return n_windows
 
 
-    def create_lambda_list_bash(self):
+    def create_lambda_list_bash(self, n_windows): 
         """
         Create a bash-readable list of evenly spaced lambda values between 0 and n_windows
 
@@ -708,7 +828,7 @@ class Network(object):
         bash_list: str
             a bash-readable list of lambda values
         """
-        lambda_list_numpy = list(np.linspace(0, 1, int(self.n_windows)))
+        lambda_list_numpy = list(np.linspace(0, 1, int(n_windows)))
         lambda_list = [format(item, ".4f") for item in lambda_list_numpy]
         return " ".join(lambda_list)
 
@@ -731,14 +851,15 @@ class Network(object):
         backward = self.workding_directory + "network_bwd.dat"
         with open(forward, "w") as network_file:
             for transformation, lomap_score in self.dictionary_fwd.items():
-                self.n_windows = self.set_n_windows(lomap_score)
-                lambda_array_bash = self.create_lambda_list_bash()
-                network_file.write(f"{transformation[0]}, {transformation[1]}, {self.n_windows}, {lambda_array_bash}, {self.md_engine}\n")
+                n_windows = self.set_n_windows(lomap_score)
+                self.n_windows.append(n_windows)
+                lambda_array_bash = self.create_lambda_list_bash(n_windows)
+                network_file.write(f"{transformation[0]}, {transformation[1]}, {n_windows}, {lambda_array_bash}, {self.md_engine}\n")
         with open(backward, "w") as network_file:
             for transformation, lomap_score in self.dictionary_bwd.items():
-                self.n_windows = self.set_n_windows(lomap_score)
-                lambda_array_bash = self.create_lambda_list_bash()
-                network_file.write(f"{transformation[0]}, {transformation[1]}, {self.n_windows}, {lambda_array_bash}, {self.md_engine}\n")
+                n_windows = self.set_n_windows(lomap_score)
+                lambda_array_bash = self.create_lambda_list_bash(n_windows)
+                network_file.write(f"{transformation[0]}, {transformation[1]}, {n_windows}, {lambda_array_bash}, {self.md_engine}\n")
         return forward, backward
     
 
