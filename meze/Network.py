@@ -5,7 +5,7 @@ import functions
 from argparse import RawTextHelpFormatter
 import pandas as pd
 import sys
-from definitions import ADJUST_OPTIONS, PICOSECOND, ANGSTROM, KELVIN, ATM
+from definitions import ADJUST_OPTIONS, PICOSECOND, NANOSECOND, ANGSTROM, KELVIN, ATM
 import numpy as np
 import shutil
 import os
@@ -205,6 +205,41 @@ def merge_ligands(ligand_1, ligand_2):
     return bss.Align.merge(ligand_1, aligned_ligand_2, mapping, allow_ring_breaking=True, allow_ring_size_change=True)
 
 
+def create_lambda_windows(n_windows):
+    """
+    Create evenly spaced list of lambda windows 
+
+    Parameters:
+    -----------
+    n_windows: int
+        number of windows
+
+    Return:
+    -------
+    list: 
+        list of lambdas
+    """
+    return list(np.linspace(0, 1, int(n_windows)))
+
+
+def create_lambda_list_bash(n_windows): 
+    """
+    Create a bash-readable list of evenly spaced lambda values between 0 and n_windows
+
+    Parameters:
+    -----------
+    n_windows: 
+        number of lambda windows
+
+    Return:
+    -------
+    bash_list: str
+        a bash-readable list of lambda values
+    """
+    lambda_list_numpy = create_lambda_windows(n_windows)
+    lambda_list = [format(item, ".4f") for item in lambda_list_numpy]
+    return " ".join(lambda_list)
+
 
 class Network(object):
     """
@@ -220,7 +255,7 @@ class Network(object):
     """
     def __init__(self, workdir, ligand_path, group_name, protein_file, protein_path, water_model, ligand_ff, protein_ff, ligand_charge, 
                  engine, sampling_time, box_edges, box_shape, min_steps, short_nvt, nvt, npt, 
-                 min_dt, min_tol, temperature=300, pressure=1, threshold=0.4, n_normal=11, n_difficult=17):
+                 min_dt, min_tol, repeats, temperature=300, pressure=1, threshold=0.4, n_normal=11, n_difficult=17):
         """
         Class constructor
         """
@@ -249,15 +284,16 @@ class Network(object):
         self.n_normal = n_normal
         self.n_difficult = n_difficult
         self.n_windows = []
+        self.lambdas = []
         self.n_ligands = self.get_n_ligands()
         self.bound_ligands = [None] * self.n_ligands
 
         self.workding_directory = functions.path_exists(workdir)
-        self.md_engine = engine
-        self.md_time = sampling_time,
+
         self.box_shape = box_shape
         self.box_edges = box_edges
         self.min_steps = min_steps
+        
         self.short_nvt = functions.convert_to_units(short_nvt, PICOSECOND)
         self.nvt = functions.convert_to_units(nvt, PICOSECOND)
         self.npt = functions.convert_to_units(npt, PICOSECOND)
@@ -265,16 +301,22 @@ class Network(object):
         self.min_tol = min_tol
         self.temperature = functions.convert_to_units(temperature, KELVIN)
         self.pressure = functions.convert_to_units(pressure, ATM)
-        self.afe_directory = self.create_directory("/afe/")
+        
+        self.md_engine = engine
+        self.md_time = functions.convert_to_units(sampling_time, NANOSECOND)
+        self.n_repeats = repeats
+        self.log_directory = self.create_directory("/logs/")
+        self.afe_input_directory = self.create_directory("/afe/")
         self.equilibration_directory = self.create_directory("/equilibration/")
+        self.output_directories, self.unbound_directories, self.bound_directories = self.create_output_directories()
 
 
-    def create_directory(self, name):
+    def create_directory(self, name, create_parents=False):
         """
         Create AFE working directory in path.
 
         Parameters:
-        -----------
+        -----------xantham gum
         name: str
             name of new directory
         Return:
@@ -284,12 +326,32 @@ class Network(object):
         """
         try:
             directory = self.workding_directory + str(name)
-            pathlib.Path(directory).mkdir(parents=False, exist_ok=False)
+            pathlib.Path(directory).mkdir(parents=create_parents, exist_ok=False)
         except FileNotFoundError as e:
             print(f"Could not create directory {directory}. Pathlib raised error: {e}")
         except FileExistsError as e:
             print(f"Could not create directory {directory}. Pathlib raised error: {e}")
         return directory   
+
+
+    def create_output_directories(self):
+        """
+        Create bound and unbound output directories for each repeat AFE run
+
+        Parameters:
+        -----------
+
+        Return:
+        -------
+        output, unbound, bound: tuple
+            parent directories list, unbound dirs, bound dirs
+        """
+        output_directories, unbound_directories, bound_directories = [], [], []
+        for i in range(1, self.n_repeats + 1, 1):
+            output_directories.append(self.create_directory(f"/{self.md_engine}_{i}/outputs/", create_parents=True))
+            unbound_directories.append(self.create_directory(f"/{self.md_engine}_{i}/outputs/unbound/"))
+            bound_directories.append(self.create_directory(f"/{self.md_engine}_{i}/outputs/bound/"))
+        return output_directories, unbound_directories, bound_directories
 
 
     def prepare_meze(self):
@@ -304,8 +366,9 @@ class Network(object):
         self: Network
             (prepared) Network object
         """
-        self.dictionary_fwd, self.dictionary_bwd = self.create_dictionary()
-        self.forward, self.backward = self.create_network_files() # possibly do not need
+        self.transformations = self.set_transformations()
+        self.n_transformations = len(self.transformations)
+        # self.forward, self.backward = self.create_network_files() # possibly do not need
         self.ligands_dat_file = self.create_ligand_dat_file()
         self.protocol_file = self.create_protocol_file()
         return self
@@ -331,63 +394,58 @@ class Network(object):
         #     mols.append(ligs[i].get_system())
 
         with multiprocessing.pool.Pool() as pool:
-            self.ligands = pool.map(self.solvate_unbound, range(2))
+            self.ligands = pool.map(self.solvate_unbound, range(self.n_ligands))
             self.ligand_molecules = [ligand.get_system() for ligand in self.ligands]
-            self.ligands = pool.map(self.solvate_bound, range(2))
+            self.ligands = pool.map(self.solvate_bound, range(self.n_ligands))
             self.bound_ligands = [ligand.get_system() for ligand in self.ligands] 
         return self
     
 
-    def equilibration(self):
-        """
-        Use multiprocessing to equilibrate unbound and bound legs
-
-        Parameters:
-        -----------
-
-        Return:
-        -------
-        self: Network
-            (solvated) Network object
-        """
-        # multiprocessing - takes up a lot of RAM!
-        # start_equil = time.time()
-        # with multiprocessing.pool.Pool() as pool:
-        #     self.ligand_molecules = pool.map(self.heat_unbound, range(self.n_ligands))
-        # print(f"\t Heating unbound took {time.time() - start_equil} s")
-        # start_equil = time.time()
-        # with multiprocessing.pool.Pool() as pool:
-        #     self.bound_ligands = pool.map(self.heat_bound, range(self.n_ligands))
-        # print(f"\t Heating bound took {time.time() - start_equil} s")
-
-        start_equil = time.time()
-        self.ligands = [self.heat_unbound(i) for i in range(2)]
-        self.ligand_molecules = [ligand.get_system() for ligand in self.ligands]
-        print(f"\t Heating unbound took {time.time() - start_equil} s")
-        start_equil = time.time()
-        self.ligands = [self.heat_bound(i) for i in range(2)]
-        self.bound_ligands = [ligand.get_system() for ligand in self.ligands]
-        print(f"\t Heating bound took {time.time() - start_equil} s")
-        return self
-
-
     def afe_prep(self):
+        # forward
+        columns_to_list = lambda column: self.transformations[column].tolist()
+        ligand_a, ligand_b = columns_to_list("ligand_a"), columns_to_list("ligand_b")
+        indices_a, indices_b = columns_to_list("index_a"), columns_to_list("index_b")
+        lambdas = columns_to_list("lambdas")
 
-        for transformation, lomap_score in self.dictionary_fwd.items():
-            ligand_1_name, ligand_2_name = transformation[0], transformation[1]
-            # get_ligand_number = lambda ligand_name: ligand_name.split("_")[-1]
-            # ligand_1_number = get_ligand_number(ligand_1_name)
-            # ligand_2_number = get_ligand_number(ligand_2_name)   
-            # self.ligands: list of Ligand objects
-            unbound_ligand_1_system = self.match_name_to_system(self.ligands, ligand_1_name)
-            unbound_ligand_2_system = self.match_name_to_system(self.ligands, ligand_2_name)
-            bound_ligand_1_system = self.match_name_to_system(self.bound_ligands, ligand_1_name)
-            bound_ligand_2_system = self.match_name_to_system(self.bound_ligands, ligand_2_name)
+        for i in range(self.n_transformations):
+            a, b = indices_a[i], indices_b[i] 
 
-            unbound = combine_unbound_ligands(unbound_ligand_1_system, unbound_ligand_2_system)
-            bound = combine_bound_ligands(bound_ligand_1_system, bound_ligand_2_system)
+            unbound_system_a = self.ligands[a].get_system()
+            unbound_system_b = self.ligands[b].get_system()
+            bound_system_a = self.bound_ligands[a]
+            bound_system_b = self.bound_ligands[b].get_system()
+            unbound = combine_unbound_ligands(unbound_system_a, unbound_system_b)
+            bound = combine_bound_ligands(bound_system_a, bound_system_b)
 
-            free_energy_protocol = bss.Protocol.FreeEnergy()
+            lambda_minimisation_protocol = bss.Protocol.FreeEnergyMinimisation(lam_vals=lambdas[i], runtime=self.md_time)
+            
+            bss.FreeEnergy.Relative(unbound, lambda_minimisation_protocol, engine=self.md_engine, work_dir=self.unbound_directories[0], setup_only=True)
+            
+            print("here")
+
+
+            # print(f"index a: {a}, ligand a: {ligand_a[i]}, index b: {b}, ligand b: {ligand_b[i]}")
+            
+        # n_windows = self.n_windows
+        # lambdas = self.lambdas
+
+
+        # for transformation, lomap_score in self.dictionary_fwd.items():
+        #     ligand_1_name, ligand_2_name = transformation[0], transformation[1]
+        #     # get_ligand_number = lambda ligand_name: ligand_name.split("_")[-1]
+        #     # ligand_1_number = get_ligand_number(ligand_1_name)
+        #     # ligand_2_number = get_ligand_number(ligand_2_name)   
+        #     # self.ligands: list of Ligand objects
+        #     unbound_ligand_1_system = self.match_name_to_system(self.ligands, ligand_1_name)
+        #     unbound_ligand_2_system = self.match_name_to_system(self.ligands, ligand_2_name)
+        #     bound_ligand_1_system = self.match_name_to_system(self.bound_ligands, ligand_1_name)
+        #     bound_ligand_2_system = self.match_name_to_system(self.bound_ligands, ligand_2_name)
+
+        #     unbound = combine_unbound_ligands(unbound_ligand_1_system, unbound_ligand_2_system)
+        #     bound = combine_bound_ligands(bound_ligand_1_system, bound_ligand_2_system)
+
+        #     free_energy_protocol = bss.Protocol.FreeEnergy()
 
 
 
@@ -463,196 +521,6 @@ class Network(object):
         return solvated_system
 
 
-    def minimise(self, system, workdir):
-        """
-        Minimise the system using Gromacs
-
-        Parameters:
-        -----------
-        system: bss.System
-            system to be minimised
-        working_directory: str
-            current working dir
-
-        Return:
-        -------
-        minimsed_system: bss.System
-            minimised system
-        """
-        protocol = bss.Protocol.Minimisation(steps=self.min_steps)
-        configuration = [f"emstep = {self.min_dt}", f"emtol = {self.min_tol}"]
-        minimised_system = run_process(system, protocol, "min", workdir, configuration=configuration)
-        return minimised_system        
-
-
-                                                     # for start_t, end_t need to convert the default vals to Kelvin
-    def equilibrate(self, system, name, workdir, time, start_t=300, end_t=300, temperature=None, pressure=None, configuration=None, restraints=None):
-        """
-        Run NVT or NPT equilibration
-
-        Parameters:
-        -----------
-        system: bss.System
-            system to be equilibrated
-
-        Return:
-        -------
-        equilibrated_system: bss.System
-            equilibrated system
-        """
-        protocol = bss.Protocol.Equilibration(runtime=time,
-                                              temperature_start=start_t,
-                                              temperature_end=end_t,
-                                              temperature=temperature,
-                                              pressure=pressure,
-                                              restraint=restraints)
-        equilibrated_system = run_process(system, protocol, name, workdir, configuration)
-        return equilibrated_system
-
-
-    def match_name_to_system(self, objects, name):
-        """
-        Take ligand name and return bss.System with that name
-
-        Parameters:
-        -----------
-        name: str
-            ligand name
-        objects: list
-            list of unbound/bound objects
-        
-        Return:
-        -------
-        bss.System: 
-            system with the given name
-        """
-        for i in range(2):
-            if objects[i].name == name:
-                return objects[i].get_system()
-
-
-    def heat_unbound(self, index):
-        """
-        Perform minimisation and NVT and NPT equilibrations on ligand
-
-        Parameters:
-        -----------
-        index: int
-            ligand index
-
-        Return:
-        -------
-        equilibrated_ligand: bss.System
-            equilibrated ligand object
-        """
-        ligand_number = self.names[index].split("_")[-1]
-        directory = functions.mkdir(self.equilibration_directory + f"/unbound/ligand_{ligand_number}/")
-        solvated_ligand = self.ligand_molecules[index]
-        print(f"Equilibrating unbound ligand {ligand_number}")
-        directories = lambda step: functions.mkdir(directory+step)
-        min_directory = directories("min")
-        r_nvt_directory = directories("r_nvt")
-        nvt_directory = directories("nvt")
-        r_npt_directory = directories("r_npt")
-        npt_directory = directories("npt")
-
-        minimised_ligand = self.minimise(system=solvated_ligand, workdir=min_directory)
-        start_temp = functions.convert_to_units(0, KELVIN)
-        restrained_nvt = self.equilibrate(system=minimised_ligand,
-                                          name="r_nvt",
-                                          workdir=r_nvt_directory,
-                                          time=self.short_nvt,
-                                          start_t=start_temp, end_t=self.temperature,
-                                          configuration=["dt = 0.0005"], # need to be able to change
-                                          restraints="all")
-        nvt = self.equilibrate(system=restrained_nvt,
-                               name="nvt",
-                               workdir=nvt_directory,
-                               time=self.nvt,
-                               temperature=self.temperature)
-        restrained_npt = self.equilibrate(system=nvt,
-                                          name="r_npt",
-                                          workdir=r_npt_directory,
-                                          time=self.npt,
-                                          pressure=self.pressure,
-                                          temperature=self.temperature,
-                                          restraints="heavy")
-        equilibrated_molecule = self.equilibrate(system=restrained_npt,
-                                               name="npt",
-                                               workdir=npt_directory,
-                                               time=self.npt,
-                                               pressure=self.pressure,
-                                               temperature=self.temperature)
-        unbound_savename = npt_directory + f"/ligand_{ligand_number}"
-        equilibrated_files = bss.IO.saveMolecules(filebase=unbound_savename, system=equilibrated_molecule, fileformat=["PRM7", "RST7"])        
-        equilibrated_ligand = Ligand.Ligand(file=equilibrated_files, parameterised=True)
-        return equilibrated_ligand
-    
-
-    def heat_bound(self, index):
-        """
-        Perform minimisation and NVT and NPT equilibrations on bound ligand 
-
-        Parameters:
-        -----------
-        index: int
-            ligand index
-
-        Return:
-        -------
-        equilibrated_system: bss.System
-            equilibrated system object
-        """        
-        ligand_number = self.names[index].split("_")[-1]
-        solvated_system = self.bound_ligands[index]
-        directory = functions.mkdir(self.equilibration_directory+f"/bound/ligand_{ligand_number}/")
-        directories = lambda step: functions.mkdir(directory+step)
-        min_dir = directories("min")
-        r_nvt_dir = directories("r_nvt")
-        bb_r_nvt_dir = directories("bb_r_nvt")
-        nvt_dir = directories("nvt")
-        r_npt_dir = directories("r_npt")
-        npt_dir = directories("npt")     
-        start_temp = functions.convert_to_units(0, KELVIN)
-        print(f"Equilibrating bound ligand {ligand_number}")
-        minimised_system = self.minimise(system=solvated_system, workdir=min_dir)
-        restrained_nvt = self.equilibrate(system=minimised_system,
-                                          workdir=r_nvt_dir,
-                                          name="r_nvt",
-                                          time=self.short_nvt,
-                                          start_t=start_temp, end_t=self.temperature,
-                                          restraints="all",
-                                          configuration=["dt = 0.0005"]) # need to be able to change
-        backbone_restrained_nvt = self.equilibrate(system=restrained_nvt,
-                                                   name="bb_r_nvt",
-                                                   workdir=bb_r_nvt_dir,
-                                                   time=self.nvt,
-                                                   temperature=self.temperature,
-                                                   restraints="backbone")
-        nvt = self.equilibrate(system=backbone_restrained_nvt,
-                               name="nvt",
-                               workdir=nvt_dir,
-                               time=self.nvt,
-                               temperature=self.temperature)
-        restrained_npt = self.equilibrate(system=nvt,
-                                          name="r_npt",
-                                          workdir=r_npt_dir,
-                                          time=self.npt,
-                                          pressure=self.pressure,
-                                          temperature=self.temperature,
-                                          restraints="heavy")
-        equilibrated_protein = self.equilibrate(system=restrained_npt,
-                                               name="npt",
-                                               workdir=npt_dir,
-                                               time=self.npt,
-                                               pressure=self.pressure,
-                                               temperature=self.temperature)
-        bound_savename = npt_dir + f"/system_{ligand_number}"
-        equilibrated_files = bss.IO.saveMolecules(filebase=bound_savename, system=equilibrated_protein, fileformat=["PRM7", "RST7"])     
-        equilibrated_system = Ligand.Ligand(file=equilibrated_files, parameterised=True)
-        return equilibrated_system
-
-
     def create_box(self, molecule):
         """
         Create a bss.Box object for solvation.
@@ -685,30 +553,36 @@ class Network(object):
         return self.box, self.box_angles
     
 
-    def create_dictionary(self):
+    def set_transformations(self):
         """
         Create a transformation network with LOMAP
 
         Return:
         -------
-        dictionary
-            dict of transformation: score
+        transformations: pd.DataFrame
+            forward and backward transformations with their associated lomap scores, number of windows and lambda list
         """
         lomap_work_directory = self.check_lomap_directory()
-        transformations, lomap_scores = bss.Align.generateNetwork(self.ligand_molecules, plot_network=True, names=self.names, work_dir=lomap_work_directory)
-        network_dict_fwd, network_dict_bwd = {}, {}
-        named_transformations_fwd = [(self.names[transformation[0]], self.names[transformation[1]]) for transformation in transformations]
-        named_transformations_bwd = [(self.names[transformation[1]], self.names[transformation[0]]) for transformation in transformations]
-
-        for transformation, score in zip(named_transformations_fwd, lomap_scores):
-            network_dict_fwd[transformation] = score
-        for transformation, score in zip(named_transformations_bwd, lomap_scores):
-            network_dict_bwd[transformation] = score
-
-        with open(self.ligand_path+f"/meze_network.csv", "w") as lomap_out:
-            for key, value in network_dict_fwd.items():
-                lomap_out.write(f"{key}: {value}\n")
-        return network_dict_fwd, network_dict_bwd
+        transformations, lomap_scores = bss.Align.generateNetwork(self.ligand_molecules, plot_network=True, names=self.names, work_dir=lomap_work_directory)        
+        start_ligand = [self.names[transformation[0]] for transformation in transformations]
+        end_ligand = [self.names[transformation[1]] for transformation in transformations] 
+        start_indices = [transformation[0] for transformation in transformations]
+        end_indices = [transformation[1] for transformation in transformations]
+        dataframe = pd.DataFrame()
+        dataframe["ligand_a"] = start_ligand
+        dataframe["index_a"] = start_indices
+        dataframe["ligand_b"] = end_ligand
+        dataframe["index_b"] = end_indices
+        dataframe["score"] = lomap_scores
+        for score in lomap_scores:
+            n_windows = self.set_n_windows(score)
+            self.n_windows.append(n_windows)
+            lambda_windows = create_lambda_windows(n_windows)
+            self.lambdas.append(lambda_windows)
+        dataframe["n_windows"] = self.n_windows
+        dataframe["lambdas"] = self.lambdas
+        dataframe.to_csv(self.afe_input_directory+f"/meze_network.csv", sep="\t")
+        return dataframe
     
 
     def get_files(self):
@@ -777,18 +651,6 @@ class Network(object):
         if exists:
             remove_lomap_directories(lomap_directories)
 
-
-        # while exists:
-        #     delete = input("\nDo you want to over-write them? [y]es/[n]o: ").lower()
-        #     if delete == "yes" or delete == "y":
-        #         remove_lomap_directories(lomap_directories)
-        #         break
-        #     elif delete == "no" or delete == "n":
-        #         self.create_new_lomap_directory()
-        #         break
-        #     else:
-        #         print("Invalid option.")
-        #         continue
         return lomap_work_directory
 
 
@@ -812,25 +674,6 @@ class Network(object):
         else:
             n_windows = self.n_normal
         return n_windows
-
-
-    def create_lambda_list_bash(self, n_windows): 
-        """
-        Create a bash-readable list of evenly spaced lambda values between 0 and n_windows
-
-        Parameters:
-        -----------
-        n_windows: 
-            number of lambda windows
-
-        Return:
-        -------
-        bash_list: str
-            a bash-readable list of lambda values
-        """
-        lambda_list_numpy = list(np.linspace(0, 1, int(n_windows)))
-        lambda_list = [format(item, ".4f") for item in lambda_list_numpy]
-        return " ".join(lambda_list)
 
 
     def create_network_files(self):
@@ -869,15 +712,15 @@ class Network(object):
 
         Parameters:
         -----------
-        afe_directory: 
-            AFE working directory
+        afe_input_directory: 
+            dir for afe input files
 
         Return:
         -------
         ligands_dat: str
             ligands datafile
         """
-        ligands_dat = self.afe_directory + "ligands.dat"
+        ligands_dat = self.afe_input_directory + "ligands.dat"
         with open(ligands_dat, "w") as ligands_file:
             writer = csv.writer(ligands_file)
             for ligand in self.names:
@@ -907,7 +750,7 @@ class Network(object):
                     f"protocol = default",
                     f"sampling = {self.md_time}*ns",
                     f"engine = {self.md_engine}"]
-        protocol_file = self.workding_directory + "/protocol.dat"
+        protocol_file = self.afe_input_directory + "/protocol.dat"
 
         with open(protocol_file, "w") as file:
             writer = csv.writer(file)
@@ -930,10 +773,9 @@ class Network(object):
         pd.DataFrame
             LOMAP network as a df
         """
-        dictionary = self.create_dictionary()
+        dictionary = self.set_transformations()
         dataframe_from_dict = pd.DataFrame.from_dict(dictionary, "index")
-        network_dataframe = dataframe_from_dict.reset_index().rename(columns={"index":"transformations",
-                                                                            0:"score"})
+        network_dataframe = dataframe_from_dict.reset_index().rename(columns={"index":"transformations", 0:"score"})
         network_dataframe.index.name = "index"
         print("The LOMAP-generated perturbation network is:\n")
         print(network_dataframe)
@@ -1146,26 +988,8 @@ class Network(object):
         return dict(zip(edited_dataframe["transformations"], edited_dataframe["score"]))
        
 
-
 def main():
-
-    parser = argparse.ArgumentParser(description="MEZE: MEtalloenZymE FF-builder for alchemistry\nCreate and edit a LOMAP network.",
-                                     formatter_class=RawTextHelpFormatter)
-    
-    parser.add_argument("-l",
-                        "--ligand-path",
-                        dest="ligand_path",
-                        help="path to ligand files")
-    arguments = parser.parse_args()
-
-    ligand_path = functions.get_absolute_path(arguments.ligand_path)
-    ligand_files = functions.get_ligand_files(ligand_path)
-    ligands = [bss.IO.readMolecules(file)[0] for file in ligand_files]
-    ligand_names = [functions.get_filenames(filepath) for filepath in ligand_files]
-    #TODO add a thing where you can input a network and then edit it here
-    network_dict = create_network(ligands, ligand_names, ligand_path)
-    edit_network(ligand_path, network_dict)
-
+   pass
 
 if __name__ == "__main__":
     main()

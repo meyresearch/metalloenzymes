@@ -21,7 +21,8 @@
             "-ppd", "/home/jguven/projects/alchemistry/add_caps_to_kpc2/inputs/protein/",
             "-pwd", "/home/jguven/projects/alchemistry/add_caps_to_kpc2/",
             "-lpd", "/home/jguven/projects/alchemistry/add_caps_to_kpc2/inputs/ligands/",
-            "-c", "-1"]
+            "-c", "-1", 
+            "-snvt", "1", "-nvt", "1", "-npt", "1"]
         }
     ]
 }

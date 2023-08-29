@@ -4,6 +4,7 @@ import os
 import Network
 import logging
 import time
+import equilibrate
 logger = logging.getLogger()
 logger.setLevel(logging.CRITICAL)
 
@@ -33,6 +34,7 @@ def clean_arguments(arguments):
 
 
 def main():
+
     parser = argparse.ArgumentParser(description="MEZE: MetalloEnZymE FF-builder for alchemistry")
 
     # parser.add_argument("-s",
@@ -127,32 +129,43 @@ def main():
     parser.add_argument("-st",
                         "--sampling-time",
                         dest="sampling_time",
-                        help="sampling time in nanoseconds",
+                         help="sampling time in nanoseconds",
                         type=float,
                         default=4) 
     
+    parser.add_argument("-r",
+                        "--repeats",
+                        dest="repeats",
+                        help="number of AFE repeat runs",
+                        type=int, 
+                        default=3)
+
     parser.add_argument("-min",
                         "--minimisation-steps",
                         dest="min_steps",
                         help="number of minimisation steps for equilibration stage",
+                        type=int,
                         default=500)
     
     parser.add_argument("-snvt",
                         "--short-nvt-runtime",
                         dest="short_nvt",
                         help="runtime in ps for short NVT equilibration",
+                        type=float,
                         default=5) 
     
     parser.add_argument("-nvt",
                         "--nvt-runtime",
                         dest="nvt",
                         help="runtime in ps for NVT equilibration",
+                        type=float,
                         default=50)
 
     parser.add_argument("-npt",
                         "--npt-runtime",
                         dest="npt",
                         help="runtime in ps for NPT equilibration",
+                        type=float,
                         default=200)
     
     parser.add_argument("--em-step",
@@ -188,21 +201,58 @@ def main():
                               nvt=arguments.nvt,
                               npt=arguments.npt,
                               min_dt=arguments.emstep,
-                              min_tol=arguments.emtol)
+                              min_tol=arguments.emtol,
+                              repeats=arguments.repeats)
 
     start_prep = time.time()
     prepared_network = network.prepare_meze()
-
+    # print(prepared_network.transformations)
     # print(f"\t Prepare meze took {time.time() - start_prep} s")
     # start_solv = time.time()
     solvated_network = prepared_network.solvation()
     # print(f"\t Solvating meze took {time.time() - start_solv} s")   
     # start_equil = time.time()
 
+    file = solvated_network.afe_input_directory + "heat_meze.sh"
+    with open(file, "w") as f:
+        f.write("#!/bin/python\n")
+        f.write("\n")
+        f.write(f"#SBATCH -o {solvated_network.log_directory}/heat_%a.slurm.out\n")
+        f.write(f"#SBATCH -e {solvated_network.log_directory}/heat_%a.slurm.err\n")
+        f.write("#SBATCH -n 1\n")
+        f.write("#SBATCH --gres=gpu:1\n")
+        f.write("#SBATCH --cpus-per-gpu=10\n")
+        f.write("#SBATCH --mem 4096\n")
+        f.write("#SBATCH --job-name=heat_meze\n")
+        f.write("\n")
+        f.write(f"export \"MEZEHOME\"={os.path.realpath(__file__)}\n") # installation?
+        f.write("\n")
+        f.write(f"min_steps={solvated_network.min_steps}\n")
+        f.write(f"min_dt={solvated_network.min_dt}\n")
+        f.write(f"min_tol={solvated_network.min_tol}\n")
+        f.write(f"short_nvt={solvated_network.short_nvt}\n")
+        f.write(f"nvt={solvated_network.nvt}\n")
+        f.write(f"npt={solvated_network.npt}\n")
+        f.write(f"project_dir={solvated_network.workding_directory}\n")
+        f.write(f"equilibration_dir={solvated_network.equilibration_directory}\n")
+        f.write("LIG_NUMBER=$SLURM_ARRAY_TASK_ID\n")
+        f.write("\n")
+        f.write(f"python $MEZEHOME/equilibrate.py $LIG_NUMBER \
+                                                  $equilibration_dir\n \
+                                                  $project_dir\n \
+                                                  $min_steps\n \
+                                                  $min_dt\n \
+                                                  $min_tol\n \
+                                                  $short_nvt\n \
+                                                  $nvt\n \
+                                                  $npt\n")
+    os.system(f"sbatch --array=0-{solvated_network.n_ligands} {file}")
+
+    print("here")
     # equilibrated_network = solvated_network.equilibration() # make this slurm-able? 
     # print(f"\t Heating meze took {time.time() - start_equil} s")
-    afe = solvated_network.afe_prep()
-
+    # afe = equilibrated_network.afe_prep()
+    # print(afe)
     # _, equilibrated_network, _ = equilibrate.unbound(idx=arguments.idx, Network=solvated_network, AFE=solvated_afe)
 
 
