@@ -3,7 +3,6 @@ import argparse
 import os
 import Network
 import logging
-import time
 import equilibrate
 logger = logging.getLogger()
 logger.setLevel(logging.CRITICAL)
@@ -204,51 +203,25 @@ def main():
                               min_tol=arguments.emtol,
                               repeats=arguments.repeats)
 
-    start_prep = time.time()
+
     prepared_network = network.prepare_meze()
-    # print(prepared_network.transformations)
-    # print(f"\t Prepare meze took {time.time() - start_prep} s")
-    # start_solv = time.time()
-    solvated_network = prepared_network.solvation()
-    # print(f"\t Solvating meze took {time.time() - start_solv} s")   
-    # start_equil = time.time()
+    # solvated_network = prepared_network.solvation()
+    solvated_network = prepared_network
 
-    file = solvated_network.afe_input_directory + "heat_meze.sh"
-    with open(file, "w") as f:
-        f.write("#!/bin/python\n")
-        f.write("\n")
-        f.write(f"#SBATCH -o {solvated_network.log_directory}/heat_%a.slurm.out\n")
-        f.write(f"#SBATCH -e {solvated_network.log_directory}/heat_%a.slurm.err\n")
-        f.write("#SBATCH -n 1\n")
-        f.write("#SBATCH --gres=gpu:1\n")
-        f.write("#SBATCH --cpus-per-gpu=10\n")
-        f.write("#SBATCH --mem 4096\n")
-        f.write("#SBATCH --job-name=heat_meze\n")
-        f.write("\n")
-        f.write(f"export \"MEZEHOME\"={os.path.realpath(__file__)}\n") # installation?
-        f.write("\n")
-        f.write(f"min_steps={solvated_network.min_steps}\n")
-        f.write(f"min_dt={solvated_network.min_dt}\n")
-        f.write(f"min_tol={solvated_network.min_tol}\n")
-        f.write(f"short_nvt={solvated_network.short_nvt}\n")
-        f.write(f"nvt={solvated_network.nvt}\n")
-        f.write(f"npt={solvated_network.npt}\n")
-        f.write(f"project_dir={solvated_network.workding_directory}\n")
-        f.write(f"equilibration_dir={solvated_network.equilibration_directory}\n")
-        f.write("LIG_NUMBER=$SLURM_ARRAY_TASK_ID\n")
-        f.write("\n")
-        f.write(f"python $MEZEHOME/equilibrate.py $LIG_NUMBER \
-                                                  $equilibration_dir\n \
-                                                  $project_dir\n \
-                                                  $min_steps\n \
-                                                  $min_dt\n \
-                                                  $min_tol\n \
-                                                  $short_nvt\n \
-                                                  $nvt\n \
-                                                  $npt\n")
-    os.system(f"sbatch --array=0-{solvated_network.n_ligands} {file}")
+    slurm_heat_file = equilibrate.write_slurm_script(path=solvated_network.afe_input_directory,
+                                                     log_dir=solvated_network.log_directory,
+                                                     project_dir=solvated_network.workding_directory,
+                                                     equil_dir=solvated_network.equilibration_directory,
+                                                     min_steps=arguments.min_steps,
+                                                     min_dt=arguments.emstep,
+                                                     min_tol=arguments.emtol,
+                                                     short_nvt=arguments.short_nvt,
+                                                     nvt=arguments.nvt,
+                                                     npt=arguments.npt)
+    
+    success = equilibrate.slurm_heat(n_ligands=solvated_network.n_ligands, script=slurm_heat_file)
 
-    print("here")
+    print(success)
     # equilibrated_network = solvated_network.equilibration() # make this slurm-able? 
     # print(f"\t Heating meze took {time.time() - start_equil} s")
     # afe = equilibrated_network.afe_prep()

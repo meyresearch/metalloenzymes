@@ -6,6 +6,54 @@ import functions
 import BioSimSpace as bss
 import argparse
 import os 
+import subprocess
+
+
+def input_to_dict(file):
+    """
+    Convert an input file to dictionary
+
+    Parameters:
+    -----------
+    file: str
+        full path to input file
+
+    Return:
+    -------
+    dict:
+        input options as a dictionart
+    """
+    with open(file, "r") as file:
+        lines = file.readlines()
+    clean_lines = [line.strip().split("=") for line in lines]
+    
+    dictionary = {}
+    for key, value in clean_lines:
+        if value.isdigit():
+            value = int(value)
+            dictionary[key] = value
+        else:
+            try:
+                value = float(value)
+                dictionary[key] = value
+            except ValueError:
+                dictionary[key] = value
+    return dictionary
+
+
+def write_equilibration_file(path, project_dir, equil_dir, min_steps, min_dt, min_tol, short_nvt, nvt, npt):
+    
+    file = path + "heat.in"
+    with open(file, "w") as f:
+        f.write(f"min_steps={min_steps}\n")
+        f.write(f"min_dt={min_dt}\n")
+        f.write(f"min_tol={min_tol}\n")
+        f.write(f"short_nvt={short_nvt}\n")
+        f.write(f"nvt={nvt}\n")
+        f.write(f"npt={npt}\n")
+        f.write(f"project_dir={project_dir}\n")
+        f.write(f"equilibration_dir={equil_dir}\n")
+    return file
 
 
 def write_slurm_script(path, log_dir, project_dir, equil_dir, min_steps, min_dt, min_tol, short_nvt, nvt, npt):
@@ -41,8 +89,10 @@ def write_slurm_script(path, log_dir, project_dir, equil_dir, min_steps, min_dt,
         slurm script 
     """
     file = path + "slurm_heat_meze.sh"
+    meze = __file__.replace("equilibrate.py", "")
+    input_file = write_equilibration_file(path, project_dir, equil_dir, min_steps, min_dt, min_tol, short_nvt, nvt, npt)
     with open(file, "w") as f:
-        f.write("#!/bin/python\n")
+        f.write("#!/bin/bash\n")
         f.write("\n")
         f.write(f"#SBATCH -o {log_dir}/heat_%a.slurm.out\n")
         f.write(f"#SBATCH -e {log_dir}/heat_%a.slurm.err\n")
@@ -51,25 +101,14 @@ def write_slurm_script(path, log_dir, project_dir, equil_dir, min_steps, min_dt,
         f.write("#SBATCH --cpus-per-gpu=10\n")
         f.write("#SBATCH --mem 4096\n")
         f.write("#SBATCH --job-name=heat_meze\n")
-        f.write(f"export \"MEZEHOME\"={os.path.realpath(__file__)}\n") # installation?
-        f.write(f"min_steps={min_steps}\n")
-        f.write(f"min_dt={min_dt}\n")
-        f.write(f"min_tol={min_tol}\n")
-        f.write(f"short_nvt={short_nvt}\n")
-        f.write(f"nvt={nvt}\n")
-        f.write(f"npt={npt}\n")
-        f.write(f"project_dir={project_dir}\n")
-        f.write(f"equilibration_dir={equil_dir}\n")
+        f.write("\n")
+        f.write(f"export \"MEZEHOME\"={meze}\n") # installation?
+        f.write("\n")
         f.write("LIG_NUMBER=$SLURM_ARRAY_TASK_ID\n")
-        f.write(f"python $MEZEHOME/equilibrate.py $LIG_NUMBER \
-                                                  $equilibration_dir\n \
-                                                  $project_dir\n \
-                                                  $min_steps\n \
-                                                  $min_dt\n \
-                                                  $min_tol\n \
-                                                  $short_nvt\n \
-                                                  $nvt\n \
-                                                  $npt\n")
+        f.write("job_id=$SLURM_JOB_ID\n")
+        f.write("\n")
+        f.write(f"python $MEZEHOME/equilibrate.py $LIG_NUMBER {input_file}")
+    os.system(f"chmod +x {file}")
     return file
 
 
@@ -86,9 +125,11 @@ def slurm_heat(n_ligands, script):
 
     Return:
     -------
+    int:
+        0: process successful, 1: process unsuccessful
     """
-    os.system(f"sbatch --array=0-{n_ligands} {script}")
-    
+    return subprocess.call(["sbatch", "--wait", f"--array=0-{n_ligands}", f"{script}"])
+
 
 def run_process(system, protocol, process, working_directory, configuration=None):
     """
@@ -181,7 +222,7 @@ def equilibrate(system, name, workdir, time, start_t=300, end_t=300, temperature
     return equilibrated_system
 
 
-def heat_unbound(ligand_number, equilibration_dir, project_dir, short_nvt, nvt, npt, temperature=300., pressure=1.):
+def heat_unbound(ligand_number, equilibration_dir, project_dir, min_steps, min_dt, min_tol, short_nvt, nvt, npt, temperature=300., pressure=1.):
     """
     Perform minimisation and NVT and NPT equilibrations on ligand
 
@@ -221,7 +262,7 @@ def heat_unbound(ligand_number, equilibration_dir, project_dir, short_nvt, nvt, 
     r_npt_directory = directories("r_npt")
     npt_directory = directories("npt")
 
-    minimised_ligand = minimise(system=solvated_ligand, workdir=min_directory)
+    minimised_ligand = minimise(system=solvated_ligand, workdir=min_directory, min_steps=min_steps, min_dt=min_dt, min_tol=min_tol)
     start_temp = functions.convert_to_units(0, KELVIN)
     restrained_nvt = equilibrate(system=minimised_ligand,
                                         name="r_nvt",
@@ -252,7 +293,7 @@ def heat_unbound(ligand_number, equilibration_dir, project_dir, short_nvt, nvt, 
     bss.IO.saveMolecules(filebase=unbound_savename, system=equilibrated_molecule, fileformat=["PRM7", "RST7"])        
 
     
-def heat_bound(ligand_number, equilibration_dir, project_dir, short_nvt, nvt, npt, temperature=300., pressure=1.):
+def heat_bound(ligand_number, equilibration_dir, project_dir, min_steps, min_dt, min_tol, short_nvt, nvt, npt, temperature=300., pressure=1.):
     """
     Perform minimisation and NVT and NPT equilibrations on bound ligand 
 
@@ -282,7 +323,7 @@ def heat_bound(ligand_number, equilibration_dir, project_dir, short_nvt, nvt, np
     temperature = functions.convert_to_units(temperature, KELVIN)
     pressure = functions.convert_to_units(pressure, ATM)           
     directory = functions.mkdir(equilibration_dir+f"/bound/ligand_{ligand_number}/")
-    files = functions.read_files(f"{project_dir}/inputs/ligands/system_{ligand_number}_solvated.*")
+    files = functions.read_files(f"{project_dir}/inputs/protein/system_{ligand_number}_solvated.*")
     solvated_system = bss.IO.readMolecules(files)
     directories = lambda step: functions.mkdir(directory+step)
     min_dir = directories("min")
@@ -293,7 +334,7 @@ def heat_bound(ligand_number, equilibration_dir, project_dir, short_nvt, nvt, np
     npt_dir = directories("npt")     
     start_temp = functions.convert_to_units(0, KELVIN)
     print(f"Equilibrating bound ligand {ligand_number}")
-    minimised_system = minimise(system=solvated_system, workdir=min_dir)
+    minimised_system = minimise(system=solvated_system, workdir=min_dir, min_steps=min_steps, min_dt=min_dt, min_tol=min_tol)
     restrained_nvt = equilibrate(system=minimised_system,
                                         workdir=r_nvt_dir,
                                         name="r_nvt",
@@ -333,69 +374,88 @@ def main():
 
     parser = argparse.ArgumentParser(description="minimisation and equilibration for meze workflow")
 
-    parser.add_argument("ligand-number",
+    parser.add_argument("ligand_number",
                         help="ligand number used in ligand file name",
                         type=str)
     
-    parser.add_argument("equil-dir",
+    parser.add_argument("input_file",
+                        help="input file containing equilibration options",
+                        type=str)
+
+    parser.add_argument("-e",
+                        "--equil-dir",
                         dest="equil_dir",
                         help="full path to /equilibration/",
                         default=functions.path_exists(os.getcwd() + "/equilibration/"))
     
-    parser.add_argument("project-dir",
+    parser.add_argument("-pwd",
+                        "--project-dir",
                         dest="project_dir",
                         help="full path to project working directory",
                         default=os.getcwd())   
 
-    parser.add_argument("minimisation-steps",
+    parser.add_argument("-s",
+                        "--minimisation-steps",
                         dest="min_steps",
                         help="number of minimisation steps for equilibration stage",
                         type=int,
                         default=500)
 
-    parser.add_argument("short-nvt-runtime",
+    parser.add_argument("-snvt",
+                        "--short-nvt-runtime",
                         dest="short_nvt",
                         help="runtime in ps for short NVT equilibration",
                         type=float,
                         default=5) 
-
-    parser.add_argument("nvt-runtime",
+    
+    parser.add_argument("-nvt",
+                        "--nvt-runtime",
                         dest="nvt",
                         help="runtime in ps for NVT equilibration",
                         type=float,
                         default=50)
 
-    parser.add_argument("npt-runtime",
+    parser.add_argument("-npt",
+                        "--npt-runtime",
                         dest="npt",
                         help="runtime in ps for NPT equilibration",
                         type=float,
                         default=200)
-
-    parser.add_argument("em-step",
+    
+    parser.add_argument("--em-step",
                         dest="emstep",
                         help="Step size for energy minimisation",
                         type=float,
                         default=0.01)
-
-    parser.add_argument("em-tolerance",
+    
+    parser.add_argument("--em-tolerance",
                         dest="emtol",
                         help="kJ mol-1 nm-1, Maximum force tolerance for energy minimisation",
                         type=float,
                         default=1000)
+   
     arguments = parser.parse_args()
+    options = input_to_dict(file=arguments.input_file)
 
     heat_unbound(ligand_number=arguments.ligand_number,
-                 equilibration_dir=arguments.equil_dir,
-                 project_dir=arguments.project_dir,
-                 short_nvt=functions.convert_to_units(arguments.short_nvt, PICOSECOND),
-                 nvt=functions.convert_to_units(arguments.nvt, PICOSECOND),
-                 npt=functions.convert_to_units(arguments.npt, PICOSECOND))
+                 equilibration_dir=options["equilibration_dir"],
+                 project_dir=options["project_dir"],
+                 min_steps=options["min_steps"],
+                 min_dt=options["min_dt"],
+                 min_tol=options["min_tol"],
+                 short_nvt=functions.convert_to_units(options["short_nvt"], PICOSECOND),
+                 nvt=functions.convert_to_units(options["nvt"], PICOSECOND),
+                 npt=functions.convert_to_units(options["npt"], PICOSECOND))
     heat_bound(ligand_number=arguments.ligand_number,
-               equilibration_dir=arguments.equil_dir,
-               project_dir=arguments.project_dir,
-               short_nvt=functions.convert_to_units(arguments.short_nvt, PICOSECOND),
-               nvt=functions.convert_to_units(arguments.nvt, PICOSECOND),
-               npt=functions.convert_to_units(arguments.npt, PICOSECOND))
+               equilibration_dir=options["equilibration_dir"],
+               project_dir=options["project_dir"],
+               min_steps=options["min_steps"],
+               min_dt=options["min_dt"],
+               min_tol=options["min_tol"],               
+               short_nvt=functions.convert_to_units(options["short_nvt"], PICOSECOND),
+               nvt=functions.convert_to_units(options["nvt"], PICOSECOND),
+               npt=functions.convert_to_units(options["npt"], PICOSECOND))
+
 
 if __name__ == "__main__":
     main()
