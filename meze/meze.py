@@ -205,26 +205,30 @@ def main():
 
 
     prepared_network = network.prepare_meze()
+    
     # solvated_network = prepared_network.solvation()
     solvated_network = prepared_network
 
-    slurm_heat_file = equilibrate.write_slurm_script(path=solvated_network.afe_input_directory,
-                                                     log_dir=solvated_network.log_directory,
-                                                     project_dir=solvated_network.workding_directory,
-                                                     equil_dir=solvated_network.equilibration_directory,
-                                                     min_steps=arguments.min_steps,
-                                                     min_dt=arguments.emstep,
-                                                     min_tol=arguments.emtol,
-                                                     short_nvt=arguments.short_nvt,
-                                                     nvt=arguments.nvt,
-                                                     npt=arguments.npt)
+    # slurm_heat_file = equilibrate.write_slurm_script(path=solvated_network.afe_input_directory,
+    #                                                  log_dir=solvated_network.log_directory,
+    #                                                  project_dir=solvated_network.workding_directory,
+    #                                                  equil_dir=solvated_network.equilibration_directory,
+    #                                                  min_steps=arguments.min_steps,
+    #                                                  min_dt=arguments.emstep,
+    #                                                  min_tol=arguments.emtol,
+    #                                                  short_nvt=arguments.short_nvt,
+    #                                                  nvt=arguments.nvt,
+    #                                                  npt=arguments.npt)
     
-    success = equilibrate.slurm_heat(n_ligands=solvated_network.n_ligands, script=slurm_heat_file)
+    # success = equilibrate.slurm_heat(n_ligands=solvated_network.n_ligands, script=slurm_heat_file)
 
-    print(success)
-    # equilibrated_network = solvated_network.equilibration() # make this slurm-able? 
-    # print(f"\t Heating meze took {time.time() - start_equil} s")
-    # afe = equilibrated_network.afe_prep()
+    # if success > 1:
+    #     raise RuntimeError(f"Heating meze failed. Please check error logs at {solvated_network.log_directory}")
+    
+    equilibrated_network = solvated_network.get_equilibrated()
+
+    #TODO
+    afe = equilibrated_network.afe_prep()
     # print(afe)
     # _, equilibrated_network, _ = equilibrate.unbound(idx=arguments.idx, Network=solvated_network, AFE=solvated_afe)
 

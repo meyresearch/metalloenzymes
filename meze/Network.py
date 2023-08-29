@@ -399,9 +399,35 @@ class Network(object):
             self.ligands = pool.map(self.solvate_bound, range(self.n_ligands))
             self.bound_ligands = [ligand.get_system() for ligand in self.ligands] 
         return self
-    
+
+
+    def get_equilibrated(self):
+        """
+        Read in equilibrated files and update Network class object
+
+        Parameters:
+        -----------
+
+        Return:
+        -------
+        self: Network
+            (equilibrated) Network object
+        """
+        unbound_paths = functions.read_files(self.equilibration_directory+"/unbound/ligand_*/npt/")
+        unbound_equilibrated = [functions.read_files(path+"ligand_*") for path in unbound_paths]
+        self.ligands = [Ligand.Ligand(files, parameterised=True) for files in unbound_equilibrated]
+        self.ligand_molecules = [ligand.get_system() for ligand in self.ligands]
+
+        bound_paths = functions.read_files(self.equilibration_directory+"/bound/ligand_*/npt/")
+        bound_equilibrated = [functions.read_files(path+"system_*") for path in bound_paths]
+        self.ligands = [Ligand.Ligand(files, parameterised=True) for files in bound_equilibrated]
+        self.bound_ligands = [ligand.get_system() for ligand in self.ligands]
+        return self
+
 
     def afe_prep(self):
+
+
         # forward
         columns_to_list = lambda column: self.transformations[column].tolist()
         ligand_a, ligand_b = columns_to_list("ligand_a"), columns_to_list("ligand_b")

@@ -128,7 +128,7 @@ def slurm_heat(n_ligands, script):
     int:
         0: process successful, 1: process unsuccessful
     """
-    return subprocess.call(["sbatch", "--wait", f"--array=0-{n_ligands}", f"{script}"])
+    return subprocess.call(["sbatch", "--wait", f"--array=1-{n_ligands}", f"{script}"])
 
 
 def run_process(system, protocol, process, working_directory, configuration=None):
