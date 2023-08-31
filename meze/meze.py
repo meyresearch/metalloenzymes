@@ -203,9 +203,8 @@ def main():
                               min_tol=arguments.emtol,
                               repeats=arguments.repeats)
 
-
-    prepared_network = network.prepare_meze()
     
+    prepared_network = network.prepare_meze()
     # solvated_network = prepared_network.solvation()
     solvated_network = prepared_network
 
@@ -226,12 +225,9 @@ def main():
     #     raise RuntimeError(f"Heating meze failed. Please check error logs at {solvated_network.log_directory}")
     
     equilibrated_network = solvated_network.get_equilibrated()
-
-    #TODO
-    afe = equilibrated_network.afe_prep()
-    # print(afe)
-    # _, equilibrated_network, _ = equilibrate.unbound(idx=arguments.idx, Network=solvated_network, AFE=solvated_afe)
-
+    
+    equilibrated_network.afe_prep()
+    print("done")
 
 if __name__ == "__main__":
     main()

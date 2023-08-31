@@ -1,8 +1,6 @@
 import BioSimSpace as bss
 bss.setVerbose(True)
-import argparse
 import functions
-from argparse import RawTextHelpFormatter
 import pandas as pd
 import sys
 from definitions import ADJUST_OPTIONS, PICOSECOND, NANOSECOND, ANGSTROM, KELVIN, ATM
@@ -15,6 +13,8 @@ import csv
 import Protein
 import pathlib
 import multiprocessing.pool
+import tqdm
+import istarmap
 import time
 from BioSimSpace import _Exceptions
 
@@ -126,25 +126,26 @@ def run_process(system, protocol, process, working_directory, configuration=None
     return system
 
 
-def combine_unbound_ligands(system_1, system_2):
+def combine_unbound_ligands(system_a, system_b):
     """
     Take two unbound bss.Systems and combine the ligands' systems
 
     Parameters:
     -----------
-    system_1: bss.System 
-    system_2: bss.System
+    a: Ligand() 
+    b: Ligand()
 
     Return:
     -------
     system_1: bss.System
         system with combined ligand topologies
     """
-    ligand_1, ligand_2 = system_1.getMolecule(0), system_2.getMolecule(0)
+    # system_a, system_b = a.get_system(), b.get_system()
+    ligand_1, ligand_2 = system_a.getMolecule(0), system_b.getMolecule(0)
     merged_ligands = merge_ligands(ligand_1, ligand_2)
-    system_1.removeMolecules(ligand_1)
-    system_1.addMolecules(merged_ligands)
-    return system_1
+    system_a.removeMolecules(ligand_1)
+    system_a.addMolecules(merged_ligands)
+    return system_a
 
 
 def combine_bound_ligands(system_1, system_2):
@@ -169,7 +170,7 @@ def combine_bound_ligands(system_1, system_2):
         if n_residues == 1 and n_atoms > 5:  
             ligand_1 = system_1.getMolecule(j)
         elif n_residues > 1:
-            protein = system_1.getMolecules(j)
+            protein = system_1.getMolecule(j)
     ligand_2 = None
     n_residues = [molecule.nResidues() for molecule in system_2]
     n_atoms = [molecule.nAtoms() for molecule in system_2]   
@@ -241,6 +242,29 @@ def create_lambda_list_bash(n_windows):
     return " ".join(lambda_list)
 
 
+def create_minimisation_configs(files):
+    """
+    Open FreeEnergy configuration file and convert it into a minimisation configuration
+
+    Parameters:
+    -----------
+    files: list
+        list of configuration files in each lambda minimisation window
+
+    Return:
+    -------
+    """
+    minimisation_config = ["minimise = True\n", "minimise maximum iterations = 10000\n"]
+    for i in range(len(files)):
+        with open(files[i], "r") as f:
+            old_config = f.readlines()
+        with open(files[i], "w") as f:
+            replaced_config = [setting.replace("ncycles = 5\n", "ncycles = 1").replace("nmoves = 200000", "nmoves = 50000") for setting in old_config]
+            for setting in minimisation_config:
+                replaced_config.append(setting)
+            f.writelines(replaced_config)
+
+
 class Network(object):
     """
     Network class object
@@ -287,6 +311,7 @@ class Network(object):
         self.lambdas = []
         self.n_ligands = self.get_n_ligands()
         self.bound_ligands = [None] * self.n_ligands
+        self.bound_ligand_molecules = [None] * self.n_ligands
 
         self.workding_directory = functions.path_exists(workdir)
 
@@ -308,7 +333,7 @@ class Network(object):
         self.log_directory = self.create_directory("/logs/")
         self.afe_input_directory = self.create_directory("/afe/")
         self.equilibration_directory = self.create_directory("/equilibration/")
-        self.output_directories, self.unbound_directories, self.bound_directories = self.create_output_directories()
+        self.output_directories = self.create_output_directories()
 
 
     def create_directory(self, name, create_parents=False):
@@ -346,12 +371,10 @@ class Network(object):
         output, unbound, bound: tuple
             parent directories list, unbound dirs, bound dirs
         """
-        output_directories, unbound_directories, bound_directories = [], [], []
+        output_directories = []
         for i in range(1, self.n_repeats + 1, 1):
             output_directories.append(self.create_directory(f"/{self.md_engine}_{i}/outputs/", create_parents=True))
-            unbound_directories.append(self.create_directory(f"/{self.md_engine}_{i}/outputs/unbound/"))
-            bound_directories.append(self.create_directory(f"/{self.md_engine}_{i}/outputs/bound/"))
-        return output_directories, unbound_directories, bound_directories
+        return output_directories
 
 
     def prepare_meze(self):
@@ -368,7 +391,6 @@ class Network(object):
         """
         self.transformations = self.set_transformations()
         self.n_transformations = len(self.transformations)
-        # self.forward, self.backward = self.create_network_files() # possibly do not need
         self.ligands_dat_file = self.create_ligand_dat_file()
         self.protocol_file = self.create_protocol_file()
         return self
@@ -386,18 +408,14 @@ class Network(object):
         self: Network
             (solvated) Network object
         """
-        # For testing only
-        # ligs = []
-        # mols = []
-        # for i in range(self.n_ligands):
-        #     ligs.append(self.solvate_bound(i))
-        #     mols.append(ligs[i].get_system())
-
+        self.ligands, self.bound_ligands = [], []
         with multiprocessing.pool.Pool() as pool:
-            self.ligands = pool.map(self.solvate_unbound, range(self.n_ligands))
+            for result in tqdm.tqdm(pool.imap(self.solvate_unbound, range(self.n_ligands)), desc="Solvate unbound", total=self.n_ligands):
+                self.ligands.append(result)
             self.ligand_molecules = [ligand.get_system() for ligand in self.ligands]
-            self.ligands = pool.map(self.solvate_bound, range(self.n_ligands))
-            self.bound_ligands = [ligand.get_system() for ligand in self.ligands] 
+            for result in tqdm.tqdm(pool.imap(self.solvate_bound, range(self.n_ligands)), desc="Solvate bound", total=self.n_ligands):
+                self.bound_ligands.append(result)
+            self.bound_ligand_molecules = [ligand.get_system() for ligand in self.ligands] 
         return self
 
 
@@ -414,78 +432,94 @@ class Network(object):
             (equilibrated) Network object
         """
         unbound_paths = functions.read_files(self.equilibration_directory+"/unbound/ligand_*/npt/")
-        unbound_equilibrated = [functions.read_files(path+"ligand_*") for path in unbound_paths]
-        self.ligands = [Ligand.Ligand(files, parameterised=True) for files in unbound_equilibrated]
-        self.ligand_molecules = [ligand.get_system() for ligand in self.ligands]
+        paths = list(map(lambda x: x + "ligand_*", unbound_paths))
+        unbound_equilibrated = []
+        with multiprocessing.pool.Pool() as pool:
+            for result in tqdm.tqdm(pool.imap(functions.read_files, paths), desc="Equilbrated unbound", total=len(paths)):
+                unbound_equilibrated.append(result)
+
+        self.ligand_molecules = []
+        with multiprocessing.pool.Pool() as pool:
+            for result in tqdm.tqdm(pool.imap(bss.IO.readMolecules, unbound_equilibrated), desc="Unbound objects", total=len(unbound_equilibrated)):
+                self.ligand_molecules.append(result)
 
         bound_paths = functions.read_files(self.equilibration_directory+"/bound/ligand_*/npt/")
-        bound_equilibrated = [functions.read_files(path+"system_*") for path in bound_paths]
-        self.ligands = [Ligand.Ligand(files, parameterised=True) for files in bound_equilibrated]
-        self.bound_ligands = [ligand.get_system() for ligand in self.ligands]
+        paths = list(map(lambda x: x + "system_*", bound_paths))
+        bound_equilibrated = []
+        with multiprocessing.pool.Pool() as pool:
+            for result in tqdm.tqdm(pool.imap(functions.read_files, paths), desc="Equilibrated bound", total=len(paths)):
+                bound_equilibrated.append(result)
+
+        self.bound_ligand_molecules = []
+        with multiprocessing.pool.Pool() as pool:
+            for result in tqdm.tqdm(pool.imap(bss.IO.readMolecules, bound_equilibrated), desc="Bound objects", total=len(bound_equilibrated)):
+                self.bound_ligand_molecules.append(result)
+
         return self
 
 
     def afe_prep(self):
+        """
+        Prepare minimisation and free energy lambda windows directory tree
 
+        Parameters:
+        -----------
 
+        Return:
+        -------
+        """
         # forward
         columns_to_list = lambda column: self.transformations[column].tolist()
-        ligand_a, ligand_b = columns_to_list("ligand_a"), columns_to_list("ligand_b")
+
+        # ligands_a, ligands_b = columns_to_list("ligand_a"), columns_to_list("ligand_b")
+
         indices_a, indices_b = columns_to_list("index_a"), columns_to_list("index_b")
-        lambdas = columns_to_list("lambdas")
+        lambdas = self.transformations["lambdas"].to_numpy()
 
-        for i in range(self.n_transformations):
-            a, b = indices_a[i], indices_b[i] 
+        arguments = [(self.ligand_molecules[indices_a[i]], self.ligand_molecules[indices_b[i]]) for i in range(self.n_transformations)]
+        unbound_systems = []
+        with multiprocessing.pool.Pool() as pool:
+            for result in tqdm.tqdm(pool.istarmap(combine_unbound_ligands, arguments), desc="Merging unbound", total=len(arguments)):
+                unbound_systems.append(result)
 
-            unbound_system_a = self.ligands[a].get_system()
-            unbound_system_b = self.ligands[b].get_system()
-            bound_system_a = self.bound_ligands[a]
-            bound_system_b = self.bound_ligands[b].get_system()
-            unbound = combine_unbound_ligands(unbound_system_a, unbound_system_b)
-            bound = combine_bound_ligands(bound_system_a, bound_system_b)
-
-            lambda_minimisation_protocol = bss.Protocol.FreeEnergyMinimisation(lam_vals=lambdas[i], runtime=self.md_time)
-            
-            bss.FreeEnergy.Relative(unbound, lambda_minimisation_protocol, engine=self.md_engine, work_dir=self.unbound_directories[0], setup_only=True)
-            
-            print("here")
-
-
-            # print(f"index a: {a}, ligand a: {ligand_a[i]}, index b: {b}, ligand b: {ligand_b[i]}")
-            
-        # n_windows = self.n_windows
-        # lambdas = self.lambdas
-
-
-        # for transformation, lomap_score in self.dictionary_fwd.items():
-        #     ligand_1_name, ligand_2_name = transformation[0], transformation[1]
-        #     # get_ligand_number = lambda ligand_name: ligand_name.split("_")[-1]
-        #     # ligand_1_number = get_ligand_number(ligand_1_name)
-        #     # ligand_2_number = get_ligand_number(ligand_2_name)   
-        #     # self.ligands: list of Ligand objects
-        #     unbound_ligand_1_system = self.match_name_to_system(self.ligands, ligand_1_name)
-        #     unbound_ligand_2_system = self.match_name_to_system(self.ligands, ligand_2_name)
-        #     bound_ligand_1_system = self.match_name_to_system(self.bound_ligands, ligand_1_name)
-        #     bound_ligand_2_system = self.match_name_to_system(self.bound_ligands, ligand_2_name)
-
-        #     unbound = combine_unbound_ligands(unbound_ligand_1_system, unbound_ligand_2_system)
-        #     bound = combine_bound_ligands(bound_ligand_1_system, bound_ligand_2_system)
-
-        #     free_energy_protocol = bss.Protocol.FreeEnergy()
+        arguments = [(self.bound_ligand_molecules[indices_a[i]], self.bound_ligand_molecules[indices_b[i]]) for i in range(self.n_transformations)]
+        bound_systems = []
+        with multiprocessing.pool.Pool() as pool:
+            for result in tqdm.tqdm(pool.istarmap(combine_bound_ligands, arguments), desc="Merging bound", total=len(arguments)):
+                bound_systems.append(result)
+ 
+        free_energy_protocols = [bss.Protocol.FreeEnergy(lam_vals=lambdas[i], runtime=self.md_time) for i in tqdm.tqdm(range(self.n_transformations), desc="Free energy protocols")]
 
 
 
+        # transformation_directories = [directory + f"/{ligand_a}~{ligand_b}/" for directory in self.output_directories]
+        # bound_directories = [directory + "/bound/" for directory in transformation_directories]
+        # unbound_directories = [directory + "/unbound/" for directory in transformation_directories]
+
+        # for j in range(self.n_repeats):
+        #     bss.FreeEnergy.Relative(bound, free_energy_protocol, engine=self.md_engine, work_dir=bound_directories[j], setup_only=True)
+        #     bss.FreeEnergy.Relative(unbound, free_energy_protocol, engine=self.md_engine, work_dir=unbound_directories[j], setup_only=True)
+
+        # bound_lambda_minimisation_directories = [functions.mkdir(directory + "/minimisation/") for directory in bound_directories]
+        # unbound_lambda_minimisation_directories = [functions.mkdir(directory + "/minimisation/") for directory in unbound_directories]
+
+        # for j in range(self.n_repeats):
+        #     bss.FreeEnergy.Relative(bound, free_energy_protocol, engine=self.md_engine, work_dir=bound_lambda_minimisation_directories[j], setup_only=True)
+        #     bss.FreeEnergy.Relative(unbound, free_energy_protocol, engine=self.md_engine, work_dir=unbound_lambda_minimisation_directories[j], setup_only=True)            
+
+        # bound_configurations = list(map(lambda x: x + "/*/*.cfg", bound_lambda_minimisation_directories))
+        # unbound_configurations = list(map(lambda x: x + "/*/*.cfg", unbound_lambda_minimisation_directories))
+
+        # bound_configuration_files = functions.read_files(bound_configurations)
+        # unbound_configuration_files = functions.read_files(unbound_configurations)
+
+        # create_minimisation_configs(bound_configuration_files)
+        # create_minimisation_configs(unbound_configuration_files)
+
+                # bar.update(idx)
+                # idx += 1
 
 
-            # print(f"lig {ligand_1_number} ----> lig {ligand_2_number}")
-
-        # for transformation, lomap_score in self.dictionary_bwd.items():
-        #     ligand_1, ligand_2 = transformation[0], transformation[1]
-        #     get_ligand_number = lambda ligand_name: ligand_name.split("_")[-1]
-        #     ligand_1_number = get_ligand_number(ligand_1)
-        #     ligand_2_number = get_ligand_number(ligand_2)            
-
-        #     print(f"lig {ligand_1_number} ----> lig {ligand_2_number}")
 
     def solvate_unbound(self, index):
         """
