@@ -3,7 +3,7 @@ import argparse
 import os
 import Network
 import logging
-import equilibrate
+import time
 logger = logging.getLogger()
 logger.setLevel(logging.CRITICAL)
 
@@ -205,6 +205,7 @@ def main():
 
     
     prepared_network = network.prepare_meze()
+
     # solvated_network = prepared_network.solvation()
     solvated_network = prepared_network
 
@@ -222,12 +223,12 @@ def main():
     # success = equilibrate.slurm_heat(n_ligands=solvated_network.n_ligands, script=slurm_heat_file)
 
     # if success > 1:
-    #     raise RuntimeError(f"Heating meze failed. Please check error logs at {solvated_network.log_directory}")
+    #     raise RuntimeError(f"Heating meze failed. Please check error logs at {solvated_nete = time.time()work.log_directory}")
     
     equilibrated_network = solvated_network.get_equilibrated()
-    
+    s = time.time()
     equilibrated_network.afe_prep()
-    print("done")
+    print(f"time: {time.time() - s} s")
 
 if __name__ == "__main__":
     main()

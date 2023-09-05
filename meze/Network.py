@@ -15,7 +15,7 @@ import pathlib
 import multiprocessing.pool
 import tqdm
 import istarmap
-import time
+import shutil
 from BioSimSpace import _Exceptions
 
 
@@ -265,6 +265,25 @@ def create_minimisation_configs(files):
             f.writelines(replaced_config)
 
 
+def construct_relative_afe(system, protocol, engine, workdir):
+    """
+    Wrap the BSS.FreeEnergy.Relative so it is easier to run with multiprocessing
+
+    Parameters:
+    -----------
+    system: bss.System
+    protocol: bss.Protocol
+    engine: str
+    workdir: str
+        
+    Return:
+    -------
+    bss.FreeEnergy.Relative: 
+        class constructor to setup free energy calculations
+    """
+    return bss.FreeEnergy.Relative(system=system, protocol=protocol, engine=engine, work_dir=workdir, setup_only=True)
+
+
 class Network(object):
     """
     Network class object
@@ -373,7 +392,7 @@ class Network(object):
         """
         output_directories = []
         for i in range(1, self.n_repeats + 1, 1):
-            output_directories.append(self.create_directory(f"/{self.md_engine}_{i}/outputs/", create_parents=True))
+            output_directories.append(self.create_directory(f"/outputs/{self.md_engine}_{i}/", create_parents=True))
         return output_directories
 
 
@@ -410,10 +429,10 @@ class Network(object):
         """
         self.ligands, self.bound_ligands = [], []
         with multiprocessing.pool.Pool() as pool:
-            for result in tqdm.tqdm(pool.imap(self.solvate_unbound, range(self.n_ligands)), desc="Solvate unbound", total=self.n_ligands):
+            for result in tqdm.tqdm(pool.imap(self.solvate_unbound, range(self.n_ligands)), desc="Solvate unbound\n", total=self.n_ligands):
                 self.ligands.append(result)
             self.ligand_molecules = [ligand.get_system() for ligand in self.ligands]
-            for result in tqdm.tqdm(pool.imap(self.solvate_bound, range(self.n_ligands)), desc="Solvate bound", total=self.n_ligands):
+            for result in tqdm.tqdm(pool.imap(self.solvate_bound, range(self.n_ligands)), desc="Solvate bound\n", total=self.n_ligands):
                 self.bound_ligands.append(result)
             self.bound_ligand_molecules = [ligand.get_system() for ligand in self.ligands] 
         return self
@@ -431,30 +450,31 @@ class Network(object):
         self: Network
             (equilibrated) Network object
         """
+        print("\n")
         unbound_paths = functions.read_files(self.equilibration_directory+"/unbound/ligand_*/npt/")
         paths = list(map(lambda x: x + "ligand_*", unbound_paths))
         unbound_equilibrated = []
         with multiprocessing.pool.Pool() as pool:
             for result in tqdm.tqdm(pool.imap(functions.read_files, paths), desc="Equilbrated unbound", total=len(paths)):
                 unbound_equilibrated.append(result)
-
+        print("\n")
         self.ligand_molecules = []
         with multiprocessing.pool.Pool() as pool:
             for result in tqdm.tqdm(pool.imap(bss.IO.readMolecules, unbound_equilibrated), desc="Unbound objects", total=len(unbound_equilibrated)):
                 self.ligand_molecules.append(result)
-
+        print("\n")
         bound_paths = functions.read_files(self.equilibration_directory+"/bound/ligand_*/npt/")
         paths = list(map(lambda x: x + "system_*", bound_paths))
         bound_equilibrated = []
         with multiprocessing.pool.Pool() as pool:
             for result in tqdm.tqdm(pool.imap(functions.read_files, paths), desc="Equilibrated bound", total=len(paths)):
                 bound_equilibrated.append(result)
-
+        print("\n")
         self.bound_ligand_molecules = []
         with multiprocessing.pool.Pool() as pool:
             for result in tqdm.tqdm(pool.imap(bss.IO.readMolecules, bound_equilibrated), desc="Bound objects", total=len(bound_equilibrated)):
                 self.bound_ligand_molecules.append(result)
-
+        print("\n")
         return self
 
 
@@ -471,7 +491,7 @@ class Network(object):
         # forward
         columns_to_list = lambda column: self.transformations[column].tolist()
 
-        # ligands_a, ligands_b = columns_to_list("ligand_a"), columns_to_list("ligand_b")
+        ligands_a, ligands_b = columns_to_list("ligand_a"), columns_to_list("ligand_b")
 
         indices_a, indices_b = columns_to_list("index_a"), columns_to_list("index_b")
         lambdas = self.transformations["lambdas"].to_numpy()
@@ -481,45 +501,52 @@ class Network(object):
         with multiprocessing.pool.Pool() as pool:
             for result in tqdm.tqdm(pool.istarmap(combine_unbound_ligands, arguments), desc="Merging unbound", total=len(arguments)):
                 unbound_systems.append(result)
-
+        print("\n")
         arguments = [(self.bound_ligand_molecules[indices_a[i]], self.bound_ligand_molecules[indices_b[i]]) for i in range(self.n_transformations)]
         bound_systems = []
         with multiprocessing.pool.Pool() as pool:
             for result in tqdm.tqdm(pool.istarmap(combine_bound_ligands, arguments), desc="Merging bound", total=len(arguments)):
                 bound_systems.append(result)
- 
+        print("\n")
         free_energy_protocols = [bss.Protocol.FreeEnergy(lam_vals=lambdas[i], runtime=self.md_time) for i in tqdm.tqdm(range(self.n_transformations), desc="Free energy protocols")]
+        print("\n")
+        first_run_directory = self.output_directories[0]
+        transformation_directories = [first_run_directory + f"/{ligands_a[i]}~{ligands_b[i]}/" for i in range(self.n_transformations)]
+        bound_directories = [directory + "/bound/" for directory in transformation_directories]
+        unbound_directories = [directory + "/unbound/" for directory in transformation_directories]
+
+        _ = [bss.FreeEnergy.Relative(system=unbound_systems[i], protocol=free_energy_protocols[i], engine=self.md_engine, work_dir=unbound_directories[i]) for i in tqdm.tqdm(range(self.n_transformations), desc="Unbound AFE")]
+        print("\n")
+        _ = [bss.FreeEnergy.Relative(system=bound_systems[i], protocol=free_energy_protocols[i], engine=self.md_engine, work_dir=bound_directories[i]) for i in tqdm.tqdm(range(self.n_transformations), desc="Bound AFE")]
+        print("\n")
+
+        _ = [shutil.copytree(unbound_directories[i], self.output_directories[j], dirs_exist_ok=True) for i in tqdm.tqdm(range(len(unbound_directories)), desc="Copy unbound") for j in range(self.n_repeats)]
+        print("\n")
+        _ = [shutil.copytree(bound_directories[i], self.output_directories[j], dirs_exist_ok=True) for i in tqdm.tqdm(range(len(bound_directories)), desc="Copy bound") for j in range(self.n_repeats)]
+        print("\n")
+        bound_lambda_minimisation_directories = [functions.mkdir(directory + "/minimisation/") for directory in bound_directories]
+        unbound_lambda_minimisation_directories = [functions.mkdir(directory + "/minimisation/") for directory in unbound_directories]
 
 
+        print("\n")
+        _ = [shutil.copytree(unbound_directories[i], unbound_lambda_minimisation_directories[i], dirs_exist_ok=True) for i in tqdm.tqdm(range(len(unbound_lambda_minimisation_directories)), desc="Unbound minimisation")]
+        print("\n")
+        _ = [shutil.copytree(bound_directories[i], bound_lambda_minimisation_directories[i], dirs_exist_ok=True) for i in tqdm.tqdm(range(len(bound_lambda_minimisation_directories)), desc="Bound minimisation")]
+        
+        bound_configurations = list(map(lambda x: x + "/*/*.cfg", bound_lambda_minimisation_directories))
+        unbound_configurations = list(map(lambda x: x + "/*/*.cfg", unbound_lambda_minimisation_directories))
 
-        # transformation_directories = [directory + f"/{ligand_a}~{ligand_b}/" for directory in self.output_directories]
-        # bound_directories = [directory + "/bound/" for directory in transformation_directories]
-        # unbound_directories = [directory + "/unbound/" for directory in transformation_directories]
+        bound_configuration_files = [functions.read_files(file) for file in bound_configurations]
+        unbound_configuration_files = [functions.read_files(file) for file in unbound_configurations]
 
-        # for j in range(self.n_repeats):
-        #     bss.FreeEnergy.Relative(bound, free_energy_protocol, engine=self.md_engine, work_dir=bound_directories[j], setup_only=True)
-        #     bss.FreeEnergy.Relative(unbound, free_energy_protocol, engine=self.md_engine, work_dir=unbound_directories[j], setup_only=True)
+        _ = [create_minimisation_configs(config_files) for config_files in bound_configuration_files]
+        _ = [create_minimisation_configs(config_files) for config_files in unbound_configuration_files]
 
-        # bound_lambda_minimisation_directories = [functions.mkdir(directory + "/minimisation/") for directory in bound_directories]
-        # unbound_lambda_minimisation_directories = [functions.mkdir(directory + "/minimisation/") for directory in unbound_directories]
-
-        # for j in range(self.n_repeats):
-        #     bss.FreeEnergy.Relative(bound, free_energy_protocol, engine=self.md_engine, work_dir=bound_lambda_minimisation_directories[j], setup_only=True)
-        #     bss.FreeEnergy.Relative(unbound, free_energy_protocol, engine=self.md_engine, work_dir=unbound_lambda_minimisation_directories[j], setup_only=True)            
-
-        # bound_configurations = list(map(lambda x: x + "/*/*.cfg", bound_lambda_minimisation_directories))
-        # unbound_configurations = list(map(lambda x: x + "/*/*.cfg", unbound_lambda_minimisation_directories))
-
-        # bound_configuration_files = functions.read_files(bound_configurations)
-        # unbound_configuration_files = functions.read_files(unbound_configurations)
-
-        # create_minimisation_configs(bound_configuration_files)
-        # create_minimisation_configs(unbound_configuration_files)
-
-                # bar.update(idx)
-                # idx += 1
-
-
+        print("\n")
+        _ = [shutil.copytree(unbound_lambda_minimisation_directories[i], self.output_directories[j], dirs_exist_ok=True) for i in tqdm.tqdm(range(len(unbound_lambda_minimisation_directories)), desc="Copy unbound") for j in range(1, self.n_repeats)]
+        print("\n")
+        _ = [shutil.copytree(bound_lambda_minimisation_directories[i], self.output_directories[j], dirs_exist_ok=True) for i in tqdm.tqdm(range(len(bound_lambda_minimisation_directories)), desc="Copy bound") for j in range(1, self.n_repeats)]
+        
 
     def solvate_unbound(self, index):
         """
