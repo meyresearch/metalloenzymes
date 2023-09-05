@@ -488,7 +488,6 @@ class Network(object):
         Return:
         -------
         """
-        # forward
         columns_to_list = lambda column: self.transformations[column].tolist()
 
         ligands_a, ligands_b = columns_to_list("ligand_a"), columns_to_list("ligand_b")
@@ -546,7 +545,41 @@ class Network(object):
         _ = [shutil.copytree(unbound_lambda_minimisation_directories[i], self.output_directories[j], dirs_exist_ok=True) for i in tqdm.tqdm(range(len(unbound_lambda_minimisation_directories)), desc="Copy unbound") for j in range(1, self.n_repeats)]
         print("\n")
         _ = [shutil.copytree(bound_lambda_minimisation_directories[i], self.output_directories[j], dirs_exist_ok=True) for i in tqdm.tqdm(range(len(bound_lambda_minimisation_directories)), desc="Copy bound") for j in range(1, self.n_repeats)]
+    
+
+    def write_afe_run_script(self):
         
+        output = self.afe_input_directory + f"run_{self.md_engine}.sh"
+        meze = __file__.replace("Network.py", "") # installation?
+        
+        template = meze + "/run_afe.sh"
+        with open(template, "r") as file:
+            lines = file.readlines()
+        
+        options = {"PATH_TO_LOGS": self.log_directory,
+                   "N_TASKS": str(1), # change
+                   "N_GPUS": str(1), # change
+                   "N_CPUS": str(10), # change
+                   "MEMORY": str(4069), # change
+                   "JOB": f"{self.md_engine}_afe", 
+                   "ENGINE": self.md_engine,
+                   "N_REPEATS": str(self.n_repeats),
+                   "OUTPUTS_DIR": self.workding_directory + "/ouputs/"}
+
+        # lines = set([line.replace(key, value) for line in lines for key, value in options.items()])
+
+        # for line in lines:
+        #     for key, value in options.items():
+        #         line.replace(key, value)
+
+        # Credit: https://stackoverflow.com/a/51240945
+        with open(output, "w") as file:
+            for line in lines:
+                for key, value in options.items():
+                    line = line.replace(key, value)
+                file.write(line)
+          
+
 
     def solvate_unbound(self, index):
         """

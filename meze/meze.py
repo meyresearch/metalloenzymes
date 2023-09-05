@@ -4,6 +4,7 @@ import os
 import Network
 import logging
 import time
+import equilibrate
 logger = logging.getLogger()
 logger.setLevel(logging.CRITICAL)
 
@@ -35,13 +36,6 @@ def clean_arguments(arguments):
 def main():
 
     parser = argparse.ArgumentParser(description="MEZE: MetalloEnZymE FF-builder for alchemistry")
-
-    # parser.add_argument("-s",
-    #                     "--step",
-    #                     dest="step",
-    #                     required=True,
-    #                     help="workflow step number: 1: prep, 2: solvate, 3: equilbrate",
-    #                     choices=["1", "2", "3", "4"])
 
     parser.add_argument("-i",
                         "--ligand-index",
@@ -182,6 +176,8 @@ def main():
     arguments = parser.parse_args()
     arguments = clean_arguments(arguments)
 
+    s = time.time()
+
     network = Network.Network(workdir=arguments.working_directory,
                               ligand_path=arguments.ligand_directory,
                               group_name=arguments.group_name,
@@ -207,7 +203,6 @@ def main():
     prepared_network = network.prepare_meze()
 
     # solvated_network = prepared_network.solvation()
-    solvated_network = prepared_network
 
     # slurm_heat_file = equilibrate.write_slurm_script(path=solvated_network.afe_input_directory,
     #                                                  log_dir=solvated_network.log_directory,
@@ -223,12 +218,16 @@ def main():
     # success = equilibrate.slurm_heat(n_ligands=solvated_network.n_ligands, script=slurm_heat_file)
 
     # if success > 1:
-    #     raise RuntimeError(f"Heating meze failed. Please check error logs at {solvated_nete = time.time()work.log_directory}")
+    #     raise RuntimeError(f"Heating meze failed. Please check error logs at {solvated_network.log_directory}")
     
-    equilibrated_network = solvated_network.get_equilibrated()
-    s = time.time()
-    equilibrated_network.afe_prep()
+    # equilibrated_network = solvated_network.get_equilibrated()
+    
+    # equilibrated_network.afe_prep()
+
+    prepared_network.write_afe_run_script()
+    
     print(f"time: {time.time() - s} s")
+
 
 if __name__ == "__main__":
     main()

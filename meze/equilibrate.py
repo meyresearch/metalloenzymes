@@ -92,22 +92,19 @@ def write_slurm_script(path, log_dir, project_dir, equil_dir, min_steps, min_dt,
     meze = __file__.replace("equilibrate.py", "")
     input_file = write_equilibration_file(path, project_dir, equil_dir, min_steps, min_dt, min_tol, short_nvt, nvt, npt)
     with open(file, "w") as f:
-        f.write("#!/bin/bash\n")
-        f.write("\n")
-        f.write(f"#SBATCH -o {log_dir}/heat_%a.slurm.out\n")
-        f.write(f"#SBATCH -e {log_dir}/heat_%a.slurm.err\n")
-        f.write("#SBATCH -n 1\n")
-        f.write("#SBATCH --gres=gpu:1\n")
-        f.write("#SBATCH --cpus-per-gpu=10\n")
-        f.write("#SBATCH --mem 4096\n")
-        f.write("#SBATCH --job-name=heat_meze\n")
-        f.write("\n")
-        f.write(f"export \"MEZEHOME\"={meze}\n") # installation?
-        f.write("\n")
-        f.write("LIG_NUMBER=$SLURM_ARRAY_TASK_ID\n")
-        f.write("job_id=$SLURM_JOB_ID\n")
-        f.write("\n")
-        f.write(f"python $MEZEHOME/equilibrate.py $LIG_NUMBER {input_file}")
+        f.write(f"#!/bin/bash\
+                  #SBATCH -o {log_dir}/heat_%a.slurm.out\
+                  #SBATCH -e {log_dir}/heat_%a.slurm.err\
+                  #SBATCH -n 1\
+                  #SBATCH --gres=gpu:1\
+                  #SBATCH --cpus-per-gpu=10\
+                  #SBATCH --mem 4096\
+                  #SBATCH --job-name=heat_meze\
+                  export \"MEZEHOME\"={meze}\
+                  LIG_NUMBER=$SLURM_ARRAY_TASK_ID\
+                  job_id=$SLURM_JOB_ID\
+                  python $MEZEHOME/equilibrate.py $LIG_NUMBER {input_file}\
+                  ")
     os.system(f"chmod +x {file}")
     return file
 
