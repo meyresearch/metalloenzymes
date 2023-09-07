@@ -220,11 +220,12 @@ def main():
     # if success > 1:
     #     raise RuntimeError(f"Heating meze failed. Please check error logs at {solvated_network.log_directory}")
     
-    # equilibrated_network = solvated_network.get_equilibrated()
+    equilibrated_network = prepared_network.get_equilibrated()
     
-    # equilibrated_network.afe_prep()
+    equilibrated_network.afe_prep()
 
-    prepared_network.write_afe_run_script()
+    run_script = equilibrated_network.write_afe_run_script()
+    equilibrated_network.submit(run_script)
     
     print(f"time: {time.time() - s} s")
 

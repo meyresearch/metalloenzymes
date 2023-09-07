@@ -15,6 +15,7 @@ import pathlib
 import multiprocessing.pool
 import tqdm
 import istarmap
+import subprocess
 import shutil
 from BioSimSpace import _Exceptions
 
@@ -217,29 +218,30 @@ def create_lambda_windows(n_windows):
 
     Return:
     -------
-    list: 
-        list of lambdas
+    str: 
+        string of lambdas as strings formatted to 4 decimal places
     """
-    return list(np.linspace(0, 1, int(n_windows)))
+    return " ".join([format(item, ".4f") for item in np.linspace(0, 1, int(n_windows))])
 
 
-def create_lambda_list_bash(n_windows): 
-    """
-    Create a bash-readable list of evenly spaced lambda values between 0 and n_windows
+# def create_lambda_list_bash(n_windows): 
+#     """
+#     Create a bash-readable list of evenly spaced lambda values between 0 and n_windows
 
-    Parameters:
-    -----------
-    n_windows: 
-        number of lambda windows
+#     Parameters:
+#     -----------
+#     n_windows: 
+#         number of lambda windows
 
-    Return:
-    -------
-    bash_list: str
-        a bash-readable list of lambda values
-    """
-    lambda_list_numpy = create_lambda_windows(n_windows)
-    lambda_list = [format(item, ".4f") for item in lambda_list_numpy]
-    return " ".join(lambda_list)
+#     Return:
+#     -------
+#     bash_list: str
+#         a bash-readable list of lambda values
+#     """
+#     lambda_list_numpy = create_lambda_windows(n_windows)
+#     lambda_list = [format(item, ".4f") for item in lambda_list_numpy]
+#     return " ".join(lambda_list)
+
 
 
 def create_minimisation_configs(files):
@@ -489,66 +491,79 @@ class Network(object):
         -------
         """
         columns_to_list = lambda column: self.transformations[column].tolist()
-
         ligands_a, ligands_b = columns_to_list("ligand_a"), columns_to_list("ligand_b")
-
         indices_a, indices_b = columns_to_list("index_a"), columns_to_list("index_b")
-        lambdas = self.transformations["lambdas"].to_numpy()
-
+        lambda_list = columns_to_list("lambdas")
+        lambdas = [list(map(float, lambda_list[i].split())) for i in range(len(lambda_list))]
+        
         arguments = [(self.ligand_molecules[indices_a[i]], self.ligand_molecules[indices_b[i]]) for i in range(self.n_transformations)]
         unbound_systems = []
         with multiprocessing.pool.Pool() as pool:
             for result in tqdm.tqdm(pool.istarmap(combine_unbound_ligands, arguments), desc="Merging unbound", total=len(arguments)):
                 unbound_systems.append(result)
         print("\n")
+        
         arguments = [(self.bound_ligand_molecules[indices_a[i]], self.bound_ligand_molecules[indices_b[i]]) for i in range(self.n_transformations)]
         bound_systems = []
         with multiprocessing.pool.Pool() as pool:
             for result in tqdm.tqdm(pool.istarmap(combine_bound_ligands, arguments), desc="Merging bound", total=len(arguments)):
                 bound_systems.append(result)
         print("\n")
+        
         free_energy_protocols = [bss.Protocol.FreeEnergy(lam_vals=lambdas[i], runtime=self.md_time) for i in tqdm.tqdm(range(self.n_transformations), desc="Free energy protocols")]
         print("\n")
+
+        # Create ligand transformation directory tree in the first repeat directory, e.g. SOMD_1/lig_a~lig_b/ for bound/unbound 
         first_run_directory = self.output_directories[0]
         transformation_directories = [first_run_directory + f"/{ligands_a[i]}~{ligands_b[i]}/" for i in range(self.n_transformations)]
         bound_directories = [directory + "/bound/" for directory in transformation_directories]
         unbound_directories = [directory + "/unbound/" for directory in transformation_directories]
 
+        # Only construct the BioSimSpace Relative AFE objects in the first repeat directory, to save on computation
         _ = [bss.FreeEnergy.Relative(system=unbound_systems[i], protocol=free_energy_protocols[i], engine=self.md_engine, work_dir=unbound_directories[i]) for i in tqdm.tqdm(range(self.n_transformations), desc="Unbound AFE")]
         print("\n")
         _ = [bss.FreeEnergy.Relative(system=bound_systems[i], protocol=free_energy_protocols[i], engine=self.md_engine, work_dir=bound_directories[i]) for i in tqdm.tqdm(range(self.n_transformations), desc="Bound AFE")]
-        print("\n")
 
-        _ = [shutil.copytree(unbound_directories[i], self.output_directories[j], dirs_exist_ok=True) for i in tqdm.tqdm(range(len(unbound_directories)), desc="Copy unbound") for j in range(self.n_repeats)]
-        print("\n")
-        _ = [shutil.copytree(bound_directories[i], self.output_directories[j], dirs_exist_ok=True) for i in tqdm.tqdm(range(len(bound_directories)), desc="Copy bound") for j in range(self.n_repeats)]
-        print("\n")
+        # For SOMD only: create a minimisation directory manually and copy the AFE MD configuration files to the minimisation directory for the first repeat
         bound_lambda_minimisation_directories = [functions.mkdir(directory + "/minimisation/") for directory in bound_directories]
         unbound_lambda_minimisation_directories = [functions.mkdir(directory + "/minimisation/") for directory in unbound_directories]
 
-
         print("\n")
-        _ = [shutil.copytree(unbound_directories[i], unbound_lambda_minimisation_directories[i], dirs_exist_ok=True) for i in tqdm.tqdm(range(len(unbound_lambda_minimisation_directories)), desc="Unbound minimisation")]
+        _ = [os.system(f"cp -r {unbound_directories[i]}/lambda_* {unbound_lambda_minimisation_directories[i]}") for i in tqdm.tqdm(range(len(unbound_lambda_minimisation_directories)), desc="Unbound minimisation")]
         print("\n")
-        _ = [shutil.copytree(bound_directories[i], bound_lambda_minimisation_directories[i], dirs_exist_ok=True) for i in tqdm.tqdm(range(len(bound_lambda_minimisation_directories)), desc="Bound minimisation")]
+        _ = [os.system(f"cp -r {bound_directories[i]}/lambda_* {bound_lambda_minimisation_directories[i]}") for i in tqdm.tqdm(range(len(bound_lambda_minimisation_directories)), desc="Bound minimisation")]
         
+        # For SOMD only: Open the AFE MD configuration files and convert to minimisation configurations for the first repeat
         bound_configurations = list(map(lambda x: x + "/*/*.cfg", bound_lambda_minimisation_directories))
         unbound_configurations = list(map(lambda x: x + "/*/*.cfg", unbound_lambda_minimisation_directories))
-
         bound_configuration_files = [functions.read_files(file) for file in bound_configurations]
         unbound_configuration_files = [functions.read_files(file) for file in unbound_configurations]
-
         _ = [create_minimisation_configs(config_files) for config_files in bound_configuration_files]
         _ = [create_minimisation_configs(config_files) for config_files in unbound_configuration_files]
 
-        print("\n")
-        _ = [shutil.copytree(unbound_lambda_minimisation_directories[i], self.output_directories[j], dirs_exist_ok=True) for i in tqdm.tqdm(range(len(unbound_lambda_minimisation_directories)), desc="Copy unbound") for j in range(1, self.n_repeats)]
-        print("\n")
-        _ = [shutil.copytree(bound_lambda_minimisation_directories[i], self.output_directories[j], dirs_exist_ok=True) for i in tqdm.tqdm(range(len(bound_lambda_minimisation_directories)), desc="Copy bound") for j in range(1, self.n_repeats)]
-    
+        # # Copy edited minimisation configurations to the rest of the repeat directories, e.g SOMD_2, SOMD_3
+        # print("\n")
+        # _ = [os.system(f"cp -r {unbound_lambda_minimisation_directories[i]} {self.output_directories[j]}") for i in tqdm.tqdm(range(len(unbound_lambda_minimisation_directories)), desc="Copy unbound") for j in range(1, self.n_repeats)]
+        # print("\n")
+        # _ = [os.system(f"cp -r {bound_lambda_minimisation_directories[i]} {self.output_directories[j]}") for i in tqdm.tqdm(range(len(bound_lambda_minimisation_directories)), desc="Copy bound") for j in range(1, self.n_repeats)]
+        
+        # Copy lambda transformation directories (including minimisation) from first repeat directory to the rest of the repeat directories, e.g. SOMD_2, SOMD_3
+        _ = [os.system(f"cp -r {transformation_directories[i].rstrip('/')} {self.output_directories[j]}") for i in tqdm.tqdm(range(len(unbound_directories)), desc="Copy unbound") for j in range(1, self.n_repeats)]
+        _ = [os.system(f"cp -r {transformation_directories[i].rstrip('/')} {self.output_directories[j]}") for i in tqdm.tqdm(range(len(bound_directories)), desc="Copy bound") for j in range(1, self.n_repeats)]
+
 
     def write_afe_run_script(self):
-        
+        """
+        Write a AFE run script for given engine 
+
+        Parameters:
+        -----------
+
+        Return:
+        -------
+        output: str
+            full path to AFE run script
+        """
         output = self.afe_input_directory + f"run_{self.md_engine}.sh"
         meze = __file__.replace("Network.py", "") # installation?
         
@@ -561,16 +576,10 @@ class Network(object):
                    "N_GPUS": str(1), # change
                    "N_CPUS": str(10), # change
                    "MEMORY": str(4069), # change
-                   "JOB": f"{self.md_engine}_afe", 
+                #    "JOB": f"{self.md_engine}_afe", 
                    "ENGINE": self.md_engine,
                    "N_REPEATS": str(self.n_repeats),
-                   "OUTPUTS_DIR": self.workding_directory + "/ouputs/"}
-
-        # lines = set([line.replace(key, value) for line in lines for key, value in options.items()])
-
-        # for line in lines:
-        #     for key, value in options.items():
-        #         line.replace(key, value)
+                   "OUTPUTS_DIR": self.workding_directory + "/outputs/"}
 
         # Credit: https://stackoverflow.com/a/51240945
         with open(output, "w") as file:
@@ -578,7 +587,21 @@ class Network(object):
                 for key, value in options.items():
                     line = line.replace(key, value)
                 file.write(line)
+        return output
           
+
+    def submit(self, run_script):
+        
+        # if slurm:
+        for i in range(self.n_transformations):
+            array_index = self.transformations["n_windows"][i] - 1
+            ligand_a = self.transformations["ligand_a"][i]
+            ligand_b = self.transformations["ligand_b"][i]
+            lambdas = self.transformations["lambdas"][i]
+            subprocess.call(["sbatch", f"--array=0-{array_index}", f"--job-name={ligand_a}_{ligand_b}_afe", run_script, ligand_a, ligand_b, self.md_engine, lambdas])
+        # else: 
+        #pass
+
 
 
     def solvate_unbound(self, index):
@@ -701,7 +724,7 @@ class Network(object):
             self.lambdas.append(lambda_windows)
         dataframe["n_windows"] = self.n_windows
         dataframe["lambdas"] = self.lambdas
-        dataframe.to_csv(self.afe_input_directory+f"/meze_network.csv", sep="\t")
+        dataframe.to_csv(self.afe_input_directory+f"/meze_network.csv")
         return dataframe
     
 
@@ -794,36 +817,6 @@ class Network(object):
         else:
             n_windows = self.n_normal
         return n_windows
-
-
-    def create_network_files(self):
-        """
-        _summary_
-
-        Parameters:
-        -----------
-        engine: str
-            MD engine
-        
-        Return:
-        -------
-        tuple:
-            forward and backward network.dat files
-        """
-        forward = self.workding_directory + "network_fwd.dat"
-        backward = self.workding_directory + "network_bwd.dat"
-        with open(forward, "w") as network_file:
-            for transformation, lomap_score in self.dictionary_fwd.items():
-                n_windows = self.set_n_windows(lomap_score)
-                self.n_windows.append(n_windows)
-                lambda_array_bash = self.create_lambda_list_bash(n_windows)
-                network_file.write(f"{transformation[0]}, {transformation[1]}, {n_windows}, {lambda_array_bash}, {self.md_engine}\n")
-        with open(backward, "w") as network_file:
-            for transformation, lomap_score in self.dictionary_bwd.items():
-                n_windows = self.set_n_windows(lomap_score)
-                lambda_array_bash = self.create_lambda_list_bash(n_windows)
-                network_file.write(f"{transformation[0]}, {transformation[1]}, {n_windows}, {lambda_array_bash}, {self.md_engine}\n")
-        return forward, backward
     
 
     def create_ligand_dat_file(self):
