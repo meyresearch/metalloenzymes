@@ -64,6 +64,8 @@ def write_slurm_script(path, log_dir, project_dir, equil_dir, min_steps, min_dt,
     -----------
     path: str
         path where slurm script will be saved
+    engine: str
+        name of the MD engine to be used for 
     log_dir: 
         directory for outputting slurm logs
     project_dir: str
@@ -88,25 +90,28 @@ def write_slurm_script(path, log_dir, project_dir, equil_dir, min_steps, min_dt,
     file: str
         slurm script 
     """
-    file = path + "slurm_heat_meze.sh"
+    output = path + "slurm_heat_meze.sh"
     meze = __file__.replace("equilibrate.py", "")
     input_file = write_equilibration_file(path, project_dir, equil_dir, min_steps, min_dt, min_tol, short_nvt, nvt, npt)
-    with open(file, "w") as f:
-        f.write(f"#!/bin/bash\
-                  #SBATCH -o {log_dir}/heat_%a.slurm.out\
-                  #SBATCH -e {log_dir}/heat_%a.slurm.err\
-                  #SBATCH -n 1\
-                  #SBATCH --gres=gpu:1\
-                  #SBATCH --cpus-per-gpu=10\
-                  #SBATCH --mem 4096\
-                  #SBATCH --job-name=heat_meze\
-                  export \"MEZEHOME\"={meze}\
-                  LIG_NUMBER=$SLURM_ARRAY_TASK_ID\
-                  job_id=$SLURM_JOB_ID\
-                  python $MEZEHOME/equilibrate.py $LIG_NUMBER {input_file}\
-                  ")
-    os.system(f"chmod +x {file}")
-    return file
+    template = meze + "/slurm_heat_meze.sh"
+    with open(template, "r") as file:
+        lines = file.readlines()
+    
+    options = {"PATH_TO_LOGS": log_dir,
+               "N_TASKS": str(1),
+               "N_GPUS": str(1), 
+               "N_CPUS": str(10),
+               "MEMORY": str(4069),
+               "PATH_TO_MEZE": meze,
+               "INPUTFILE": input_file}    
+    
+    with open(output, "w") as file:
+        for line in lines:
+            for key, value in options.items():
+                line = line.replace(key, value)
+            file.write(line)
+    os.system(f"chmod +x {output}")
+    return output
 
 
 def slurm_heat(n_ligands, script):

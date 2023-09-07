@@ -429,14 +429,11 @@ class Network(object):
         self: Network
             (solvated) Network object
         """
-        self.ligands, self.bound_ligands = [], []
         with multiprocessing.pool.Pool() as pool:
-            for result in tqdm.tqdm(pool.imap(self.solvate_unbound, range(self.n_ligands)), desc="Solvate unbound\n", total=self.n_ligands):
-                self.ligands.append(result)
-            self.ligand_molecules = [ligand.get_system() for ligand in self.ligands]
-            for result in tqdm.tqdm(pool.imap(self.solvate_bound, range(self.n_ligands)), desc="Solvate bound\n", total=self.n_ligands):
-                self.bound_ligands.append(result)
-            self.bound_ligand_molecules = [ligand.get_system() for ligand in self.ligands] 
+            self.ligands = list(pool.imap(self.solvate_unbound, range(self.n_ligands)))
+            self.bound_ligands = list(pool.imap(self.solvate_bound, range(self.n_ligands)))
+        self.ligand_molecules = [ligand.get_system() for ligand in self.ligands]
+        self.bound_ligand_molecules = [ligand.get_system() for ligand in self.bound_ligands] 
         return self
 
 
@@ -455,27 +452,23 @@ class Network(object):
         print("\n")
         unbound_paths = functions.read_files(self.equilibration_directory+"/unbound/ligand_*/npt/")
         paths = list(map(lambda x: x + "ligand_*", unbound_paths))
-        unbound_equilibrated = []
         with multiprocessing.pool.Pool() as pool:
-            for result in tqdm.tqdm(pool.imap(functions.read_files, paths), desc="Equilbrated unbound", total=len(paths)):
-                unbound_equilibrated.append(result)
+            unbound_equilibrated = list(pool.imap(functions.read_files, paths))
+
         print("\n")
-        self.ligand_molecules = []
         with multiprocessing.pool.Pool() as pool:
-            for result in tqdm.tqdm(pool.imap(bss.IO.readMolecules, unbound_equilibrated), desc="Unbound objects", total=len(unbound_equilibrated)):
-                self.ligand_molecules.append(result)
+            self.ligand_molecules = list(pool.imap(bss.IO.readMolecules, unbound_equilibrated))
+
         print("\n")
         bound_paths = functions.read_files(self.equilibration_directory+"/bound/ligand_*/npt/")
         paths = list(map(lambda x: x + "system_*", bound_paths))
-        bound_equilibrated = []
+
         with multiprocessing.pool.Pool() as pool:
-            for result in tqdm.tqdm(pool.imap(functions.read_files, paths), desc="Equilibrated bound", total=len(paths)):
-                bound_equilibrated.append(result)
+            bound_equilibrated = list(pool.imap(functions.read_files, paths))
+
         print("\n")
-        self.bound_ligand_molecules = []
         with multiprocessing.pool.Pool() as pool:
-            for result in tqdm.tqdm(pool.imap(bss.IO.readMolecules, bound_equilibrated), desc="Bound objects", total=len(bound_equilibrated)):
-                self.bound_ligand_molecules.append(result)
+            self.bound_ligand_molecules = list(pool.imap(bss.IO.readMolecules, bound_equilibrated))
         print("\n")
         return self
 
@@ -541,12 +534,6 @@ class Network(object):
         _ = [create_minimisation_configs(config_files) for config_files in bound_configuration_files]
         _ = [create_minimisation_configs(config_files) for config_files in unbound_configuration_files]
 
-        # # Copy edited minimisation configurations to the rest of the repeat directories, e.g SOMD_2, SOMD_3
-        # print("\n")
-        # _ = [os.system(f"cp -r {unbound_lambda_minimisation_directories[i]} {self.output_directories[j]}") for i in tqdm.tqdm(range(len(unbound_lambda_minimisation_directories)), desc="Copy unbound") for j in range(1, self.n_repeats)]
-        # print("\n")
-        # _ = [os.system(f"cp -r {bound_lambda_minimisation_directories[i]} {self.output_directories[j]}") for i in tqdm.tqdm(range(len(bound_lambda_minimisation_directories)), desc="Copy bound") for j in range(1, self.n_repeats)]
-        
         # Copy lambda transformation directories (including minimisation) from first repeat directory to the rest of the repeat directories, e.g. SOMD_2, SOMD_3
         _ = [os.system(f"cp -r {transformation_directories[i].rstrip('/')} {self.output_directories[j]}") for i in tqdm.tqdm(range(len(unbound_directories)), desc="Copy unbound") for j in range(1, self.n_repeats)]
         _ = [os.system(f"cp -r {transformation_directories[i].rstrip('/')} {self.output_directories[j]}") for i in tqdm.tqdm(range(len(bound_directories)), desc="Copy bound") for j in range(1, self.n_repeats)]
@@ -618,7 +605,6 @@ class Network(object):
             (solvated) Ligand object whose file attribute is the prm7 and rst7 files 
         """ 
         ligand = self.ligands[index]
-        names = self.names
         ligand_number = self.names[index].split("_")[-1]
         print(f"Solvating unbound ligand {ligand_number}")
         ligand_parameters = ligand.parameterise(self.ligand_forcefield, self.ligand_charge)
@@ -647,10 +633,9 @@ class Network(object):
             (solvated) Ligand object whose file attribute is the prm7 and rst7 files         
         """
         ligand = self.ligands[index]
-        names = self.names
         ligand_number = self.names[index].split("_")[-1]
-        ligand_parameters = ligand.parameterise(self.ligand_forcefield, self.ligand_charge)
-        print(f"Solvating bound ligand {ligand_number}")        
+        print(f"Solvating bound ligand {ligand_number}")
+        ligand_parameters = ligand.parameterise(self.ligand_forcefield, self.ligand_charge)     
         system_parameters = ligand_parameters + self.protein.get_prepared_protein()
         bound_box, bound_box_angles = self.create_box(system_parameters)
         solvated_molecules = bss.Solvent.solvate(model=self.protein.water_model,
