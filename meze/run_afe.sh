@@ -42,7 +42,7 @@ do
 		echo "cd $minimisation_directory"
 		if [[ $engine == *"SOMD"* ]]; then	
 			# Minimise
-			$BSS_HOME/bin/somd-freenrg -C ./somd.cfg -l $lambda -c ./somd.rst7 -t ./somd.prm7 -m ./somd.pert -p CUDA 
+			$BSS_HOME/somd-freenrg -C ./somd.cfg -l $lambda -c ./somd.rst7 -t ./somd.prm7 -m ./somd.pert -p CUDA 
 		
 			# Copy files to lambda directory to be used for the AFE run
 			cp $minimisation_directory/sim_restart.s3 $lambda_directory/sim_restart.s3
@@ -52,7 +52,7 @@ do
 			echo "Running AFE transformation..."
 			cd $lambda_directory
 		
-			$BSS_HOME/bin/somd-freenrg -C ./somd.cfg -l $lambda -c ./somd.rst7 -t ./somd.prm7 -m ./somd.pert -p CUDA
+			$BSS_HOME/somd-freenrg -C ./somd.cfg -l $lambda -c ./somd.rst7 -t ./somd.prm7 -m ./somd.pert -p CUDA
 		else
 			echo "Engine $engine is not supported yet."
 		fi
