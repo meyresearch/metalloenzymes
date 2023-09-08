@@ -267,10 +267,10 @@ def create_minimisation_configs(files, min_cycles=1, min_moves=50000):
         for line in old_config:
             if "ncycles" in line:
                 idx = old_config.index(line)
-                old_config[idx] = f"ncycles = {min_cycles}"
+                old_config[idx] = f"ncycles = {min_cycles}\n"
             elif "nmoves" in line:
                 idx = old_config.index(line)
-                old_config[idx] = f"nmoves = {min_moves}"
+                old_config[idx] = f"nmoves = {min_moves}\n"
         replaced_config = old_config
 
         with open(files[i], "w") as f:
@@ -316,7 +316,7 @@ class Network(object):
         """
         Class constructor
         """
-        self.ligand_path = functions.path_exists(ligand_path) # ligand directory (change name?)
+        self.ligand_path = functions.path_exists(ligand_path)
         self.ligand_forcefield = ligand_ff
         self.water_model = water_model
         self.input_files = self.get_files()
