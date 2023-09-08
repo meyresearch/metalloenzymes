@@ -272,7 +272,7 @@ def create_minimisation_configs(files, min_cycles=1, min_moves=50000):
                 idx = old_config.index(line)
                 old_config[idx] = f"nmoves = {min_moves}"
         replaced_config = old_config
-        
+
         with open(files[i], "w") as f:
             for setting in minimisation_config:
                 replaced_config.append(setting)
@@ -461,27 +461,24 @@ class Network(object):
         self: Network
             (equilibrated) Network object
         """
-        print("\n")
+        print("Getting equilibrated systems")
         unbound_paths = functions.read_files(self.equilibration_directory+"/unbound/ligand_*/npt/")
         paths = list(map(lambda x: x + "ligand_*", unbound_paths))
         with multiprocessing.pool.Pool() as pool:
             unbound_equilibrated = list(pool.imap(functions.read_files, paths))
 
-        print("\n")
         with multiprocessing.pool.Pool() as pool:
             self.ligand_molecules = list(pool.imap(bss.IO.readMolecules, unbound_equilibrated))
 
-        print("\n")
         bound_paths = functions.read_files(self.equilibration_directory+"/bound/ligand_*/npt/")
         paths = list(map(lambda x: x + "system_*", bound_paths))
 
         with multiprocessing.pool.Pool() as pool:
             bound_equilibrated = list(pool.imap(functions.read_files, paths))
 
-        print("\n")
         with multiprocessing.pool.Pool() as pool:
             self.bound_ligand_molecules = list(pool.imap(bss.IO.readMolecules, bound_equilibrated))
-        print("\n")
+
         return self
 
 
@@ -567,11 +564,11 @@ class Network(object):
             number of MD cycles, default 5
         Return:
         -------
-        number of moves: float
+        number of moves: int
             number of moves for SOMD 
         """
-        number_of_steps = self.runtime / stepsize
-        return  number_of_steps / number_of_cycles
+        number_of_steps = self.md_time // stepsize
+        return  number_of_steps // number_of_cycles
 
 
     def write_afe_run_script(self):
