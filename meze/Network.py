@@ -244,7 +244,7 @@ def create_lambda_windows(n_windows):
 
 
 
-def create_minimisation_configs(files):
+def create_minimisation_configs(files, min_cycles=1, min_moves=50000):
     """
     Open FreeEnergy configuration file and convert it into a minimisation configuration
 
@@ -252,16 +252,28 @@ def create_minimisation_configs(files):
     -----------
     files: list
         list of configuration files in each lambda minimisation window
-
+    min_cycles: int
+        number of cycles for the SOMD minimisation
+    min_moves: int
+        number of moves for the SOMD minimisation
     Return:
     -------
     """
     minimisation_config = ["minimise = True\n", "minimise maximum iterations = 10000\n"]
     for i in range(len(files)):
-        with open(files[i], "r") as f:
+        with open(files[0], "r") as f:
             old_config = f.readlines()
+        
+        for line in old_config:
+            if "ncycles" in line:
+                idx = old_config.index(line)
+                old_config[idx] = f"ncycles = {min_cycles}"
+            elif "nmoves" in line:
+                idx = old_config.index(line)
+                old_config[idx] = f"nmoves = {min_moves}"
+        replaced_config = old_config
+        
         with open(files[i], "w") as f:
-            replaced_config = [setting.replace("ncycles = 5\n", "ncycles = 1").replace("nmoves = 200000", "nmoves = 50000") for setting in old_config]
             for setting in minimisation_config:
                 replaced_config.append(setting)
             f.writelines(replaced_config)
@@ -503,7 +515,7 @@ class Network(object):
                 bound_systems.append(result)
         print("\n")
         
-        free_energy_protocols = [bss.Protocol.FreeEnergy(lam_vals=lambdas[i], runtime=self.md_time) for i in tqdm.tqdm(range(self.n_transformations), desc="Free energy protocols")]
+        free_energy_protocols = [bss.Protocol.FreeEnergy(lam_vals=lambdas[i], runtime=self.md_time, restart_interval=200, report_interval=200) for i in tqdm.tqdm(range(self.n_transformations), desc="Free energy protocols")]
         print("\n")
 
         # Create ligand transformation directory tree in the first repeat directory, e.g. SOMD_1/lig_a~lig_b/ for bound/unbound 
@@ -513,9 +525,11 @@ class Network(object):
         unbound_directories = [directory + "/unbound/" for directory in transformation_directories]
 
         # Only construct the BioSimSpace Relative AFE objects in the first repeat directory, to save on computation
-        _ = [bss.FreeEnergy.Relative(system=unbound_systems[i], protocol=free_energy_protocols[i], engine=self.md_engine, work_dir=unbound_directories[i]) for i in tqdm.tqdm(range(self.n_transformations), desc="Unbound AFE")]
+        n_cycles = 5 #TODO make editable
+        n_moves = self.set_n_moves()
+        _ = [bss.FreeEnergy.Relative(system=unbound_systems[i], protocol=free_energy_protocols[i], engine=self.md_engine, work_dir=unbound_directories[i], extra_options={"ncycles": n_cycles, "nmoves": n_moves}) for i in tqdm.tqdm(range(self.n_transformations), desc="Unbound AFE")]
         print("\n")
-        _ = [bss.FreeEnergy.Relative(system=bound_systems[i], protocol=free_energy_protocols[i], engine=self.md_engine, work_dir=bound_directories[i]) for i in tqdm.tqdm(range(self.n_transformations), desc="Bound AFE")]
+        _ = [bss.FreeEnergy.Relative(system=bound_systems[i], protocol=free_energy_protocols[i], engine=self.md_engine, work_dir=bound_directories[i], extra_options={"ncycles": n_cycles, "nmoves": n_moves}) for i in tqdm.tqdm(range(self.n_transformations), desc="Bound AFE")]
 
         # For SOMD only: create a minimisation directory manually and copy the AFE MD configuration files to the minimisation directory for the first repeat
         bound_lambda_minimisation_directories = [functions.mkdir(directory + "/minimisation/") for directory in bound_directories]
@@ -537,6 +551,27 @@ class Network(object):
         # Copy lambda transformation directories (including minimisation) from first repeat directory to the rest of the repeat directories, e.g. SOMD_2, SOMD_3
         _ = [os.system(f"cp -r {transformation_directories[i].rstrip('/')} {self.output_directories[j]}") for i in tqdm.tqdm(range(len(unbound_directories)), desc="Copy unbound") for j in range(1, self.n_repeats)]
         _ = [os.system(f"cp -r {transformation_directories[i].rstrip('/')} {self.output_directories[j]}") for i in tqdm.tqdm(range(len(bound_directories)), desc="Copy bound") for j in range(1, self.n_repeats)]
+
+
+    def set_n_moves(self, stepsize=2, number_of_cycles=5):
+        """
+        Set SOMD nmoves in a reasonable way for better performance.
+        See reference to: https://github.com/michellab/BioSimSpace/issues/258 and
+        https://github.com/OpenBioSim/biosimspace/issues/18 
+
+        Parameters:
+        -----------
+        stepsize: int
+            MD stepsize in femtoseconds, default 2
+        number_of_cycles: int
+            number of MD cycles, default 5
+        Return:
+        -------
+        number of moves: float
+            number of moves for SOMD 
+        """
+        number_of_steps = self.runtime / stepsize
+        return  number_of_steps / number_of_cycles
 
 
     def write_afe_run_script(self):
@@ -574,6 +609,7 @@ class Network(object):
                 for key, value in options.items():
                     line = line.replace(key, value)
                 file.write(line)
+        os.system(f"chmod +x {output}")
         return output
           
 
