@@ -567,7 +567,9 @@ class Network(object):
         number of moves: int
             number of moves for SOMD 
         """
-        number_of_steps = self.md_time // stepsize
+         
+        time = float(str(self.md_time).split()[0]) * 1000000
+        number_of_steps = int(time / stepsize)
         return  number_of_steps // number_of_cycles
 
 
