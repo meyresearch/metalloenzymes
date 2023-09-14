@@ -64,11 +64,6 @@ class Protein(object):
         self.molecule = bss.IO.readMolecules(functions.file_exists(protein_file))
         self.forcefield = forcefield
         self.water_model = water_model
-        water_file = get_water_file(self.path)
-        if water_file is not None:
-            self.xtal_water = bss.IO.readMolecules(get_water_file(self.path))
-        else:
-            self.xtal_water = ""
         self.prepared = self.path + "/" + self.name + "_tleap"
     
     
@@ -84,12 +79,17 @@ class Protein(object):
         pdb_file: str
             pdb file with water and protein combined
         """
-
+        water_file = get_water_file(self.path)
         output = self.path + "/protein_water_complex"
-        complex = self.molecule + self.xtal_water
-        self.complex = complex
-        bss.IO.saveMolecules(output, complex, fileformat="pdb")
-        return output + ".pdb"
+        
+        if water_file is not None:
+            self.xtal_water = bss.IO.readMolecules(get_water_file(self.path))
+            complex = self.molecule + self.xtal_water
+            file = bss.IO.saveMolecules(output, complex, fileformat="pdb")[0]
+        else:
+            file = bss.IO.saveMolecules(output, self.molecule, fileformat="pdb")[0]
+        
+        return file
 
 
     def tleap(self, complex_file):

@@ -37,13 +37,6 @@ def main():
 
     parser = argparse.ArgumentParser(description="MEZE: MetalloEnZymE FF-builder for alchemistry")
 
-    parser.add_argument("-i",
-                        "--ligand-index",
-                        dest="idx",
-                        type=functions.check_int,
-                        help="ligand index for sorting through Network.names",
-                        default=0)
-
     parser.add_argument("-if",
                         "--input-pdb-file",
                         dest="protein",
@@ -204,30 +197,30 @@ def main():
 
     solvated_network = prepared_network.solvation()
 
-    slurm_heat_file = equilibrate.write_slurm_script(path=solvated_network.afe_input_directory,
-                                                     log_dir=solvated_network.log_directory,
-                                                     project_dir=solvated_network.workding_directory,
-                                                     equil_dir=solvated_network.equilibration_directory,
-                                                     min_steps=arguments.min_steps,
-                                                     min_dt=arguments.emstep,
-                                                     min_tol=arguments.emtol,
-                                                     short_nvt=arguments.short_nvt,
-                                                     nvt=arguments.nvt,
-                                                     npt=arguments.npt)
+    # slurm_heat_file = equilibrate.write_slurm_script(path=solvated_network.afe_input_directory,
+    #                                                  log_dir=solvated_network.log_directory,
+    #                                                  project_dir=solvated_network.workding_directory,
+    #                                                  equil_dir=solvated_network.equilibration_directory,
+    #                                                  min_steps=arguments.min_steps,
+    #                                                  min_dt=arguments.emstep,
+    #                                                  min_tol=arguments.emtol,
+    #                                                  short_nvt=arguments.short_nvt,
+    #                                                  nvt=arguments.nvt,
+    #                                                  npt=arguments.npt)
     
-    success = equilibrate.slurm_heat(n_ligands=solvated_network.n_ligands, script=slurm_heat_file)
+    # success = equilibrate.slurm_heat(n_ligands=solvated_network.n_ligands, script=slurm_heat_file)
 
-    if success > 1:
-        raise RuntimeError(f"Heating meze failed. Please check error logs at {solvated_network.log_directory}")
+    # if success > 1:
+    #     raise RuntimeError(f"Heating meze failed. Please check error logs at {solvated_network.log_directory}")
     
-    equilibrated_network = solvated_network.get_equilibrated()
+    # equilibrated_network = solvated_network.get_equilibrated()
 
-    equilibrated_network.afe_prep()
+    # equilibrated_network.afe_prep()
 
-    run_script = equilibrated_network.write_afe_run_script()
-    equilibrated_network.submit(run_script)
+    # run_script = equilibrated_network.write_afe_run_script()
+    # equilibrated_network.submit(run_script)
     
-    print(f"time: {time.time() - s} s")
+    # print(f"time: {time.time() - s} s")
 
 
 if __name__ == "__main__":

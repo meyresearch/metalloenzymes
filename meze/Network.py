@@ -335,6 +335,7 @@ class Network(object):
                                        forcefield=self.protein_forcefield,
                                        water_model=self.water_model)
         self.protein_water_complex = self.protein.create_complex()
+        print(self.protein_water_complex)
         self.prepared_protein = self.protein.tleap(self.protein_water_complex)
         
         self.threshold = threshold
