@@ -1,5 +1,6 @@
 import os
 import BioSimSpace as bss
+import scipy
 
 
 ROOT_DIRECTORY = os.path.realpath(os.path.join(os.path.dirname(__file__), ".."))
@@ -15,3 +16,6 @@ NANOSECOND = bss.Units.Time.nanosecond
 ANGSTROM = bss.Units.Length.angstrom
 KELVIN = bss.Units.Temperature.kelvin
 ATM = bss.Units.Pressure.atm
+
+BOLTZMANN_CONSTANT = scipy.constants.Boltzmann
+AVOGADROS_NUMBER = scipy.constants.Avogadro

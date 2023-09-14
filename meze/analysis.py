@@ -113,8 +113,16 @@ def bootstrap_statistics(experimental: np.array, calculated: np.array, n_samples
 
 
 def fix_simfile():
-    pass
+    
+    #TODO: How do I set the path to this file?
+    template = "simfile_header.txt"
+    with open(template, "r") as file:
+        template_header = file.readlines()
 
+    # How do I get the path to outputs?
+    # How do I get the number of repeats?
+        # Could I write a file in meze.py that outputs all that information and I just have to read it in?
+    
 
 def main():
     pass

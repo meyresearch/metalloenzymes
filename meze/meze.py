@@ -221,7 +221,7 @@ def main():
         raise RuntimeError(f"Heating meze failed. Please check error logs at {solvated_network.log_directory}")
     
     equilibrated_network = solvated_network.get_equilibrated()
-    
+
     equilibrated_network.afe_prep()
 
     run_script = equilibrated_network.write_afe_run_script()

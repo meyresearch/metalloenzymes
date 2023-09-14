@@ -133,7 +133,7 @@ def slurm_heat(n_ligands, script):
     return subprocess.call(["sbatch", "--wait", f"--array=1-{n_ligands}", f"{script}"])
 
 
-def run_process(system, protocol, process, working_directory, configuration=None):
+def run_process(system, protocol, process, working_directory, configuration=None, checkpoint=None):
     """
     Run a Gromacs minimisation or equilibration process 
     Adapted from https://tinyurl.com/BSSligprep
@@ -148,14 +148,15 @@ def run_process(system, protocol, process, working_directory, configuration=None
         process name for saving process output
     working_directory: str
         save output into this directory
+    checkpoint: str
+        path to a checkpoint file forom a previous run; corresponds to the -t flag for gmx grompp
 
     Return:
     -------
     system: bss.System
         equilibrated or minimised system
     """
-    process = bss.Process.Gromacs(system, protocol, name=process, work_dir=working_directory, #exe="/usr/local/gromacs/bin/gmx_mpi"
-                                  )
+    process = bss.Process.Gromacs(system, protocol, name=process, work_dir=working_directory, checkpoint_file=checkpoint)
     config = process.getConfig()
     if configuration:
         for setting in configuration:
@@ -200,7 +201,7 @@ def minimise(system, workdir, min_steps, min_dt, min_tol):
     return minimised_system   
 
 
-def equilibrate(system, name, workdir, time, start_t=300, end_t=300, temperature=None, pressure=None, configuration=None, restraints=None):
+def equilibrate(system, name, workdir, time, start_t=300, end_t=300, temperature=None, pressure=None, configuration=None, restraints=None, checkpoint=None):
     """
     Run NVT or NPT equilibration
 
@@ -208,19 +209,25 @@ def equilibrate(system, name, workdir, time, start_t=300, end_t=300, temperature
     -----------
     system: bss.System
         system to be equilibrated
+    name: str
+        name of equilibration process
+    workdir: str
+        path to the equilibration step directory
+    time: bss.Units.Time
+        runtime for equilibration
 
     Return:
     -------
     equilibrated_system: bss.System
-        equilibrated system
+        
     """
     protocol = bss.Protocol.Equilibration(runtime=time,
-                                            temperature_start=start_t,
-                                            temperature_end=end_t,
-                                            temperature=temperature,
-                                            pressure=pressure,
-                                            restraint=restraints)
-    equilibrated_system = run_process(system, protocol, name, workdir, configuration)
+                                          temperature_start=start_t,
+                                          temperature_end=end_t,
+                                          temperature=temperature,
+                                          pressure=pressure,
+                                          restraint=restraints)
+    equilibrated_system = run_process(system, protocol, name, workdir, configuration, checkpoint)
     return equilibrated_system
 
 
@@ -267,30 +274,39 @@ def heat_unbound(ligand_number, equilibration_dir, project_dir, min_steps, min_d
     minimised_ligand = minimise(system=solvated_ligand, workdir=min_directory, min_steps=min_steps, min_dt=min_dt, min_tol=min_tol)
     start_temp = functions.convert_to_units(0, KELVIN)
     restrained_nvt = equilibrate(system=minimised_ligand,
-                                        name="r_nvt",
-                                        workdir=r_nvt_directory,
-                                        time=short_nvt,
-                                        start_t=start_temp, end_t=temperature,
-                                        configuration=["dt = 0.0005"], # need to be able to change
-                                        restraints="all")
+                                 name="r_nvt",
+                                 workdir=r_nvt_directory,
+                                 time=short_nvt,
+                                 start_t=start_temp, end_t=temperature,
+                                 configuration=["dt = 0.0005"], # need to be able to change
+                                 restraints="all")
     nvt = equilibrate(system=restrained_nvt,
-                             name="nvt",
-                             workdir=nvt_directory,
-                             time=nvt,
-                             temperature=temperature)
+                      name="nvt",
+                      workdir=nvt_directory,
+                      time=nvt,
+                      temperature=temperature,
+                      checkpoint=r_nvt_directory + "/r_nvt.cpt")
+    nvt = equilibrate(system=restrained_nvt,
+                    name="nvt",
+                    workdir=nvt_directory,
+                    time=nvt,
+                    temperature=temperature,
+                    checkpoint=r_nvt_directory + "/r_nvt.cpt")
     restrained_npt = equilibrate(system=nvt,
-                                        name="r_npt",
-                                        workdir=r_npt_directory,
+                                 name="r_npt",
+                                 workdir=r_npt_directory,
+                                 time=npt,
+                                 pressure=pressure,
+                                 temperature=temperature,
+                                 restraints="heavy",
+                                 checkpoint=nvt_directory + "/nvt.cpt")
+    equilibrated_molecule = equilibrate(system=restrained_npt,
+                                        name="npt",
+                                        workdir=npt_directory,
                                         time=npt,
                                         pressure=pressure,
                                         temperature=temperature,
-                                        restraints="heavy")
-    equilibrated_molecule = equilibrate(system=restrained_npt,
-                                               name="npt",
-                                               workdir=npt_directory,
-                                               time=npt,
-                                               pressure=pressure,
-                                               temperature=temperature)
+                                        checkpoint=r_npt_directory + "/r_npt.cpt")
     unbound_savename = npt_directory + f"/ligand_{ligand_number}"
     bss.IO.saveMolecules(filebase=unbound_savename, system=equilibrated_molecule, fileformat=["PRM7", "RST7"])        
 
@@ -338,36 +354,40 @@ def heat_bound(ligand_number, equilibration_dir, project_dir, min_steps, min_dt,
     print(f"Equilibrating bound ligand {ligand_number}")
     minimised_system = minimise(system=solvated_system, workdir=min_dir, min_steps=min_steps, min_dt=min_dt, min_tol=min_tol)
     restrained_nvt = equilibrate(system=minimised_system,
-                                        workdir=r_nvt_dir,
-                                        name="r_nvt",
-                                        time=short_nvt,
-                                        start_t=start_temp, end_t=temperature,
-                                        restraints="all",
-                                        configuration=["dt = 0.0005"]) # need to be able to change
+                                 workdir=r_nvt_dir,
+                                 name="r_nvt",
+                                 time=short_nvt,
+                                 start_t=start_temp, end_t=temperature,
+                                 restraints="all",
+                                 configuration=["dt = 0.0005"]) # need to be able to change
     backbone_restrained_nvt = equilibrate(system=restrained_nvt,
-                                                 name="bb_r_nvt",
-                                                 workdir=bb_r_nvt_dir,
-                                                 time=nvt,
-                                                 temperature=temperature,
-                                                 restraints="backbone")
+                                          name="bb_r_nvt",
+                                          workdir=bb_r_nvt_dir,
+                                          time=nvt,
+                                          temperature=temperature,
+                                          restraints="backbone",
+                                          checkpoint=r_nvt_dir + "/r_nvt.cpt")
     nvt = equilibrate(system=backbone_restrained_nvt,
-                             name="nvt",
-                             workdir=nvt_dir,
-                             time=nvt,
-                             temperature=temperature)
+                      name="nvt",
+                      workdir=nvt_dir,
+                      time=nvt,
+                      temperature=temperature,
+                      checkpoint=bb_r_nvt_dir + "/bb_r_nvt.cpt")
     restrained_npt = equilibrate(system=nvt,
-                                        name="r_npt",
-                                        workdir=r_npt_dir,
-                                        time=npt,
-                                        pressure=pressure,
-                                        temperature=temperature,
-                                        restraints="heavy")
+                                 name="r_npt",
+                                 workdir=r_npt_dir,
+                                 time=npt,
+                                 pressure=pressure,
+                                 temperature=temperature,
+                                 restraints="heavy",
+                                 checkpoint=nvt_dir + "/nvt.cpt")
     equilibrated_protein = equilibrate(system=restrained_npt,
-                                              name="npt",
-                                              workdir=npt_dir,
-                                              time=npt,
-                                              pressure=pressure,
-                                              temperature=temperature)
+                                       name="npt",
+                                       workdir=npt_dir,
+                                       time=npt,
+                                       pressure=pressure,
+                                       temperature=temperature,
+                                       checkpoint=r_npt_dir + "/r_npt.cpt")
     bound_savename = npt_dir + f"/system_{ligand_number}"
     bss.IO.saveMolecules(filebase=bound_savename, system=equilibrated_protein, fileformat=["PRM7", "RST7"])     
    
@@ -384,17 +404,17 @@ def main():
                         help="input file containing equilibration options",
                         type=str)
 
-    parser.add_argument("-e",
-                        "--equil-dir",
-                        dest="equil_dir",
-                        help="full path to /equilibration/",
-                        default=functions.path_exists(os.getcwd() + "/equilibration/"))
+    # parser.add_argument("-e",
+    #                     "--equil-dir",
+    #                     dest="equil_dir",
+    #                     help="full path to /equilibration/",
+    #                     default=os.getcwd() + "/equilibration/")
     
-    parser.add_argument("-pwd",
-                        "--project-dir",
-                        dest="project_dir",
-                        help="full path to project working directory",
-                        default=os.getcwd())   
+    # parser.add_argument("-pwd",
+    #                     "--project-dir",
+    #                     dest="project_dir",
+    #                     help="full path to project working directory",
+    #                     default=os.getcwd())   
 
     parser.add_argument("-s",
                         "--minimisation-steps",
