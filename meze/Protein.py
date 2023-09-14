@@ -4,6 +4,7 @@ Protein class object
 import os
 import functions
 import BioSimSpace as bss
+import argparse
 
 
 def get_water_file(working_directory, name="water.pdb"):
@@ -15,11 +16,16 @@ def get_water_file(working_directory, name="water.pdb"):
     -----------
     Return:
     -------
-    water_pdb: str
-        crystal waters in pdb file
+    water_file: str or None
+        crystal waters in pdb file or None if water file doesn't exist in working directory
     """
     water_file = working_directory + "/" + name
-    return functions.file_exists(water_file)
+    try:
+        water_file = functions.file_exists(water_file)
+    except argparse.ArgumentTypeError:
+        print("No separate water file detected in working directory. Continuing without it.")
+        water_file = None
+    return water_file
 
 
 class Protein(object):
@@ -58,8 +64,12 @@ class Protein(object):
         self.molecule = bss.IO.readMolecules(functions.file_exists(protein_file))
         self.forcefield = forcefield
         self.water_model = water_model
-        self.xtal_water = bss.IO.readMolecules(get_water_file(self.path))
-        self.prepared = self.path + "/" + self.name+ "_tleap"
+        water_file = get_water_file(self.path)
+        if water_file is not None:
+            self.xtal_water = bss.IO.readMolecules(get_water_file(self.path))
+        else:
+            self.xtal_water = ""
+        self.prepared = self.path + "/" + self.name + "_tleap"
     
     
     def create_complex(self):
