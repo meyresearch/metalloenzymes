@@ -875,6 +875,8 @@ class Network(object):
         protocol_file: str
             protocol datafile
         """
+        strip = self.output_directories[0].split("/")[-2]
+        path_to_outputs = self.output_directories[0].replace(strip, "")
         protocol = [f"ligand forcefield = {self.ligand_forcefield}", 
                     f"protein forcefield = {self.protein_forcefield}", 
                     f"solvent = {self.water_model}", 
@@ -882,7 +884,9 @@ class Network(object):
                     f"box shape = {self.box_shape}", 
                     f"protocol = default",
                     f"sampling = {self.md_time}*ns",
-                    f"engine = {self.md_engine}"]
+                    f"engine = {self.md_engine}",
+                    f"outputs = {path_to_outputs}",
+                    f"repeats = {self.n_repeats}"]
         protocol_file = self.afe_input_directory + "/protocol.dat"
 
         with open(protocol_file, "w") as file:
