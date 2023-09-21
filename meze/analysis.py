@@ -220,28 +220,28 @@ def fix_simfile(protocol): # ONLY FOR SOMD
 
         arguments = [(unbound_minimisation_simfiles[i], unbound_simfiles[i], bound_simfiles[i], template_header) for i in range(len(unbound_minimisation_simfiles))]
 
-        with multiprocessing.pool.Pool() as pool:
-            pool.istarmap(create_correct_header, arguments)
+        # with multiprocessing.pool.Pool() as pool:
+        #     pool.istarmap(create_correct_header, arguments)
 
+            # NEED TO ADD A NEWLINE CHARACTER TO THE END OF THE TEMPLATE HEADER
+        for i in range(len(unbound_minimisation_simfiles)):
+
+            with open(unbound_minimisation_simfiles[i], "r") as file:
+                minimisation_simfile = file.readlines()
             
-        # for i in range(len(unbound_minimisation_simfiles)):
+            with open(unbound_minimisation_simfiles[i], "r") as file:
+                for j, line in enumerate(file):
+                    if "lambda" in line:
+                        start = j
+                    if "#" not in line:
+                        end = j
+                        break
 
-        #     with open(unbound_minimisation_simfiles[i], "r") as file:
-        #         minimisation_simfile = file.readlines()
-            
-        #     with open(unbound_minimisation_simfiles[i], "r") as file:
-        #         for j, line in enumerate(file):
-        #             if "lambda" in line:
-        #                 start = j
-        #             if "#" not in line:
-        #                 end = j
-        #                 break
+            lambda_lines = minimisation_simfile[start:end]
+            correct_lambda_header = template_header + lambda_lines
 
-        #     lambda_lines = minimisation_simfile[start:end]
-        #     correct_lambda_header = template_header + lambda_lines
-
-        #     write_header(unbound_simfiles[i], correct_lambda_header)
-        #     write_header(bound_simfiles[i], correct_lambda_header)
+            write_header(unbound_simfiles[i], correct_lambda_header)
+            write_header(bound_simfiles[i], correct_lambda_header)
             
 
 def get_results(protocol):
@@ -289,9 +289,9 @@ def main():
     arguments = parser.parse_args()
     protocol_file = functions.file_exists(arguments.protocol)
     protocol = read_protocol(protocol_file)
-    # s = time.time()
+    s = time.time()
     fix_simfile(protocol)
-    # print(f"fix_simfile took {time.time() - s} seconds")
+    print(f"fix_simfile took {time.time() - s} seconds")
     # get_results(protocol)
 
 if __name__ == "__main__":
