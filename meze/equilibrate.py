@@ -128,7 +128,7 @@ def slurm_heat(n_ligands, script):
     Return:
     -------
     int:
-        0: process successful, 1: process unsuccessful
+        0: process successful, 1: process unsuccessful #DOESN'T WORK
     """
     return subprocess.call(["sbatch", "--wait", f"--array=1-{n_ligands}", f"{script}"])
 
@@ -231,7 +231,7 @@ def equilibrate(system, name, workdir, time, start_t=300, end_t=300, temperature
     return equilibrated_system
 
 
-def heat_unbound(ligand_number, equilibration_dir, project_dir, min_steps, min_dt, min_tol, short_nvt, nvt, npt, temperature=300., pressure=1.):
+def heat_unbound(ligand_number, equilibration_dir, project_dir, min_steps, min_dt, min_tol, short_nvt, nvt_runtime, npt_runtime, temperature=300., pressure=1.):
     """
     Perform minimisation and NVT and NPT equilibrations on ligand
 
@@ -245,9 +245,9 @@ def heat_unbound(ligand_number, equilibration_dir, project_dir, min_steps, min_d
         full path to working directory for project
     short_nvt: float
         runtime in ps for short NVT equilibration
-    nvt: float
+    nvt_runtime: float
         runtime in ps for NVT equilibration
-    npt: float 
+    npt_runtime: float 
         runtime in ps for NPT equilibration
     temperature: bss.Units.Temperature
         system temperature in Kelvin
@@ -283,19 +283,13 @@ def heat_unbound(ligand_number, equilibration_dir, project_dir, min_steps, min_d
     nvt = equilibrate(system=restrained_nvt,
                       name="nvt",
                       workdir=nvt_directory,
-                      time=nvt,
+                      time=nvt_runtime,
                       temperature=temperature,
                       checkpoint=r_nvt_directory + "/r_nvt.cpt")
-    nvt = equilibrate(system=restrained_nvt,
-                    name="nvt",
-                    workdir=nvt_directory,
-                    time=nvt,
-                    temperature=temperature,
-                    checkpoint=r_nvt_directory + "/r_nvt.cpt")
     restrained_npt = equilibrate(system=nvt,
                                  name="r_npt",
                                  workdir=r_npt_directory,
-                                 time=npt,
+                                 time=npt_runtime,
                                  pressure=pressure,
                                  temperature=temperature,
                                  restraints="heavy",
@@ -303,7 +297,7 @@ def heat_unbound(ligand_number, equilibration_dir, project_dir, min_steps, min_d
     equilibrated_molecule = equilibrate(system=restrained_npt,
                                         name="npt",
                                         workdir=npt_directory,
-                                        time=npt,
+                                        time=npt_runtime,
                                         pressure=pressure,
                                         temperature=temperature,
                                         checkpoint=r_npt_directory + "/r_npt.cpt")
@@ -311,7 +305,7 @@ def heat_unbound(ligand_number, equilibration_dir, project_dir, min_steps, min_d
     bss.IO.saveMolecules(filebase=unbound_savename, system=equilibrated_molecule, fileformat=["PRM7", "RST7"])        
 
     
-def heat_bound(ligand_number, equilibration_dir, project_dir, min_steps, min_dt, min_tol, short_nvt, nvt, npt, temperature=300., pressure=1.):
+def heat_bound(ligand_number, equilibration_dir, project_dir, min_steps, min_dt, min_tol, short_nvt, nvt_runtime, npt_runtime, temperature=300., pressure=1.):
     """
     Perform minimisation and NVT and NPT equilibrations on bound ligand 
 
@@ -325,9 +319,9 @@ def heat_bound(ligand_number, equilibration_dir, project_dir, min_steps, min_dt,
         full path to working directory for project
     short_nvt: float
         runtime in ps for short NVT equilibration
-    nvt: float
+    nvt_runtime: float
         runtime in ps for NVT equilibration
-    npt: float 
+    npt_runtime: float 
         runtime in ps for NPT equilibration
     temperature: bss.Units.Temperature
         system temperature in Kelvin
@@ -363,20 +357,20 @@ def heat_bound(ligand_number, equilibration_dir, project_dir, min_steps, min_dt,
     backbone_restrained_nvt = equilibrate(system=restrained_nvt,
                                           name="bb_r_nvt",
                                           workdir=bb_r_nvt_dir,
-                                          time=nvt,
+                                          time=nvt_runtime,
                                           temperature=temperature,
                                           restraints="backbone",
                                           checkpoint=r_nvt_dir + "/r_nvt.cpt")
     nvt = equilibrate(system=backbone_restrained_nvt,
                       name="nvt",
                       workdir=nvt_dir,
-                      time=nvt,
+                      time=nvt_runtime,
                       temperature=temperature,
                       checkpoint=bb_r_nvt_dir + "/bb_r_nvt.cpt")
     restrained_npt = equilibrate(system=nvt,
                                  name="r_npt",
                                  workdir=r_npt_dir,
-                                 time=npt,
+                                 time=npt_runtime,
                                  pressure=pressure,
                                  temperature=temperature,
                                  restraints="heavy",
@@ -384,7 +378,7 @@ def heat_bound(ligand_number, equilibration_dir, project_dir, min_steps, min_dt,
     equilibrated_protein = equilibrate(system=restrained_npt,
                                        name="npt",
                                        workdir=npt_dir,
-                                       time=npt,
+                                       time=npt_runtime,
                                        pressure=pressure,
                                        temperature=temperature,
                                        checkpoint=r_npt_dir + "/r_npt.cpt")
@@ -448,14 +442,15 @@ def main():
                         dest="emstep",
                         help="Step size for energy minimisation",
                         type=float,
-                        default=0.01)
+                        default=0.001) 
     
     parser.add_argument("--em-tolerance",
                         dest="emtol",
                         help="kJ mol-1 nm-1, Maximum force tolerance for energy minimisation",
                         type=float,
                         default=1000)
-   
+    
+    
     arguments = parser.parse_args()
     options = input_to_dict(file=arguments.input_file)
 
@@ -466,17 +461,18 @@ def main():
                  min_dt=options["min_dt"],
                  min_tol=options["min_tol"],
                  short_nvt=functions.convert_to_units(options["short_nvt"], PICOSECOND),
-                 nvt=functions.convert_to_units(options["nvt"], PICOSECOND),
-                 npt=functions.convert_to_units(options["npt"], PICOSECOND))
+                 nvt_runtime=functions.convert_to_units(options["nvt"], PICOSECOND),
+                 npt_runtime=functions.convert_to_units(options["npt"], PICOSECOND))
+    
     heat_bound(ligand_number=arguments.ligand_number,
                equilibration_dir=options["equilibration_dir"],
                project_dir=options["project_dir"],
                min_steps=options["min_steps"],
                min_dt=options["min_dt"],
-               min_tol=options["min_tol"],               
+               min_tol=options["min_tol"],     
                short_nvt=functions.convert_to_units(options["short_nvt"], PICOSECOND),
-               nvt=functions.convert_to_units(options["nvt"], PICOSECOND),
-               npt=functions.convert_to_units(options["npt"], PICOSECOND))
+               nvt_runtime=functions.convert_to_units(options["nvt"], PICOSECOND),
+               npt_runtime=functions.convert_to_units(options["npt"], PICOSECOND))
 
 
 if __name__ == "__main__":

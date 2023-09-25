@@ -19,3 +19,6 @@ ATM = bss.Units.Pressure.atm
 
 BOLTZMANN_CONSTANT = scipy.constants.Boltzmann
 AVOGADROS_NUMBER = scipy.constants.Avogadro
+
+COLOURS = {"PINK": "#D0006F",
+           "BLUE": "#0099AB"}

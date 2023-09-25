@@ -259,23 +259,30 @@ def create_minimisation_configs(files, min_cycles=1, min_moves=50000):
     Return:
     -------
     """
-    minimisation_config = ["minimise = True\n", "minimise maximum iterations = 10000\n"]
+    # minimisation_config = [f"minimise maximum iterations = 10000\n"]
     for i in range(len(files)):
         with open(files[0], "r") as f:
             old_config = f.readlines()
         
         for line in old_config:
-            if "ncycles" in line:
+            if "ncycles" in line and "ncycles_per_snap" not in line:
                 idx = old_config.index(line)
                 old_config[idx] = f"ncycles = {min_cycles}\n"
             elif "nmoves" in line:
                 idx = old_config.index(line)
                 old_config[idx] = f"nmoves = {min_moves}\n"
+            elif "buffered coordinates frequency" in line:
+                idx = old_config.index(line)
+                frames = min_moves // 100
+                old_config[idx] = f"buffered coordinates frequency = {frames}\n"
+            elif "minimise" in line and "minimise maximum iterations" not in line:
+                idx = old_config.index(line)
+                old_config[idx] = "minimise = True\n"
         replaced_config = old_config
 
         with open(files[i], "w") as f:
-            for setting in minimisation_config:
-                replaced_config.append(setting)
+            # for setting in minimisation_config:
+            #     replaced_config.append(setting)
             f.writelines(replaced_config)
 
 
@@ -441,6 +448,7 @@ class Network(object):
         self: Network
             (solvated) Network object
         """
+        print("\n")
         with multiprocessing.pool.Pool() as pool:
             self.ligands = list(pool.imap(self.solvate_unbound, range(self.n_ligands)))
             self.bound_ligands = list(pool.imap(self.solvate_bound, range(self.n_ligands)))
@@ -461,6 +469,7 @@ class Network(object):
         self: Network
             (equilibrated) Network object
         """
+        print("\n")
         print("Getting equilibrated systems")
         unbound_paths = functions.read_files(self.equilibration_directory+"/unbound/ligand_*/npt/")
         paths = list(map(lambda x: x + "ligand_*", unbound_paths))
@@ -497,7 +506,7 @@ class Network(object):
         indices_a, indices_b = columns_to_list("index_a"), columns_to_list("index_b")
         lambda_list = columns_to_list("lambdas")
         lambdas = [list(map(float, lambda_list[i].split())) for i in range(len(lambda_list))]
-        
+        print("\n")
         arguments = [(self.ligand_molecules[indices_a[i]], self.ligand_molecules[indices_b[i]]) for i in range(self.n_transformations)]
         unbound_systems = []
         with multiprocessing.pool.Pool() as pool:
@@ -524,9 +533,15 @@ class Network(object):
         # Only construct the BioSimSpace Relative AFE objects in the first repeat directory, to save on computation
         n_cycles = 5 #TODO make editable
         n_moves = self.set_n_moves()
-        _ = [bss.FreeEnergy.Relative(system=unbound_systems[i], protocol=free_energy_protocols[i], engine=self.md_engine, work_dir=unbound_directories[i], extra_options={"ncycles": n_cycles, "nmoves": n_moves}) for i in tqdm.tqdm(range(self.n_transformations), desc="Unbound AFE")]
+        frames = n_moves // 100
+        config_options = {"ncycles": n_cycles, 
+                          "nmoves": n_moves, 
+                          "buffered coordinates frequency": frames, 
+                          "cutoff distance": "8 angstrom", 
+                          "minimise": False}
+        _ = [bss.FreeEnergy.Relative(system=unbound_systems[i], protocol=free_energy_protocols[i], engine=self.md_engine, work_dir=unbound_directories[i], extra_options=config_options) for i in tqdm.tqdm(range(self.n_transformations), desc="Unbound AFE")]
         print("\n")
-        _ = [bss.FreeEnergy.Relative(system=bound_systems[i], protocol=free_energy_protocols[i], engine=self.md_engine, work_dir=bound_directories[i], extra_options={"ncycles": n_cycles, "nmoves": n_moves}) for i in tqdm.tqdm(range(self.n_transformations), desc="Bound AFE")]
+        _ = [bss.FreeEnergy.Relative(system=bound_systems[i], protocol=free_energy_protocols[i], engine=self.md_engine, work_dir=bound_directories[i], extra_options=config_options) for i in tqdm.tqdm(range(self.n_transformations), desc="Bound AFE")]
 
         # For SOMD only: create a minimisation directory manually and copy the AFE MD configuration files to the minimisation directory for the first repeat
         bound_lambda_minimisation_directories = [functions.mkdir(directory + "/minimisation/") for directory in bound_directories]
@@ -544,9 +559,10 @@ class Network(object):
         unbound_configuration_files = [functions.read_files(file) for file in unbound_configurations]
         _ = [create_minimisation_configs(config_files) for config_files in bound_configuration_files]
         _ = [create_minimisation_configs(config_files) for config_files in unbound_configuration_files]
-
+        print("\n")
         # Copy lambda transformation directories (including minimisation) from first repeat directory to the rest of the repeat directories, e.g. SOMD_2, SOMD_3
         _ = [os.system(f"cp -r {transformation_directories[i].rstrip('/')} {self.output_directories[j]}") for i in tqdm.tqdm(range(len(unbound_directories)), desc="Copy unbound") for j in range(1, self.n_repeats)]
+        print("\n")
         _ = [os.system(f"cp -r {transformation_directories[i].rstrip('/')} {self.output_directories[j]}") for i in tqdm.tqdm(range(len(bound_directories)), desc="Copy bound") for j in range(1, self.n_repeats)]
 
 

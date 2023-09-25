@@ -5,6 +5,7 @@
     "version": "0.2.0",
     "configurations": [
 
+
         
 
 
@@ -18,13 +19,14 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": false,
-            // "args": ["-if", "/home/jguven/projects/alchemistry/add_caps_to_kpc2/inputs/protein/kpc2.input.pdb", "-g", "kpc2", 
-            // "-ppd", "/home/jguven/projects/alchemistry/add_caps_to_kpc2/inputs/protein/",
-            // "-pwd", "/home/jguven/projects/alchemistry/add_caps_to_kpc2/",
-            // "-lpd", "/home/jguven/projects/alchemistry/add_caps_to_kpc2/inputs/ligands/",
-            // "-c", "-1", 
-            // "-snvt", "1", "-nvt", "1", "-npt", "1"]
-            "args": ["-pf", "/home/jguven/projects/alchemistry/kpc2/partially_protonated_ligand/afe/protocol.dat"]
+            "args": ["-if", "/home/jguven/projects/alchemistry/kpc2/partially_protonated_ligand/inputs/protein/kpc2.input.pdb", "-g", "kpc2", 
+            "-ppd", "/home/jguven/projects/alchemistry/kpc2/partially_protonated_ligand/inputs/protein/",
+            "-pwd", "/home/jguven/projects/alchemistry/kpc2/partially_protonated_ligand/",
+            "-lpd", "/home/jguven/projects/alchemistry/kpc2/partially_protonated_ligand/inputs/ligands/",
+            "-c", "-1", 
+            "-snvt", "1", "-nvt", "1", "-npt", "1"]
+            // "args": ["-pf", "/home/jguven/projects/alchemistry/kpc2/partially_protonated_ligand/afe/protocol.dat",
+            //          "-ef", "/home/jguven/projects/alchemistry/kpc2/partially_protonated_ligand/afe/experimental_K_i.csv"]
         }
     ]
 }
