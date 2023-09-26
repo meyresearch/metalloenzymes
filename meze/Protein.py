@@ -83,7 +83,7 @@ class Protein(object):
         output = self.path + "/protein_water_complex"
         
         if water_file is not None:
-            self.xtal_water = bss.IO.readMolecules(get_water_file(self.path))
+            self.xtal_water = bss.IO.readMolecules(water_file)
             complex = self.molecule + self.xtal_water
             file = bss.IO.saveMolecules(output, complex, fileformat="pdb")[0]
         else:

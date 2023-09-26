@@ -341,8 +341,9 @@ class Network(object):
                                        path=self.protein_path,
                                        forcefield=self.protein_forcefield,
                                        water_model=self.water_model)
-        self.protein_water_complex = self.protein.create_complex()
-        self.prepared_protein = self.protein.tleap(self.protein_water_complex)
+        #TODO Check if this works:
+        # self.protein_water_complex = self.protein.create_complex()
+        # self.prepared_protein = self.protein.tleap(self.protein_water_complex)
         
         self.threshold = threshold
         self.n_normal = n_normal
@@ -417,7 +418,7 @@ class Network(object):
         return output_directories
 
 
-    def prepare_meze(self):
+    def prepare_network(self):
         """
         Prepare AFE calculations by creating network dictionary, ligand and protocol dat files.
 
@@ -429,6 +430,8 @@ class Network(object):
         self: Network
             (prepared) Network object
         """
+        self.protein_water_complex = self.protein.create_complex()
+        self.prepared_protein = self.protein.tleap(self.protein_water_complex)
         self.transformations = self.set_transformations()
         self.n_transformations = len(self.transformations)
         self.ligands_dat_file = self.create_ligand_dat_file()
@@ -672,7 +675,7 @@ class Network(object):
 
     def solvate_bound(self, index):
         """
-        Solvate unbound systems.
+        Solvate bound systems.
 
         Parameters:
         -----------
@@ -680,7 +683,7 @@ class Network(object):
             Ligand indices for sorting through Network.names and Network.ligands
         Return:
         -----
-        solvated_ligand: Ligand
+        solvated_system: Ligand
             (solvated) Ligand object whose file attribute is the prm7 and rst7 files         
         """
         ligand = self.ligands[index]

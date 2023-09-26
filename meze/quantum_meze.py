@@ -1,36 +1,9 @@
-import functions
+import Meze
 import argparse
+import functions
 import os
-import Network
-import logging
-import time
-import equilibrate
-logger = logging.getLogger()
-logger.setLevel(logging.CRITICAL)
 
 
-def clean_arguments(arguments):
-    """
-    Check arguments and clean them
-
-    Parameters:
-    -----------
-    arguments: Namespace
-        command-line arguments
-    
-    Return:
-    -------
-    cleaned Namespace of arguments
-    
-    """
-    check_integers = lambda arg: functions.check_positive(functions.check_int(arg))
-    check_integers(arguments.min_steps)
-    check_floats = lambda arg: functions.check_positive(functions.check_float(arg))
-    check_floats(arguments.short_nvt)
-    check_floats(arguments.nvt)
-    check_floats(arguments.npt)
-
-    return arguments
 
 
 def main():
@@ -68,6 +41,12 @@ def main():
                         help="water model, default is tip3p",
                         default="tip3p")
     
+    parser.add_argument("-wf",
+                        "--water-file",
+                        dest="water_file",
+                        help="water file, default is water.pdb",
+                        default=os.getcwd()+"/inputs/protein/water.pdb")
+    
     parser.add_argument("-lpd",
                         "--ligand-prep-directory",
                         dest="ligand_directory",
@@ -87,11 +66,6 @@ def main():
                         help="working directory for the project",
                         default=os.getcwd())
 
-    parser.add_argument("-e",
-                        "--engine",
-                        dest="engine",
-                        help="MD engine",
-                        default="SOMD")
 
     parser.add_argument("-lf",
                         "--ligand-forcefield",
@@ -118,13 +92,7 @@ def main():
                          help="sampling time in nanoseconds",
                         type=float,
                         default=4) 
-    
-    parser.add_argument("-r",
-                        "--repeats",
-                        dest="repeats",
-                        help="number of AFE repeat runs",
-                        type=int, 
-                        default=3)
+
 
     parser.add_argument("-min",
                         "--minimisation-steps",
@@ -168,62 +136,33 @@ def main():
 
 
     arguments = parser.parse_args()
-    arguments = clean_arguments(arguments)
 
-    s = time.time()
 
-    network = Network.Network(workdir=arguments.working_directory,
-                              ligand_path=arguments.ligand_directory,
-                              group_name=arguments.group_name,
-                              protein_file=arguments.protein,
-                              protein_path=arguments.protein_directory,
-                              water_model=arguments.water_model,
-                              protein_ff=arguments.forcefield,
-                              ligand_ff=arguments.ligand_forcefield,
-                              ligand_charge=arguments.ligand_charge,
-                              engine=arguments.engine,
-                              sampling_time=arguments.sampling_time,
-                              box_edges=arguments.box_edges,
-                              box_shape=arguments.box_shape,
-                              min_steps=arguments.min_steps,
-                              short_nvt=arguments.short_nvt,
-                              nvt=arguments.nvt,
-                              npt=arguments.npt,
-                              min_dt=arguments.emstep,
-                              min_tol=arguments.emtol,
-                              repeats=arguments.repeats)
 
+    meze = Meze.Meze(workdir=arguments.working_directory,
+                     ligand_path=arguments.ligand_directory,
+                     group_name=arguments.group_name,
+                     protein_file=arguments.protein,
+                     protein_path=arguments.protein_directory,
+                     water_model=arguments.water_model,
+                     protein_ff=arguments.forcefield,
+                     ligand_ff=arguments.ligand_forcefield,
+                     ligand_charge=arguments.ligand_charge,
+                     sampling_time=arguments.sampling_time,
+                     box_edges=arguments.box_edges,
+                     box_shape=arguments.box_shape,
+                     min_steps=arguments.min_steps,
+                     short_nvt=arguments.short_nvt,
+                     nvt=arguments.nvt,
+                     npt=arguments.npt,
+                     min_dt=arguments.emstep,
+                     min_tol=arguments.emtol,
+                     water_file=arguments.water_file)
     
-    prepared_network = network.prepare_network()
+    solvated_meze = meze.solvate_bound(0)
 
-    solvated_network = prepared_network.solvation()
 
-    slurm_heat_file = equilibrate.write_slurm_script(path=solvated_network.afe_input_directory,
-                                                     log_dir=solvated_network.log_directory,
-                                                     project_dir=solvated_network.workding_directory,
-                                                     equil_dir=solvated_network.equilibration_directory,
-                                                     min_steps=arguments.min_steps,
-                                                     min_dt=arguments.emstep,
-                                                     min_tol=arguments.emtol,
-                                                     short_nvt=arguments.short_nvt,
-                                                     nvt=arguments.nvt,
-                                                     npt=arguments.npt)
-    
-    success = equilibrate.slurm_heat(n_ligands=solvated_network.n_ligands, script=slurm_heat_file)
-
-    # if success > 1: # THIS CATCH DOESN'T WORK
-    #     raise RuntimeError(f"Heating meze failed. Please check error logs at {solvated_network.log_directory}")
-    
-    equilibrated_network = solvated_network.get_equilibrated()
-
-    equilibrated_network.afe_prep()
-
-    run_script = equilibrated_network.write_afe_run_script()
-    equilibrated_network.submit(run_script)
-    
-    print(f"time: {time.time() - s} s")
 
 
 if __name__ == "__main__":
-    main()
-
+   main()
