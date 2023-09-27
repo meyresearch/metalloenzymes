@@ -689,8 +689,9 @@ class Network(object):
         ligand = self.ligands[index]
         ligand_number = self.names[index].split("_")[-1]
         print(f"Solvating bound ligand {ligand_number}")
-        ligand_parameters = ligand.parameterise(self.ligand_forcefield, self.ligand_charge)     
-        system_parameters = ligand_parameters + self.protein.get_prepared_protein()
+        ligand_parameters = ligand.parameterise(self.ligand_forcefield, self.ligand_charge)  
+        #TODO check if this works   
+        system_parameters = ligand_parameters + self.protein.get_prepared_protein(name=self.protein.prepared)
         bound_box, bound_box_angles = self.create_box(system_parameters)
         solvated_molecules = bss.Solvent.solvate(model=self.protein.water_model,
                                                 molecule=system_parameters,

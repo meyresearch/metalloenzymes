@@ -107,9 +107,12 @@ class Protein(object):
         """
         tleap_input_file = self.path + "/tleap.in"
         tleap_output_file = self.path + "/tleap.out"
-        save_file = self.path + "/" + self.name
+        #TODO Check if this works:
+        # save_file = self.path + "/" + self.name
+        save_file = complex_file.split(".")[0] # strips the file extension
         with open(tleap_input_file, "w") as tleap_in:
             tleap_in.write(f"source leaprc.protein.{self.forcefield}\n")
+            tleap_in.write(f"source leaprc.gaff2\n")
             tleap_in.write(f"source leaprc.water.{self.water_model}\n")
             tleap_in.write(f"complex = loadpdb {complex_file}\n")
             tleap_in.write(f"saveamberparm complex {save_file}_tleap.prm7 {save_file}_tleap.rst7\n")
@@ -121,7 +124,7 @@ class Protein(object):
         return save_file + "_tleap"
 
 
-    def get_prepared_protein(self):
+    def get_prepared_protein(self, name):
         """
         Return a bss.Molecule object of the prepared protein-water complex
 
@@ -130,7 +133,7 @@ class Protein(object):
         bss.Molecule: 
             prepared molecule 
         """
-        return bss.IO.readMolecules([f"{self.prepared}.rst7", f"{self.prepared}.prm7"])[0]
+        return bss.IO.readMolecules([f"{name}.rst7", f"{name}.prm7"])[0]
         
 
 def main():
