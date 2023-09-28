@@ -342,15 +342,15 @@ def main():
     arguments = parser.parse_args()
     protocol_file = functions.file_exists(arguments.protocol)
     protocol = read_protocol(protocol_file)
-    # s = time.time()
-    # fix_simfile(protocol)
-    # print(f"fix_simfile took {time.time() - s} seconds")
-    # values, errors = get_results(protocol)
+    s = time.time()
+    fix_simfile(protocol)
+    print(f"fix_simfile took {time.time() - s} seconds")
+    values, errors = get_results(protocol)
 
     ### FOR DEBUGGING: ###
-    path = "/home/jguven/projects/alchemistry/kpc2/partially_protonated_ligand/test_outputs/"
-    values = pd.read_csv(path + "SOMD_values.csv")
-    errors = pd.read_csv(path + "SOMD_errors.csv")
+    # path = "/home/jguven/projects/alchemistry/kpc2/partially_protonated_ligand/test_outputs/"
+    # values = pd.read_csv(path + "SOMD_values.csv")
+    # errors = pd.read_csv(path + "SOMD_errors.csv")
     #######
 
     calculated_means = average(values)
@@ -368,41 +368,42 @@ def main():
     pearson_r = scipy.stats.pearsonr(experimental_free_energy, results["average"].to_numpy())
     spearman = scipy.stats.spearmanr(experimental_free_energy, results["average"].to_numpy())
     mue = sklearn.metrics.mean_absolute_error(experimental_free_energy, results["average"].to_numpy())
+    print(pearson_r, spearman, mue)
     # stats = bootstrap_statistics(experimental_free_energy, results["average"].to_numpy())
     # print(stats)
 
-def plot_repeat_correlation():
 
-    plt.figure(figsize=(10, 10))
-    sns.set(context="notebook", palette="colorblind", style="ticks", font_scale=2)
-    plt.scatter(experimental_free_energy, values["repeat_1"].to_numpy(), s=50, label="somd 1")
-    plt.scatter(experimental_free_energy, values["repeat_2"].to_numpy(), s=50, label="somd 2")
-    plt.scatter(experimental_free_energy, values["repeat_3"].to_numpy(), s=50, label="somd 3")
-    # plt.scatter(3, 2.5, s=0)
 
-    (_, caps, _) = plt.errorbar(experimental_free_energy,
-                            results["average"].to_numpy(),
-                            color="#D0006F",
-                            yerr=results["std"].to_numpy(),
-                            capsize=3,
-                            linestyle="",
-                            zorder=-1)
+#     plt.figure(figsize=(10, 10))
+#     sns.set(context="notebook", palette="colorblind", style="ticks", font_scale=2)
+#     plt.scatter(experimental_free_energy, values["repeat_1"].to_numpy(), s=50, label="somd 1")
+#     plt.scatter(experimental_free_energy, values["repeat_2"].to_numpy(), s=50, label="somd 2")
+#     plt.scatter(experimental_free_energy, values["repeat_3"].to_numpy(), s=50, label="somd 3")
+#     # plt.scatter(3, 2.5, s=0)
 
-    plt.plot([-4.5, 4.5], [-4.5, 4.5], color="#0099AB", linestyle=":", zorder=-1)
-    plt.xlabel("$\Delta \Delta$ G$_\mathrm{EXP}$ (kcal mol⁻¹)")
-    plt.ylabel("$\Delta \Delta$ G$_\mathrm{AFE}$ (kcal mol⁻¹)")
-    plt.vlines(0, -3.5, 3.5, color = "silver", linestyle="--", zorder=-1)
-    plt.hlines(0, -3.5, 3.5, color = "silver", linestyle="--", zorder=-1)
-    plt.xlim(-3.5, 3.5)
-    plt.ylim(-3.5, 3.5)
-    plt.tight_layout()
-    labels = [transformation.strip().replace("_", "").replace("ligand", "").replace("~", " to ") for transformation in values["transformations"].tolist()]
-    for i in range(len(labels)):
-        plt.annotate(labels[i], (experimental_free_energy[i], results["average"].to_numpy()[i]))
-    # plt.savefig("corr.png", dpi=1200, transparent=True)
+#     (_, caps, _) = plt.errorbar(experimental_free_energy,
+#                             results["average"].to_numpy(),
+#                             color="#D0006F",
+#                             yerr=results["std"].to_numpy(),
+#                             capsize=3,
+#                             linestyle="",
+#                             zorder=-1)
 
-    plt.legend()
-    plt.savefig("test-CORR-all.png")
+#     plt.plot([-4.5, 4.5], [-4.5, 4.5], color="#0099AB", linestyle=":", zorder=-1)
+#     plt.xlabel("$\Delta \Delta$ G$_\mathrm{EXP}$ (kcal mol⁻¹)")
+#     plt.ylabel("$\Delta \Delta$ G$_\mathrm{AFE}$ (kcal mol⁻¹)")
+#     plt.vlines(0, -3.5, 3.5, color = "silver", linestyle="--", zorder=-1)
+#     plt.hlines(0, -3.5, 3.5, color = "silver", linestyle="--", zorder=-1)
+#     plt.xlim(-3.5, 3.5)
+#     plt.ylim(-3.5, 3.5)
+#     plt.tight_layout()
+#     labels = [transformation.strip().replace("_", "").replace("ligand", "").replace("~", " to ") for transformation in values["transformations"].tolist()]
+#     for i in range(len(labels)):
+#         plt.annotate(labels[i], (experimental_free_energy[i], results["average"].to_numpy()[i]))
+#     # plt.savefig("corr.png", dpi=1200, transparent=True)
+
+#     plt.legend()
+#     plt.savefig("test-CORR-all.png")
 
 
 
@@ -541,7 +542,7 @@ def get_ligand_indices(transformations):
     return first_indices, second_indices
 
 
-def get_experimental_data(file, transformations): #SOMETHING IS WRONG HERE! ERRORS WRONG AND THE BARS ARE WRONG
+def get_experimental_data(file, transformations): 
     """
     Use the transformations to get the indices of ligands.
     Convert experimental inhibition constants to free energies 

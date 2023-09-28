@@ -342,8 +342,8 @@ class Network(object):
                                        forcefield=self.protein_forcefield,
                                        water_model=self.water_model)
         #TODO Check if this works:
-        # self.protein_water_complex = self.protein.create_complex()
-        # self.prepared_protein = self.protein.tleap(self.protein_water_complex)
+        self.protein_water_complex = self.protein.create_complex()
+        self.prepared_protein = self.protein.tleap(self.protein_water_complex)
         
         self.threshold = threshold
         self.n_normal = n_normal
@@ -452,9 +452,13 @@ class Network(object):
             (solvated) Network object
         """
         print("\n")
-        with multiprocessing.pool.Pool() as pool:
-            self.ligands = list(pool.imap(self.solvate_unbound, range(self.n_ligands)))
-            self.bound_ligands = list(pool.imap(self.solvate_bound, range(self.n_ligands)))
+        # with multiprocessing.pool.Pool() as pool:
+        #     self.ligands = list(pool.imap(self.solvate_unbound, range(self.n_ligands)))
+        #     self.bound_ligands = list(pool.imap(self.solvate_bound, range(self.n_ligands)))
+        bound_ligs = []
+        for i in range(self.n_ligands):
+            bound_ligs.append(self.solvate_bound(i))
+            
         self.ligand_molecules = [ligand.get_system() for ligand in self.ligands]
         self.bound_ligand_molecules = [ligand.get_system() for ligand in self.bound_ligands] 
         return self
@@ -671,7 +675,26 @@ class Network(object):
         solvated_files = bss.IO.saveMolecules(ligand_savename, solvated_molecule, ["PRM7", "RST7"])
         solvated_ligand = Ligand.Ligand(file=solvated_files, parameterised=True)
         return solvated_ligand
-        
+    
+# In [7]: ligand = bss.IO.readMolecules("ligand_1.sdf")[0]
+
+# In [8]: params = bss.Parameters.gaff2(molecule=ligand, net_charge=-1).getMolecule()
+
+# In [11]: protein_file = "/home/jguven/projects/alchemistry/kpc2/partially_protonated_ligand/inputs/protein/kpc2_tleap"
+
+# In [12]: protein = bss.IO.readMolecules([protein_file + ".prm7", protein_file + ".rst7"])
+
+# In [13]: system = params + protein
+
+# In [14]: box_min, box_max = system.getAxisAlignedBoundingBox()
+
+# In [15]: boxsize = [y - x for x, y in zip(box_min, box_max)]
+
+# In [16]: box_sizes = [x + 20 * bss.Units.Length.angstrom for x in boxsize]
+
+# In [17]: box, angles = bss.Box.cubic(max(box_sizes))
+
+# In [18]: solv = bss.Solvent.solvate("tip3p", molecule=system, box=box, angles=angles)
 
     def solvate_bound(self, index):
         """
@@ -691,12 +714,14 @@ class Network(object):
         print(f"Solvating bound ligand {ligand_number}")
         ligand_parameters = ligand.parameterise(self.ligand_forcefield, self.ligand_charge)  
         #TODO check if this works   
-        system_parameters = ligand_parameters + self.protein.get_prepared_protein(name=self.protein.prepared)
+        protein = self.protein.get_prepared_protein(name=self.prepared_protein)
+        system_parameters = ligand_parameters + protein
         bound_box, bound_box_angles = self.create_box(system_parameters)
+        # bss.IO.saveMolecules(self.protein_path + "/test", system_parameters, ["pdb"])
         solvated_molecules = bss.Solvent.solvate(model=self.protein.water_model,
-                                                molecule=system_parameters,
-                                                box=bound_box,
-                                                angles=bound_box_angles)
+                                                 molecule=system_parameters,
+                                                 box=bound_box,
+                                                 angles=bound_box_angles)
         
         system_savename = self.protein_path + "system_" + ligand_number + "_solvated"
         solvated_files = bss.IO.saveMolecules(system_savename, solvated_molecules, ["PRM7", "RST7"])

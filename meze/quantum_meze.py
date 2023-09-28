@@ -138,7 +138,6 @@ def main():
     arguments = parser.parse_args()
 
 
-
     meze = Meze.Meze(workdir=arguments.working_directory,
                      ligand_path=arguments.ligand_directory,
                      group_name=arguments.group_name,
