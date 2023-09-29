@@ -47,8 +47,8 @@ def main():
     parser.add_argument("-g",
                         "--group-name",
                         dest="group_name",
-                        help="group name for system, e.g. vim2/kpc2/ndm1/etc",
-                        default="meze")
+                        help="group name for system, e.g. vim2/kpc2/ndm1/etc.; default taken from input filename",
+                        default=None)
 
     parser.add_argument("-ppd",
                         "--protein-prep-directory",

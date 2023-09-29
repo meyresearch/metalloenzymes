@@ -333,15 +333,15 @@ class Network(object):
         self.names = [ligand.get_name() for ligand in self.ligands]
 
         self.protein_forcefield = protein_ff
-        self.group_name = group_name
         self.protein_file = protein_file
         self.protein_path = protein_path
+        self.group_name = self.get_name(group_name)
         self.protein = Protein.Protein(name=self.group_name,
                                        protein_file=self.protein_file,
                                        path=self.protein_path,
                                        forcefield=self.protein_forcefield,
                                        water_model=self.water_model)
-        #TODO Check if this works:
+
         self.protein_water_complex = self.protein.create_complex()
         self.prepared_protein = self.protein.tleap(self.protein_water_complex)
         
@@ -430,8 +430,8 @@ class Network(object):
         self: Network
             (prepared) Network object
         """
-        self.protein_water_complex = self.protein.create_complex()
-        self.prepared_protein = self.protein.tleap(self.protein_water_complex)
+        # self.protein_water_complex = self.protein.create_complex()
+        # self.prepared_protein = self.protein.tleap(self.protein_water_complex)
         self.transformations = self.set_transformations()
         self.n_transformations = len(self.transformations)
         self.ligands_dat_file = self.create_ligand_dat_file()
@@ -458,7 +458,7 @@ class Network(object):
         bound_ligs = []
         for i in range(self.n_ligands):
             bound_ligs.append(self.solvate_bound(i))
-            
+        self.bound_ligands = bound_ligs
         self.ligand_molecules = [ligand.get_system() for ligand in self.ligands]
         self.bound_ligand_molecules = [ligand.get_system() for ligand in self.bound_ligands] 
         return self
@@ -1169,6 +1169,25 @@ class Network(object):
                 continue
         return dict(zip(edited_dataframe["transformations"], edited_dataframe["score"]))
        
+
+    def get_name(self, given_group_name):
+        """
+        Get group name. If user group name is not given, infer name from input protein filename.
+
+        Parameters:
+        -----------
+
+        Return:
+        -------
+        str
+            group name
+        """
+        if given_group_name:
+            return given_group_name
+        else:
+            return self.protein_file.split("/")[-1].split(".")[0]
+
+
 
 def main():
    pass

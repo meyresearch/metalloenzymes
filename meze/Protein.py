@@ -80,8 +80,7 @@ class Protein(object):
             pdb file with water and protein combined
         """
         water_file = get_water_file(self.path)
-        output = self.path + "/protein_water_complex"
-        
+        output = self.path + "/" + self.name
         if water_file is not None:
             self.xtal_water = bss.IO.readMolecules(water_file)
             complex = self.molecule + self.xtal_water
