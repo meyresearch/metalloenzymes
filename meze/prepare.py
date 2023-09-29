@@ -161,14 +161,23 @@ def main():
                             repeats=arguments.repeats)
     
     prepared_network = network.prepare_network()
-    _ = functions.write_slurm_script(template_file="slurm_add_water.sh", 
-                                     path=prepared_network.afe_input_directory, 
-                                     log_dir=prepared_network.log_directory,
-                                     protocol_file=prepared_network.protocol_file)
+
+    functions.write_slurm_script(template_file="slurm_add_water.sh", 
+                                 path=prepared_network.afe_input_directory, 
+                                 log_dir=prepared_network.log_directory,
+                                 protocol_file=prepared_network.protocol_file)
     
-    _ = functions.write_slurm_script(template_file="slurm_heat_meze.sh", 
-                                     path=prepared_network.afe_input_directory, 
-                                     log_dir=prepared_network.log_directory,
-                                     protocol_file=prepared_network.protocol_file)
+    functions.write_slurm_script(template_file="slurm_heat_meze.sh", 
+                                 path=prepared_network.afe_input_directory, 
+                                 log_dir=prepared_network.log_directory,
+                                 protocol_file=prepared_network.protocol_file)
+    
+    functions.write_slurm_script(template_file="slurm_prepafe.sh",
+                                path=prepared_network.afe_input_directory, 
+                                log_dir=prepared_network.log_directory,
+                                protocol_file=prepared_network.protocol_file)
+    
+    prepared_network.write_afe_run_script()
+
 if __name__ == "__main__":
     main()

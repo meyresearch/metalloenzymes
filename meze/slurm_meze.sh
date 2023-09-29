@@ -1,11 +1,15 @@
 #! /bin/bash
 
 ### TO BE DONE IN SETUP.PY:
-# N_LIGANDS=NUMBER_OF_LIGANDS
-N_LIGANDS=16
+
 AFE_INPUT_DIR="/home/jguven/projects/alchemistry/kpc2/partially_protonated_ligand/afe/"
 # setup $MEZEHOME
 ###
+
+### Needs to be figured out:
+N_LIGANDS=16
+ENGINE="SOMD"
+# AND HOW 
 
 INPUT_FILE=$1
 LIGAND_CHARGE=$2
@@ -26,8 +30,10 @@ echo "Heating meze with slurm job $heating_job_id"
 prepafe_job_id=$(sbatch --dependency=afterok:${heating_job_id} --parsable $AFE_INPUT_DIR/slurm_prepafe.sh)
 echo "Preparing AFE with slurm job $prepafe_job_id"
 
-for i in "${!transformations_array}"
+for i in "${!transformations_array[@]}"
 do
-    afe_job_id=$(sbatch --dependency=afterok:${prepafe_job_id} --parsable --array=0-$((${lambda_array[i]-1})) $AFE_INPUT_DIR/run_afe.sh ${transformations_array[i]} ${lambdas_array[i]})
+    afe_job_id=$(sbatch --dependency=afterok:${prepafe_job_id} --parsable --array=0-$((${lambda_array[i]-1})) $AFE_INPUT_DIR/run_$ENGINE.sh ${transformations_array[i]} ${lambdas_array[i]})
+    echo "Submitted AFE slurm job $afe_job_id"
 done
+
 

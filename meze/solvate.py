@@ -145,8 +145,8 @@ def main():
                               temperature=protocol["temperature"],
                               pressure=protocol["pressure"])
 
-    _ = solvate_unbound(network=network, index=ligand_number)
-    _ = solvate_bound(network=network, index=ligand_number)
+    solvate_unbound(network=network, index=ligand_number)
+    solvate_bound(network=network, index=ligand_number)
 
 if __name__ == "__main__":
     main()

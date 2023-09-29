@@ -72,8 +72,8 @@ def main():
     equilibrated_network = solvated_network.get_equilibrated()
 
     equilibrated_network.afe_prep()
+    
 
-    _ = equilibrated_network.write_afe_run_script()
     
 
 if __name__ == "__main__":
