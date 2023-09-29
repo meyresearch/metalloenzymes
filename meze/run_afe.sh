@@ -8,11 +8,9 @@
 
 start=`date +%s`
 
-
 # get ligand pair and lambda string from input variables
-ligand_1=$1
-ligand_2=$2
-lambdastring="$4"
+transformation=$1
+lambdastring="$2"
 
 # set variables in meze.py
 engine=ENGINE
@@ -20,7 +18,7 @@ repeats=N_REPEATS
 outputs_dir=OUTPUTS_DIR
 
 # read in lambda string
-INPUT_FILE_STREAM=' ' read -a lambdas <<< "$lambdastring"
+INPUT_FILE_STREAM=',' read -a lambdas <<< "$lambdastring"
 
 # use slurm array task id as lambda window index
 id=$SLURM_ARRAY_TASK_ID
@@ -30,12 +28,12 @@ for stage in "unbound" "bound"
 do
 	for (( i=1; i<=$repeats; i++)) 
 	do
-		minimisation_directory=$outputs_dir/${engine}_${i}/$ligand_1~$ligand_2/$stage/minimisation/lambda_$lambda
+		minimisation_directory=$outputs_dir/${engine}_${i}/$transformation/$stage/minimisation/lambda_$lambda
 		echo "Minimisation directory is: $minimisation_directory"
-		lambda_directory=$outputs_dir/${engine}_${i}/$ligand_1~$ligand_2/$stage/lambda_$lambda
+		lambda_directory=$outputs_dir/${engine}_${i}/$transformation/$stage/lambda_$lambda
 		echo "Lambda directory is: $lambda_directory"
 		
-		echo "Using ${engine}_${i} for $ligand_1 and $ligand_2 at $stage lambda $lambda"
+		echo "Using ${engine}_${i} for $transformation at $stage lambda $lambda"
 		
 		echo "Minimising..."
 		cd $minimisation_directory

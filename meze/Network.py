@@ -220,7 +220,7 @@ def create_lambda_windows(n_windows):
     str: 
         string of lambdas as strings formatted to 4 decimal places
     """
-    return " ".join([format(item, ".4f") for item in np.linspace(0, 1, int(n_windows))])
+    return ",".join([format(item, ".4f") for item in np.linspace(0, 1, int(n_windows))])
 
 
 # def create_lambda_list_bash(n_windows): 
@@ -341,9 +341,6 @@ class Network(object):
                                        forcefield=self.protein_forcefield,
                                        water_model=self.water_model)
 
-        self.protein_water_complex = self.protein.create_complex()
-        self.prepared_protein = self.protein.tleap(self.protein_water_complex)
-        
         self.threshold = threshold
         self.n_normal = n_normal
         self.n_difficult = n_difficult
@@ -426,6 +423,8 @@ class Network(object):
         self: Network
             (prepared) Network object
         """
+        self.protein_water_complex = self.protein.create_complex()
+        self.prepared_protein = self.protein.tleap(self.protein_water_complex)
         self.log_directory = self.create_directory("/logs/")
         self.afe_input_directory = self.create_directory("/afe/")
         self.equilibration_directory = self.create_directory("/equilibration/")
@@ -510,7 +509,7 @@ class Network(object):
         ligands_a, ligands_b = columns_to_list("ligand_a"), columns_to_list("ligand_b")
         indices_a, indices_b = columns_to_list("index_a"), columns_to_list("index_b")
         lambda_list = columns_to_list("lambdas")
-        lambdas = [list(map(float, lambda_list[i].split())) for i in range(len(lambda_list))]
+        lambdas = [list(map(float, lambda_list[i].split(","))) for i in range(len(lambda_list))]
         print("\n")
         arguments = [(self.ligand_molecules[indices_a[i]], self.ligand_molecules[indices_b[i]]) for i in range(self.n_transformations)]
         unbound_systems = []
@@ -607,7 +606,7 @@ class Network(object):
             full path to AFE run script
         """
         output = self.afe_input_directory + f"run_{self.md_engine}.sh"
-        meze = __file__.replace("Network.py", "") # installation?
+        meze = os.environ["MEZEHOME"]
         
         template = meze + "/run_afe.sh"
         with open(template, "r") as file:
@@ -636,12 +635,14 @@ class Network(object):
     def submit(self, run_script):
         
         # if slurm:
-        for i in range(self.n_transformations):
-            array_index = self.transformations["n_windows"][i] - 1
-            ligand_a = self.transformations["ligand_a"][i]
-            ligand_b = self.transformations["ligand_b"][i]
-            lambdas = self.transformations["lambdas"][i]
-            subprocess.call(["sbatch", f"--array=0-{array_index}", f"--job-name={ligand_a}_{ligand_b}_afe", run_script, ligand_a, ligand_b, self.md_engine, lambdas])
+        output = self.afe_input_directory + "submit_slurm_afe.sh"
+        with open(output, "a") as file:
+            for i in range(self.n_transformations):
+                array_index = self.transformations["n_windows"][i] - 1
+                ligand_a = self.transformations["ligand_a"][i].split("_")[-1]
+                ligand_b = self.transformations["ligand_b"][i].split("_")[-1]
+                lambdas = self.transformations["lambdas"][i]
+                file.write(f"sbatch --array=0-{array_index} --job-name={ligand_a}_{ligand_b}_afe {run_script} {ligand_a} {ligand_b} {self.md_engine} {lambdas}\n")
         # else: 
         #pass
 
@@ -767,7 +768,7 @@ class Network(object):
             self.lambdas.append(lambda_windows)
         dataframe["n_windows"] = self.n_windows
         dataframe["lambdas"] = self.lambdas
-        dataframe.to_csv(self.afe_input_directory+f"/meze_network.csv")
+        dataframe.to_csv(self.afe_input_directory+f"/meze_network.csv", sep=" ")
         return dataframe
     
 
