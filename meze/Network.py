@@ -141,7 +141,6 @@ def combine_unbound_ligands(system_a, system_b):
     system_1: bss.System
         system with combined ligand topologies
     """
-    # system_a, system_b = a.get_system(), b.get_system()
     ligand_1, ligand_2 = system_a.getMolecule(0), system_b.getMolecule(0)
     merged_ligands = merge_ligands(ligand_1, ligand_2)
     system_a.removeMolecules(ligand_1)
@@ -318,8 +317,8 @@ class Network(object):
     -------
     """
     def __init__(self, workdir, ligand_path, group_name, protein_file, protein_path, water_model, ligand_ff, protein_ff, ligand_charge, 
-                 engine, sampling_time, box_edges, box_shape, min_steps, short_nvt, nvt, npt, 
-                 min_dt, min_tol, repeats, temperature=300, pressure=1, threshold=0.4, n_normal=11, n_difficult=17):
+                 engine, sampling_time, box_edges, box_shape, min_steps=5000, short_nvt=5, nvt=50, npt=200, 
+                 min_dt=0.01, min_tol=1000, repeats=3, temperature=300, pressure=1, threshold=0.4, n_normal=11, n_difficult=17):
         """
         Class constructor
         """
@@ -371,10 +370,7 @@ class Network(object):
         self.md_engine = engine
         self.md_time = functions.convert_to_units(sampling_time, NANOSECOND)
         self.n_repeats = repeats
-        self.log_directory = self.create_directory("/logs/")
-        self.afe_input_directory = self.create_directory("/afe/")
-        self.equilibration_directory = self.create_directory("/equilibration/")
-        self.output_directories = self.create_output_directories()
+
 
 
     def create_directory(self, name, create_parents=False):
@@ -430,8 +426,10 @@ class Network(object):
         self: Network
             (prepared) Network object
         """
-        # self.protein_water_complex = self.protein.create_complex()
-        # self.prepared_protein = self.protein.tleap(self.protein_water_complex)
+        self.log_directory = self.create_directory("/logs/")
+        self.afe_input_directory = self.create_directory("/afe/")
+        self.equilibration_directory = self.create_directory("/equilibration/")
+        self.output_directories = self.create_output_directories()
         self.transformations = self.set_transformations()
         self.n_transformations = len(self.transformations)
         self.ligands_dat_file = self.create_ligand_dat_file()
@@ -452,11 +450,11 @@ class Network(object):
             (solvated) Network object
         """
         print("\n")
-        # with multiprocessing.pool.Pool() as pool:
-        #     self.ligands = list(pool.imap(self.solvate_unbound, range(self.n_ligands)))
-        #     self.bound_ligands = list(pool.imap(self.solvate_bound, range(self.n_ligands)))
+        unbound_ligands = []
+        for i in tqdm.tqdm(range(self.n_ligands), desc="Solvate unbound"):
+            unbound_ligands.append(self.solvate_unbound(i))
         bound_ligs = []
-        for i in range(self.n_ligands):
+        for i in tqdm.tqdm(range(self.n_ligands), desc="Solvate bound"):
             bound_ligs.append(self.solvate_bound(i))
         self.bound_ligands = bound_ligs
         self.ligand_molecules = [ligand.get_system() for ligand in self.ligands]
@@ -648,7 +646,6 @@ class Network(object):
         #pass
 
 
-
     def solvate_unbound(self, index):
         """
         Solvate unbound systems.
@@ -676,25 +673,6 @@ class Network(object):
         solvated_ligand = Ligand.Ligand(file=solvated_files, parameterised=True)
         return solvated_ligand
     
-# In [7]: ligand = bss.IO.readMolecules("ligand_1.sdf")[0]
-
-# In [8]: params = bss.Parameters.gaff2(molecule=ligand, net_charge=-1).getMolecule()
-
-# In [11]: protein_file = "/home/jguven/projects/alchemistry/kpc2/partially_protonated_ligand/inputs/protein/kpc2_tleap"
-
-# In [12]: protein = bss.IO.readMolecules([protein_file + ".prm7", protein_file + ".rst7"])
-
-# In [13]: system = params + protein
-
-# In [14]: box_min, box_max = system.getAxisAlignedBoundingBox()
-
-# In [15]: boxsize = [y - x for x, y in zip(box_min, box_max)]
-
-# In [16]: box_sizes = [x + 20 * bss.Units.Length.angstrom for x in boxsize]
-
-# In [17]: box, angles = bss.Box.cubic(max(box_sizes))
-
-# In [18]: solv = bss.Solvent.solvate("tip3p", molecule=system, box=box, angles=angles)
 
     def solvate_bound(self, index):
         """
@@ -922,16 +900,33 @@ class Network(object):
         """
         strip = self.output_directories[0].split("/")[-2]
         path_to_outputs = self.output_directories[0].replace(strip, "")
-        protocol = [f"ligand forcefield = {self.ligand_forcefield}", 
+        protocol = [f"group name = {self.group_name}",
+                    f"ligand forcefield = {self.ligand_forcefield}", 
+                    f"ligand charge = {self.ligand_charge}",
+                    f"protein input file = {self.protein_file}",
                     f"protein forcefield = {self.protein_forcefield}", 
-                    f"solvent = {self.water_model}", 
-                    f"box edges = {self.box_edges}*angstrom", 
+                    f"water model = {self.water_model}", 
+                    f"box edges = {self.box_edges}", # in angstrom 
                     f"box shape = {self.box_shape}", 
-                    f"protocol = default",
-                    f"sampling = {self.md_time}*ns",
+                    f"minimisation steps = {self.min_steps}",
+                    f"minimisation stepsize = {self.min_dt}",
+                    f"minimisation tolerance = {self.min_tol}",
+                    f"short nvt = {self.short_nvt._value}",
+                    f"nvt = {self.nvt._value}",
+                    f"npt = {self.npt._value}",
+                    f"temperature = {self.temperature._value}",
+                    f"pressure = {self.pressure._value}",
+                    f"sampling time = {self.md_time._value}",
                     f"engine = {self.md_engine}",
                     f"outputs = {path_to_outputs}",
-                    f"repeats = {self.n_repeats}"]
+                    f"repeats = {self.n_repeats}",
+                    f"project directory = {self.workding_directory}",
+                    f"equilibration directory = {self.equilibration_directory}",
+                    f"ligand directory = {self.ligand_path}",
+                    f"protein directory = {self.protein_path}",
+                    f"log directory = {self.log_directory}",
+                    f"afe input directory = {self.afe_input_directory}"]
+
         protocol_file = self.afe_input_directory + "/protocol.dat"
 
         with open(protocol_file, "w") as file:

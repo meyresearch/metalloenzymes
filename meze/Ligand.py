@@ -86,6 +86,7 @@ class Ligand(object):
         system = bss.IO.readMolecules(self.file)
         return system
     
+    
 
 def main():
     lig = Ligand("/home/jguven/projects/alchemistry/add_caps_to_kpc2/inputs/ligands/ligand_1.sdf")

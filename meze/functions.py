@@ -48,7 +48,7 @@ def path_exists(path):
         path = os.getcwd()
     elif not os.path.isdir(path):
         raise argparse.ArgumentTypeError(f"{path} does not exist")
-    return path
+    return path + "/"
 
 
 def check_int(input):
@@ -206,3 +206,79 @@ def convert_to_units(value, units):
     One of bss.Units
     """
     return value * units
+
+
+def input_to_dict(file):
+    """
+    Convert an input file to dictionary
+
+    Parameters:
+    -----------
+    file: str
+        full path to input file
+
+    Return:
+    -------
+    dict:
+        input options as a dictionart
+    """
+    with open(file, "r") as file:
+        lines = file.readlines()
+    clean_lines = [line.strip().split("=") for line in lines]
+    
+    dictionary = {}
+    for _key, _value in clean_lines:
+        key = _key.strip()
+        value = _value.strip()
+        if value.isdigit():
+            value = int(value)
+            dictionary[key] = value
+        else:
+            try:
+                value = float(value)
+                dictionary[key] = value
+            except ValueError:
+                dictionary[key] = value
+    return dictionary
+
+
+def write_slurm_script(template_file, path, log_dir, protocol_file):
+    """
+    Write a slurm script for running different stages of MEZE
+    Parameters:
+    -----------
+    template_file: str
+        name of the template run script
+    path: str
+        path where slurm script will be saved
+    log_dir: str
+        directory for outputting slurm logs
+    protocol_file: str
+        full path to the protocol file
+
+    Return:
+    -------
+    file: str
+        slurm script 
+    """
+    output = path + "/" + template_file
+    meze = os.environ["MEZEHOME"]
+    template = meze + "/" + template_file
+    with open(template, "r") as file:
+        lines = file.readlines()
+    
+    options = {"PATH_TO_LOGS": log_dir,
+               "N_TASKS": str(1),
+               "N_GPUS": str(1), 
+               "N_CPUS": str(10),
+               "MEMORY": str(4069),
+               "PATH_TO_MEZE": meze,
+               "PROTOCOLFILE": protocol_file}    
+    
+    with open(output, "w") as file:
+        for line in lines:
+            for key, value in options.items():
+                line = line.replace(key, value)
+            file.write(line)
+    os.system(f"chmod +x {output}")
+    return output
