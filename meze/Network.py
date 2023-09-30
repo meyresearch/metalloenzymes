@@ -378,6 +378,23 @@ class Network(object):
         self.n_repeats = repeats
 
 
+    def get_ligand_by_name(self, name):
+        """
+        Extract a single ligand from the list of network ligands using a name
+
+        Parameters:
+        -----------
+        name: str
+            name of the ligand to be extracted
+
+        Return:
+        -------
+        Ligand
+            Ligand object whose name matches given name
+        """
+        return [ligand for ligand in self.ligands if ligand.name == name][0]
+
+
 
     def create_directory(self, name, create_parents=False):
         """

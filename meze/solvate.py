@@ -7,7 +7,7 @@ import functions
 import os
 
 
-def solvate_unbound(network, index):
+def solvate_unbound(network, ligand_name):
     """
     Solvate unbound systems.
 
@@ -15,15 +15,15 @@ def solvate_unbound(network, index):
     -----------
     network: Network
         a prepared Network object   
-    index: list
-        Ligand indices for sorting through Network.names and Network.ligands
+    ligand_name: str
+        ligand name
     Return:
     -------
     solvated_ligand: Ligand
         (solvated) Ligand object whose file attribute is the prm7 and rst7 files 
     """ 
-    ligand = network.ligands[index]
-    ligand_number = network.names[index].split("_")[-1]
+    ligand = network.get_ligand_by_name(ligand_name)
+    ligand_number = ligand_name.split("_")[-1]
     print(f"Solvating unbound ligand {ligand_number}")
     ligand_parameters = ligand.parameterise(network.ligand_forcefield, network.ligand_charge)
     unbound_box, unbound_box_angles = network.create_box(ligand_parameters)
@@ -37,7 +37,7 @@ def solvate_unbound(network, index):
     return solvated_ligand
 
 
-def solvate_bound(network, index):
+def solvate_bound(network, ligand_name):
     """
     Solvate bound systems.
 
@@ -45,16 +45,16 @@ def solvate_bound(network, index):
     -----------
     network: Network
         a prepared Network object    
-    index: int
-        Ligand indices for sorting through Network.names and Network.ligands
+    ligand_name: str
+        name of the ligand
     Return:
     -----
     solvated_system: Ligand
         (solvated) Ligand object whose file attribute is the prm7 and rst7 files         
     """
-    ligand = network.ligands[index]
-    ligand_number = network.names[index].split("_")[-1]
-    print(f"Solvating bound ligand {ligand_number}")
+    ligand = network.get_ligand_by_name(ligand_name)
+    ligand_number = ligand_name.split("_")[-1]
+    print(f"Solvating bound ligand {ligand_name}")
     ligand_parameters = ligand.parameterise(network.ligand_forcefield, network.ligand_charge)    
     protein = network.protein.get_molecule()
     system_parameters = ligand_parameters + protein
@@ -108,8 +108,8 @@ def main():
 
     parser = argparse.ArgumentParser(description="solvation for meze workflow")
 
-    parser.add_argument("ligand_index",
-                        help="ligand index used in getting ligand from list of ligand files",
+    parser.add_argument("ligand_number",
+                        help="ligand number used in ligand file name",
                         type=str)
     
     parser.add_argument("protocol_file",
@@ -118,7 +118,7 @@ def main():
                         default=os.getcwd() + "/afe/protocol.dat")
     
     arguments = parser.parse_args()
-    ligand_index = functions.check_positive(functions.check_int(arguments.ligand_index))
+    ligand_name = "ligand_" + arguments.ligand_number
     
     protocol = functions.input_to_dict(arguments.protocol_file)
 
@@ -146,8 +146,8 @@ def main():
                               temperature=protocol["temperature"],
                               pressure=protocol["pressure"])
 
-    solvate_unbound(network=network, index=ligand_index)
-    solvate_bound(network=network, index=ligand_index)
+    solvate_unbound(network=network, ligand_name=ligand_name)
+    solvate_bound(network=network, ligand_name=ligand_name)
 
 if __name__ == "__main__":
     main()

@@ -300,8 +300,8 @@ def main():
 
     parser = argparse.ArgumentParser(description="minimisation and equilibration for meze workflow")
 
-    parser.add_argument("ligand_index",
-                        help="ligand index used in getting ligand from list of ligand files",
+    parser.add_argument("ligand_number",
+                        help="ligand number used in ligand file name",
                         type=str)
     
     parser.add_argument("protocol_file",
@@ -365,7 +365,7 @@ def main():
     arguments = parser.parse_args()
     protocol = functions.input_to_dict(file=arguments.protocol_file)
 
-    heat_unbound(ligand_number=arguments.ligand_index,
+    heat_unbound(ligand_number=arguments.ligand_number,
                  equilibration_dir=protocol["equilibration directory"],
                  ligand_dir=protocol["ligand directory"],
                  min_steps=protocol["minimisation steps"],
@@ -377,7 +377,7 @@ def main():
                  pressure=protocol["pressure"],
                  temperature=protocol["temperature"])
     
-    heat_bound(ligand_number=arguments.ligand_index,
+    heat_bound(ligand_number=arguments.ligand_number,
                equilibration_dir=protocol["equilibration directory"],
                protein_dir=protocol["protein directory"],
                min_steps=protocol["minimisation steps"],
