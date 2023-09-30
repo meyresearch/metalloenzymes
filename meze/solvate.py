@@ -56,7 +56,7 @@ def solvate_bound(network, index):
     ligand_number = network.names[index].split("_")[-1]
     print(f"Solvating bound ligand {ligand_number}")
     ligand_parameters = ligand.parameterise(network.ligand_forcefield, network.ligand_charge)    
-    protein = network.protein.get_molecule(network.protein.file)
+    protein = network.protein.get_molecule()
     system_parameters = ligand_parameters + protein
     bound_box, bound_box_angles = network.create_box(system_parameters)
     solvated_molecules = bss.Solvent.solvate(model=network.protein.water_model,
@@ -108,8 +108,8 @@ def main():
 
     parser = argparse.ArgumentParser(description="solvation for meze workflow")
 
-    parser.add_argument("ligand_number",
-                        help="ligand number used in ligand file name",
+    parser.add_argument("ligand_index",
+                        help="ligand index used in getting ligand from list of ligand files",
                         type=str)
     
     parser.add_argument("protocol_file",

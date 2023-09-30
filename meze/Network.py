@@ -347,7 +347,8 @@ class Network(object):
                                        protein_file=self.protein_file,
                                        path=self.protein_path,
                                        forcefield=self.protein_forcefield,
-                                       water_model=self.water_model)
+                                       water_model=self.water_model,
+                                       parameterised=self.prepared)
 
         self.threshold = threshold
         self.n_normal = n_normal
