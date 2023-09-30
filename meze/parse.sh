@@ -13,14 +13,14 @@ done < $ligands_dat_file
 
 transformations_array=()
 lambdas_array=()
+n_windows_array=()
 
-while IFS="," read -r transformations
+while IFS="," read -a line
 do
-    while read -a line
-    do
-        transformation=${line[1]}~${line[3]}
-        lambda=${line[7]}
-        transformations_array+=("$transformation")
-        lambdas_array+=("$lambda")
-    done <<< $transformations
+    transformation=${line[1]}~${line[3]}
+    lambda=${line[7]}
+    n_windows=${line[6]}
+    transformations_array+=("$transformation")
+    lambdas_array+=("$lambda")
+    n_windows_array+=("$n_windows")
 done < <(tail -n +2 "$transformations_file")
