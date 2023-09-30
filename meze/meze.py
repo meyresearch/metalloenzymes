@@ -68,6 +68,8 @@ def main():
                                        repeats=protocol["repeats"],
                                        temperature=protocol["temperature"],
                                        pressure=protocol["pressure"])
+    
+    solvated_network.equilibration_directory = protocol["equilibration directory"]
 
     equilibrated_network = solvated_network.get_equilibrated()
 

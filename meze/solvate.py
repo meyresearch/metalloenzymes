@@ -56,7 +56,7 @@ def solvate_bound(network, index):
     ligand_number = network.names[index].split("_")[-1]
     print(f"Solvating bound ligand {ligand_number}")
     ligand_parameters = ligand.parameterise(network.ligand_forcefield, network.ligand_charge)    
-    protein = network.protein.get_prepared_protein(name=network.prepared_protein)
+    protein = network.protein.get_molecule(network.protein.file)
     system_parameters = ligand_parameters + protein
     bound_box, bound_box_angles = network.create_box(system_parameters)
     solvated_molecules = bss.Solvent.solvate(model=network.protein.water_model,
@@ -122,10 +122,11 @@ def main():
     
     protocol = functions.input_to_dict(arguments.protocol_file)
 
-    network = Network.Network(workdir=protocol["project directory"],
+    network = Network.Network(prepared=True,
+                              workdir=protocol["project directory"],
                               ligand_path=protocol["ligand directory"],
                               group_name=protocol["group name"],
-                              protein_file=protocol["protein input file"],
+                              protein_file=protocol["prepared protein file"],
                               protein_path=protocol["protein directory"],
                               water_model=protocol["water model"],
                               ligand_ff=protocol["ligand forcefield"],

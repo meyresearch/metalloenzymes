@@ -325,6 +325,8 @@ class Network(object):
         Class constructor
         """
         self.prepared = prepared
+        if self.prepared:
+            self.prepared_protein = functions.read_files(protein_file + ".*")
         self.ligand_path = functions.path_exists(ligand_path)
         self.ligand_forcefield = ligand_ff
         self.water_model = water_model
@@ -335,7 +337,10 @@ class Network(object):
         self.names = [ligand.get_name() for ligand in self.ligands]
 
         self.protein_forcefield = protein_ff
-        self.protein_file = protein_file
+        if self.prepared:
+            self.protein_file = self.prepared_protein
+        else:
+            self.protein_file = protein_file
         self.protein_path = protein_path
         self.group_name = self.get_name(group_name)
         self.protein = Protein.Protein(name=self.group_name,
@@ -696,8 +701,8 @@ class Network(object):
         ligand_number = self.names[index].split("_")[-1]
         print(f"Solvating bound ligand {ligand_number}")
         ligand_parameters = ligand.parameterise(self.ligand_forcefield, self.ligand_charge)  
-        #TODO check if this works   
-        protein = self.protein.get_prepared_protein(name=self.prepared_protein)
+        #TODO check if this works   !!!
+        protein = self.protein.get_molecule(self.file)
         system_parameters = ligand_parameters + protein
         bound_box, bound_box_angles = self.create_box(system_parameters)
         # bss.IO.saveMolecules(self.protein_path + "/test", system_parameters, ["pdb"])
@@ -908,6 +913,7 @@ class Network(object):
         protocol = [f"group name = {self.group_name}",
                     f"ligand forcefield = {self.ligand_forcefield}", 
                     f"ligand charge = {self.ligand_charge}",
+                    f"prepared protein file = {self.prepared_protein}",
                     f"protein input file = {self.protein_file}",
                     f"protein forcefield = {self.protein_forcefield}", 
                     f"water model = {self.water_model}", 

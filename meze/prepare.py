@@ -140,25 +140,25 @@ def main():
     arguments = parser.parse_args()
 
     network = Network.Network(workdir=arguments.working_directory,
-                            ligand_path=arguments.ligand_directory,
-                            group_name=arguments.group_name,
-                            protein_file=arguments.protein,
-                            protein_path=arguments.protein_directory,
-                            water_model=arguments.water_model,
-                            protein_ff=arguments.forcefield,
-                            ligand_ff=arguments.ligand_forcefield,
-                            ligand_charge=arguments.ligand_charge,
-                            engine=arguments.engine,
-                            sampling_time=arguments.sampling_time,
-                            box_edges=arguments.box_edges,
-                            box_shape=arguments.box_shape,
-                            min_steps=arguments.min_steps,
-                            short_nvt=arguments.short_nvt,
-                            nvt=arguments.nvt,
-                            npt=arguments.npt,
-                            min_dt=arguments.emstep,
-                            min_tol=arguments.emtol,
-                            repeats=arguments.repeats)
+                              ligand_path=arguments.ligand_directory,
+                              group_name=arguments.group_name,
+                              protein_file=arguments.protein,
+                              protein_path=arguments.protein_directory,
+                              water_model=arguments.water_model,
+                              protein_ff=arguments.forcefield,
+                              ligand_ff=arguments.ligand_forcefield,
+                              ligand_charge=arguments.ligand_charge,
+                              engine=arguments.engine,
+                              sampling_time=arguments.sampling_time,
+                              box_edges=arguments.box_edges,
+                              box_shape=arguments.box_shape,
+                              min_steps=arguments.min_steps,
+                              short_nvt=arguments.short_nvt,
+                              nvt=arguments.nvt,
+                              npt=arguments.npt,
+                              min_dt=arguments.emstep,
+                              min_tol=arguments.emtol,
+                              repeats=arguments.repeats)
     
     prepared_network = network.prepare_network()
 
@@ -173,10 +173,10 @@ def main():
                                  protocol_file=prepared_network.protocol_file)
     
     functions.write_slurm_script(template_file="slurm_prepafe.sh",
-                                path=prepared_network.afe_input_directory, 
-                                log_dir=prepared_network.log_directory,
-                                protocol_file=prepared_network.protocol_file)
-    
+                                 path=prepared_network.afe_input_directory, 
+                                 log_dir=prepared_network.log_directory,
+                                 protocol_file=prepared_network.protocol_file)
+     
     prepared_network.write_afe_run_script()
 
 if __name__ == "__main__":

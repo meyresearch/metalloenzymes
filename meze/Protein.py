@@ -55,17 +55,37 @@ class Protein(object):
     tleap() -> None:
         Run tleap for water-protein complex.
     """
-    def __init__(self, name, protein_file, path, forcefield, water_model):
+    def __init__(self, name, protein_file, path, forcefield, water_model, parameterised=False):
         """
         Class constructor
         """
         self.name = name
         self.path = functions.path_exists(path)
-        self.molecule = bss.IO.readMolecules(functions.file_exists(protein_file))
+        self.parameterised = parameterised # NEED TO SET TO TRUE SOMEWHERE
+        if not self.parameterised:
+            self.file = functions.file_exists(protein_file)
+        elif self.parameterised:
+            self.file = protein_file 
+        self.molecule = self.get_molecule()
         self.forcefield = forcefield
         self.water_model = water_model
         self.prepared = self.path + "/" + self.name + "_tleap"
     
+
+    def get_molecule(self):
+        """
+        Get protein molecule(s)
+
+        Parameters:
+        -----------
+
+        Return:
+        -------
+        bss.Molecules
+            molecules from the protein file(s)
+        """
+        return bss.IO.readMolecules(self.file)
+
     
     def create_complex(self):
         """
@@ -123,16 +143,16 @@ class Protein(object):
         return save_file + "_tleap"
 
 
-    def get_prepared_protein(self, name):
-        """
-        Return a bss.Molecule object of the prepared protein-water complex
+    # def get_prepared_protein(self, name):
+    #     """
+    #     Return a bss.Molecule object of the prepared protein-water complex
 
-        Return:
-        -------
-        bss.Molecule: 
-            prepared molecule 
-        """
-        return bss.IO.readMolecules([f"{name}.rst7", f"{name}.prm7"])
+    #     Return:
+    #     -------
+    #     bss.Molecule: 
+    #         prepared molecule 
+    #     """
+    #     return bss.IO.readMolecules([f"{name}.rst7", f"{name}.prm7"])
         
 
 def main():
