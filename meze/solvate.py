@@ -118,7 +118,7 @@ def main():
                         default=os.getcwd() + "/afe/protocol.dat")
     
     arguments = parser.parse_args()
-    ligand_number = functions.check_positive(functions.check_int(arguments.ligand_number))
+    ligand_index = functions.check_positive(functions.check_int(arguments.ligand_index))
     
     protocol = functions.input_to_dict(arguments.protocol_file)
 
@@ -146,8 +146,8 @@ def main():
                               temperature=protocol["temperature"],
                               pressure=protocol["pressure"])
 
-    solvate_unbound(network=network, index=ligand_number)
-    solvate_bound(network=network, index=ligand_number)
+    solvate_unbound(network=network, index=ligand_index)
+    solvate_bound(network=network, index=ligand_index)
 
 if __name__ == "__main__":
     main()
