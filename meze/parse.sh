@@ -14,7 +14,7 @@ done < $ligands_dat_file
 transformations_array=()
 lambdas_array=()
 
-while IFS=" " read -r transformations
+while IFS="," read -r transformations
 do
     while read -a line
     do

@@ -220,7 +220,7 @@ def create_lambda_windows(n_windows):
     str: 
         string of lambdas as strings formatted to 4 decimal places
     """
-    return ",".join([format(item, ".4f") for item in np.linspace(0, 1, int(n_windows))])
+    return " ".join([format(item, ".4f") for item in np.linspace(0, 1, int(n_windows))])
 
 
 # def create_lambda_list_bash(n_windows): 
@@ -316,12 +316,15 @@ class Network(object):
     Return:
     -------
     """
-    def __init__(self, workdir, ligand_path, group_name, protein_file, protein_path, water_model, ligand_ff, protein_ff, ligand_charge, 
-                 engine, sampling_time, box_edges, box_shape, min_steps=5000, short_nvt=5, nvt=50, npt=200, 
+    def __init__(self, protein_file, workdir=os.getcwd(), prepared=False,
+                 ligand_path=os.getcwd()+"/inputs/ligands/", ligand_charge=0, ligand_ff="gaff2", 
+                 group_name=None, protein_path=os.getcwd()+"/inputs/protein/", water_model="tip3p", protein_ff="ff14SB", 
+                 engine="SOMD", sampling_time=4, box_edges=20, box_shape="cubic", min_steps=5000, short_nvt=5, nvt=50, npt=200, 
                  min_dt=0.01, min_tol=1000, repeats=3, temperature=300, pressure=1, threshold=0.4, n_normal=11, n_difficult=17):
         """
         Class constructor
         """
+        self.prepared = prepared
         self.ligand_path = functions.path_exists(ligand_path)
         self.ligand_forcefield = ligand_ff
         self.water_model = water_model
@@ -433,6 +436,7 @@ class Network(object):
         self.n_transformations = len(self.transformations)
         self.ligands_dat_file = self.create_ligand_dat_file()
         self.protocol_file = self.create_protocol_file()
+        self.prepared = True
         return self
 
 
@@ -509,7 +513,7 @@ class Network(object):
         ligands_a, ligands_b = columns_to_list("ligand_a"), columns_to_list("ligand_b")
         indices_a, indices_b = columns_to_list("index_a"), columns_to_list("index_b")
         lambda_list = columns_to_list("lambdas")
-        lambdas = [list(map(float, lambda_list[i].split(","))) for i in range(len(lambda_list))]
+        lambdas = [list(map(float, lambda_list[i].split(" "))) for i in range(len(lambda_list))]
         print("\n")
         arguments = [(self.ligand_molecules[indices_a[i]], self.ligand_molecules[indices_b[i]]) for i in range(self.n_transformations)]
         unbound_systems = []
@@ -768,7 +772,7 @@ class Network(object):
             self.lambdas.append(lambda_windows)
         dataframe["n_windows"] = self.n_windows
         dataframe["lambdas"] = self.lambdas
-        dataframe.to_csv(self.afe_input_directory+f"/meze_network.csv", sep=" ")
+        dataframe.to_csv(self.afe_input_directory+f"/meze_network.csv")
         return dataframe
     
 

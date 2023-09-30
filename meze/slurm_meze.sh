@@ -9,7 +9,7 @@ AFE_INPUT_DIR="/home/jguven/projects/alchemistry/kpc2/partially_protonated_ligan
 ### Needs to be figured out:
 N_LIGANDS=16
 ENGINE="SOMD"
-# AND HOW 
+# AND HOW INPUT FILE NAMES FOR LIGANDS.DAT AND MEZE_NETWORK.DAT ARE TAKEN
 
 INPUT_FILE=$1
 LIGAND_CHARGE=$2
@@ -32,7 +32,7 @@ echo "Preparing AFE with slurm job $prepafe_job_id"
 
 for i in "${!transformations_array[@]}"
 do
-    afe_job_id=$(sbatch --dependency=afterok:${prepafe_job_id} --parsable --array=0-$((${lambda_array[i]-1})) $AFE_INPUT_DIR/run_$ENGINE.sh ${transformations_array[i]} ${lambdas_array[i]})
+    afe_job_id=$(sbatch --dependency=afterok:${prepafe_job_id} --parsable --array=0-$((${#lambda_array[@]-1})) $AFE_INPUT_DIR/run_$ENGINE.sh ${transformations_array[i]} ${lambdas_array[i]})
     echo "Submitted AFE slurm job $afe_job_id"
 done
 
