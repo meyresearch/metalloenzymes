@@ -61,7 +61,7 @@ class Protein(object):
         """
         self.name = name
         self.path = functions.path_exists(path)
-        self.parameterised = parameterised # NEED TO SET TO TRUE SOMEWHERE
+        self.parameterised = parameterised
         if not self.parameterised:
             self.file = functions.file_exists(protein_file)
         elif self.parameterised:

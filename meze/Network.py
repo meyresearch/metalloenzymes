@@ -316,7 +316,7 @@ class Network(object):
     Return:
     -------
     """
-    def __init__(self, protein_file, workdir=os.getcwd(), prepared=False,
+    def __init__(self, protein_file, workdir=os.getcwd(), prepared=False, afe_input_path=None, equilibration_path=None,
                  ligand_path=os.getcwd()+"/inputs/ligands/", ligand_charge=0, ligand_ff="gaff2", 
                  group_name=None, protein_path=os.getcwd()+"/inputs/protein/", water_model="tip3p", protein_ff="ff14SB", 
                  engine="SOMD", sampling_time=4, box_edges=20, box_shape="cubic", min_steps=5000, short_nvt=5, nvt=50, npt=200, 
@@ -324,9 +324,22 @@ class Network(object):
         """
         Class constructor
         """
+        self.workding_directory = functions.path_exists(workdir)
+
         self.prepared = prepared
         if self.prepared:
             self.prepared_protein = functions.read_files(protein_file + ".*")
+        
+        if afe_input_path:
+            self.afe_input_directory = afe_input_path
+        else: 
+            self.afe_input_directory = self.create_directory("/afe/")
+        
+        if equilibration_path:
+            self.equilibration_directory = equilibration_path
+        else:
+            self.equilibration_directory = self.create_directory("/equilibration/")
+
         self.ligand_path = functions.path_exists(ligand_path)
         self.ligand_forcefield = ligand_ff
         self.water_model = water_model
@@ -359,7 +372,6 @@ class Network(object):
         self.bound_ligands = [None] * self.n_ligands
         self.bound_ligand_molecules = [None] * self.n_ligands
 
-        self.workding_directory = functions.path_exists(workdir)
 
         self.box_shape = box_shape
         self.box_edges = box_edges
@@ -452,8 +464,6 @@ class Network(object):
         self.protein_water_complex = self.protein.create_complex()
         self.prepared_protein = self.protein.tleap(self.protein_water_complex)
         self.log_directory = self.create_directory("/logs/")
-        self.afe_input_directory = self.create_directory("/afe/")
-        self.equilibration_directory = self.create_directory("/equilibration/")
         self.output_directories = self.create_output_directories()
         self.transformations = self.set_transformations()
         self.n_transformations = len(self.transformations)
@@ -532,6 +542,8 @@ class Network(object):
         Return:
         -------
         """
+        self.transformations = self.get_transformations()
+        self.n_transformations = len(self.transformations)
         columns_to_list = lambda column: self.transformations[column].tolist()
         ligands_a, ligands_b = columns_to_list("ligand_a"), columns_to_list("ligand_b")
         indices_a, indices_b = columns_to_list("index_a"), columns_to_list("index_b")
@@ -797,6 +809,10 @@ class Network(object):
         dataframe["lambdas"] = self.lambdas
         dataframe.to_csv(self.afe_input_directory+f"/meze_network.csv")
         return dataframe
+    
+
+    def get_transformations(self):
+        return pd.read_csv(self.afe_input_directory+f"/meze_network.csv", header=0, index_col=0)
     
 
     def get_files(self):

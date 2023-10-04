@@ -172,7 +172,7 @@ def main():
                                  log_dir=prepared_network.log_directory,
                                  protocol_file=prepared_network.protocol_file)
     
-    functions.write_slurm_script(template_file="slurm_prepafe.sh",
+    functions.write_slurm_script(template_file="slurm_meze.sh",
                                  path=prepared_network.afe_input_directory, 
                                  log_dir=prepared_network.log_directory,
                                  protocol_file=prepared_network.protocol_file)

@@ -46,10 +46,12 @@ def main():
     
     protocol = functions.input_to_dict(arguments.protocol_file)
 
-    solvated_network = Network.Network(workdir=protocol["project directory"],
+    solvated_network = Network.Network(prepared=True,
+                                       equilibration_path=protocol["equilibration directory"],
+                                       workdir=protocol["project directory"],
                                        ligand_path=protocol["ligand directory"],
                                        group_name=protocol["group name"],
-                                       protein_file=protocol["protein input file"],
+                                       protein_file=protocol["prepared protein file"],
                                        protein_path=protocol["protein directory"],
                                        water_model=protocol["water model"],
                                        ligand_ff=protocol["ligand forcefield"],
@@ -68,8 +70,6 @@ def main():
                                        repeats=protocol["repeats"],
                                        temperature=protocol["temperature"],
                                        pressure=protocol["pressure"])
-    
-    solvated_network.equilibration_directory = protocol["equilibration directory"]
 
     equilibrated_network = solvated_network.get_equilibrated()
 
