@@ -27,7 +27,10 @@ echo "Adding water with slurm job $solvation_job_id"
 heating_job_id=$(sbatch --dependency=afterok:${solvation_job_id} --parsable --array=1-$N_LIGANDS $AFE_INPUT_DIR/slurm_heat_meze.sh)
 echo "Heating meze with slurm job $heating_job_id"
 
-prepafe_job_id=$(sbatch --dependency=afterok:${heating_job_id} --parsable $AFE_INPUT_DIR/slurm_prepafe.sh)
+
+# meze_job_id=$(sbatch --dependency=afterok:${heating_job_id} --parsable --array=0-$((${#transformations_array[@]}-1)) $AFE_INPUT_DIR/slurm_meze.sh)
+
+prepafe_job_id=$(sbatch --dependency=afterok:${heating_job_id} --parsable $AFE_INPUT_DIR/slurm_meze.sh)
 echo "Preparing AFE with slurm job $prepafe_job_id"
 
 for i in "${!transformations_array[@]}"

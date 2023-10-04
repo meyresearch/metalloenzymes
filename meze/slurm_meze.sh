@@ -11,7 +11,12 @@ export MEZEHOME=PATH_TO_MEZE
 
 start=`date +%s`
 
-python $MEZEHOME/meze.py PROTOCOLFILE
+id=$SLURM_ARRAY_TASK_ID
+
+source $MEZEHOME/parse.sh
+transformation=${transformations_array[$id]}
+
+python $MEZEHOME/meze.py PROTOCOLFILE $transformation
 
 end=`date +%s`
 runtime=$((end - start))

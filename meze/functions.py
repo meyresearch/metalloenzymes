@@ -282,3 +282,19 @@ def write_slurm_script(template_file, path, log_dir, protocol_file):
             file.write(line)
     os.system(f"chmod +x {output}")
     return output
+
+
+def separate(string, sep="~"):
+    """
+    Split given string by given separator
+
+    Parameters:
+    -----------
+    string: str
+
+    Return:
+    -------
+    list: 
+        separated string as a list
+    """
+    return string.split(sep)
