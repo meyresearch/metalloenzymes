@@ -465,7 +465,7 @@ class Network(object):
         self.prepared_protein = self.protein.tleap(self.protein_water_complex)
         self.log_directory = self.create_directory("/logs/")
         self.output_directories = self.create_output_directories()
-        self.transformations, self.network_file = self.set_transformations()[0], self.set_transformations()[1]
+        self.transformations, self.network_file = self.set_transformations()
         self.n_transformations = len(self.transformations)
         self.ligands_dat_file = self.create_ligand_dat_file()
         self.protocol_file = self.create_protocol_file()
