@@ -117,17 +117,17 @@ The above project directory three will then be updated as:
     |   |--- ligands/                       Ligand .sdf or .mol2 files (set-up by user)
     |   |--- protein/                       Protein .pdb file (set-up by user)
     |--- outputs/                           Folder for saving the results of AFE runs
-    |   |--- SOMD_1/
-    |   |   |--- ligand_1~ligand_2/
-    |   |   |   |--- bound/
-    |   |   |   |   |--- lambda_0.0000/
-    |   |   |   |   |--- ...
-    |   |   |--- ...
-    |   |--- SOMD_2/
-    |   |--- SOMD_3/
+    |   |--- SOMD_1/                        First AFE run directory
+    |   |   |--- ligand_1~ligand_2/         AFE transformation of ligand_1 to ligand_2
+    |   |   |   |--- bound/                 Bound stage
+    |   |   |   |   |--- lambda_0.0000/     First lambda window 0.0
+    |   |   |   |   |--- ...                [Rest of the lambda windows until lambda 1.0]
+    |   |   |--- ...                        [Other transformations]
+    |   |--- SOMD_2/                        Second AFE run repeat (depends on given number of repeats)
+    |   |--- SOMD_3/                        Third AFE run repeat (depends on given number of repeats)
     |--- afe/                               Input files for running the meze workflow and AFE runs [same as above]
     |--- equilibration/                     Folder for saving the minimisation and equilibration outputs for unbound and bound ligands
-    |   |--- bound/
+    |   |--- bound/                         
     |   |   |--- ligand_1
     |   |   |   |--- min/                   Minimisation
     |   |   |   |--- bb_r_nvt/              Backbone-restrained NVT equilibration
