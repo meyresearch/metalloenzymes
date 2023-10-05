@@ -82,50 +82,6 @@ def remove_lomap_directories(paths):
             shutil.rmtree(directory)
 
 
-def run_process(system, protocol, process, working_directory, configuration=None):
-    """
-    Run a Gromacs minimisation or equilibration process 
-    Adapted from https://tinyurl.com/BSSligprep
-
-    Parameters:
-    -----------
-    system: bss.System
-        run system
-    protocol: bss.Protocol 
-        minimisation or equilibration
-    process: name 
-        process name for saving process output
-    working_directory: str
-        save output into this directory
-
-    Return:
-    -------
-    system: bss.System
-        equilibrated or minimised system
-    """
-    process = bss.Process.Gromacs(system, protocol, name=process, work_dir=working_directory, #exe="/usr/local/gromacs/bin/gmx_mpi"
-                                  )
-    config = process.getConfig()
-    if configuration:
-        for setting in configuration:
-            key = setting.split()[0]
-            try:
-                index = [i for i, string in enumerate(config) if key in string][0]
-                config[index] = setting
-                process.setConfig(config)
-            except IndexError:
-                process.addToConfig(setting)
-                config = process.getConfig()
-    # process.setArg("-ntmpi", 1)
-    process.start()
-    process.wait()
-    if process.isError():
-        print(process.stdout())
-        print(process.stderr())
-        raise bss._Exceptions.ThirdPartyError("The process exited with an error!")
-    system = process.getSystem()
-    return system
-
 
 def combine_unbound_ligands(system_a, system_b):
     """
@@ -282,25 +238,6 @@ def create_minimisation_configs(files, min_cycles=1, min_moves=50000):
             f.writelines(replaced_config)
 
 
-def construct_relative_afe(system, protocol, engine, workdir):
-    """
-    Wrap the BSS.FreeEnergy.Relative so it is easier to run with multiprocessing
-
-    Parameters:
-    -----------
-    system: bss.System
-    protocol: bss.Protocol
-    engine: str
-    workdir: str
-        
-    Return:
-    -------
-    bss.FreeEnergy.Relative: 
-        class constructor to setup free energy calculations
-    """
-    return bss.FreeEnergy.Relative(system=system, protocol=protocol, engine=engine, work_dir=workdir, setup_only=True)
-
-
 class Network(object):
     """
     Network class object
@@ -376,7 +313,6 @@ class Network(object):
         self.bound_ligands = [None] * self.n_ligands
         self.bound_ligand_molecules = [None] * self.n_ligands
 
-
         self.box_shape = box_shape
         self.box_edges = box_edges
         self.min_steps = min_steps
@@ -389,8 +325,6 @@ class Network(object):
         self.temperature = functions.convert_to_units(temperature, KELVIN)
         self.pressure = functions.convert_to_units(pressure, ATM)
         
-
-
 
     def get_ligand_by_name(self, name):
         """
@@ -471,31 +405,6 @@ class Network(object):
         self.ligands_dat_file = self.create_ligand_dat_file()
         self.protocol_file = self.create_protocol_file()
         self.prepared = True
-        return self
-
-
-    def solvation(self):
-        """
-        Use multiprocessing to solvate unbound and bound legs
-
-        Parameters:
-        -----------
-
-        Return:
-        -------
-        self: Network
-            (solvated) Network object
-        """
-        print("\n")
-        unbound_ligands = []
-        for i in tqdm.tqdm(range(self.n_ligands), desc="Solvate unbound"):
-            unbound_ligands.append(self.solvate_unbound(i))
-        bound_ligs = []
-        for i in tqdm.tqdm(range(self.n_ligands), desc="Solvate bound"):
-            bound_ligs.append(self.solvate_bound(i))
-        self.bound_ligands = bound_ligs
-        self.ligand_molecules = [ligand.get_system() for ligand in self.ligands]
-        self.bound_ligand_molecules = [ligand.get_system() for ligand in self.bound_ligands] 
         return self
 
 
@@ -659,114 +568,6 @@ class Network(object):
         return output
           
 
-    def submit(self, run_script):
-        
-        # if slurm:
-        output = self.afe_input_directory + "submit_slurm_afe.sh"
-        with open(output, "a") as file:
-            for i in range(self.n_transformations):
-                array_index = self.transformations["n_windows"][i] - 1
-                ligand_a = self.transformations["ligand_a"][i].split("_")[-1]
-                ligand_b = self.transformations["ligand_b"][i].split("_")[-1]
-                lambdas = self.transformations["lambdas"][i]
-                file.write(f"sbatch --array=0-{array_index} --job-name={ligand_a}_{ligand_b}_afe {run_script} {ligand_a} {ligand_b} {self.md_engine} {lambdas}\n")
-        # else: 
-        #pass
-
-
-    def solvate_unbound(self, index):
-        """
-        Solvate unbound systems.
-
-        Parameters:
-        -----------
-        index: list
-            Ligand indices for sorting through Network.names and Network.ligands
-        Return:
-        -------
-        solvated_ligand: Ligand
-            (solvated) Ligand object whose file attribute is the prm7 and rst7 files 
-        """ 
-        ligand = self.ligands[index]
-        ligand_number = self.names[index].split("_")[-1]
-        print(f"Solvating unbound ligand {ligand_number}")
-        ligand_parameters = ligand.parameterise(self.ligand_forcefield, self.ligand_charge)
-        unbound_box, unbound_box_angles = self.create_box(ligand_parameters)
-        solvated_molecule = bss.Solvent.solvate(model=self.protein.water_model, 
-                                              molecule=ligand_parameters, 
-                                              box=unbound_box,
-                                              angles=unbound_box_angles)
-        ligand_savename = self.ligand_path + "ligand_" + ligand_number + "_solvated"
-        solvated_files = bss.IO.saveMolecules(ligand_savename, solvated_molecule, ["PRM7", "RST7"])
-        solvated_ligand = Ligand.Ligand(file=solvated_files, parameterised=True)
-        return solvated_ligand
-    
-
-    def solvate_bound(self, index):
-        """
-        Solvate bound systems.
-
-        Parameters:
-        -----------
-        index: int
-            Ligand indices for sorting through Network.names and Network.ligands
-        Return:
-        -----
-        solvated_system: Ligand
-            (solvated) Ligand object whose file attribute is the prm7 and rst7 files         
-        """
-        ligand = self.ligands[index]
-        ligand_number = self.names[index].split("_")[-1]
-        print(f"Solvating bound ligand {ligand_number}")
-        ligand_parameters = ligand.parameterise(self.ligand_forcefield, self.ligand_charge)  
-        #TODO check if this works   !!!
-        protein = self.protein.get_molecule(self.file)
-        system_parameters = ligand_parameters + protein
-        bound_box, bound_box_angles = self.create_box(system_parameters)
-        # bss.IO.saveMolecules(self.protein_path + "/test", system_parameters, ["pdb"])
-        solvated_molecules = bss.Solvent.solvate(model=self.protein.water_model,
-                                                 molecule=system_parameters,
-                                                 box=bound_box,
-                                                 angles=bound_box_angles)
-        
-        system_savename = self.protein_path + "system_" + ligand_number + "_solvated"
-        solvated_files = bss.IO.saveMolecules(system_savename, solvated_molecules, ["PRM7", "RST7"])
-        solvated_system = Ligand.Ligand(file=solvated_files, parameterised=True)
-        return solvated_system
-
-
-    def create_box(self, molecule):
-        """
-        Create a bss.Box object for solvation.
-
-        Parameters:
-        -----------
-        molecule: 
-            bss.Molecule: usually either a protein or a ligand
-
-        Return:
-        -------
-        tuple: 
-            bss.Box and angles
-        """
-
-        box_min, box_max = molecule.getAxisAlignedBoundingBox()
-        box_size = [y - x for x, y in zip(box_min, box_max)]
-        box_area = [x + int(self.box_edges) * ANGSTROM for x in box_size]
-        self.box, self.box_angles = None, None
-        if self.box_shape == "cubic":
-            self.box, self.box_angles = bss.Box.cubic(max(box_area))
-        elif self.box_shape == "rhombicDodecahedronHexagon":
-            self.box, self.box_angles = bss.Box.rhombicDodecahedronHexagon(max(box_area))
-        elif self.box_shape == "rhombicDodecahedronSquare":
-            self.box, self.box_angles = bss.Box.rhombicDodecahedronSquare(max(box_area))
-        elif self.box_shape == "truncatedOctahedron":
-            self.box, self.box_angles = bss.Box.truncatedOctahedron(max(box_area))
-        else:
-            print(f"Box shape {self.box_shape} not supported.")
-        return self.box, self.box_angles
-    
-
     def set_transformations(self):
         """
         Create a transformation network with LOMAP
@@ -844,24 +645,6 @@ class Network(object):
         return(len(self.ligands))
 
 
-    def create_new_lomap_directory(self):
-        """
-        Create a lomap directory in ligand path 
-
-        Return:
-        -------
-        str
-            new LOMAP working directory 
-        """
-        new_lomap_directory = self.ligand_path + "/lomap/"
-        print(f"Creating new directory {new_lomap_directory}")
-        if not os.path.exists(new_lomap_directory):
-            os.mkdir(new_lomap_directory)
-        else:
-            print(f"Directory {new_lomap_directory} already exists. Continuing.")
-        return new_lomap_directory
-
-
     def check_lomap_directory(self):
         """
         This is work-around to avoid the network plotting failing if 
@@ -877,7 +660,6 @@ class Network(object):
         lomap_directories = [self.ligand_path + name for name in lomap_names]
 
         exists = directories_exist(lomap_directories)
-
         if exists:
             remove_lomap_directories(lomap_directories)
 
@@ -1227,7 +1009,6 @@ class Network(object):
             return given_group_name
         else:
             return self.protein_file.split("/")[-1].split(".")[0]
-
 
 
 def main():

@@ -162,24 +162,24 @@ def main():
     
     prepared_network = network.prepare_network()
 
-    functions.write_slurm_script(template_file="add_water.sh", 
+    functions.write_slurm_script(template_file="02_add_water.sh", 
                                  path=prepared_network.afe_input_directory, 
                                  log_dir=prepared_network.log_directory,
                                  protocol_file=prepared_network.protocol_file)
     
-    functions.write_slurm_script(template_file="heat_meze.sh", 
+    functions.write_slurm_script(template_file="03_heat_meze.sh", 
                                  path=prepared_network.afe_input_directory, 
                                  log_dir=prepared_network.log_directory,
                                  protocol_file=prepared_network.protocol_file)
     
-    functions.write_slurm_script(template_file="meze.sh",
+    functions.write_slurm_script(template_file="04_meze.sh",
                                  path=prepared_network.afe_input_directory, 
                                  log_dir=prepared_network.log_directory,
                                  protocol_file=prepared_network.protocol_file)
      
     prepared_network.write_afe_run_script()
 
-    functions.write_slurm_script(template_file="slurm_all.sh",
+    functions.write_slurm_script(template_file="05_slurm_all.sh",
                                  path=prepared_network.afe_input_directory,
                                  log_dir=prepared_network.log_directory,
                                  protocol_file=prepared_network.protocol_file,
