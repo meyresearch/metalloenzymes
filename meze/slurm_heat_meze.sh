@@ -13,7 +13,7 @@ LIG_NUMBER=$SLURM_ARRAY_TASK_ID
 
 start=`date +%s`
 
-python $MEZEHOME/equilibrate.py $LIG_NUMBER PROTOCOLFILE
+python $MEZEHOME/equilibrate.py "ligand_$LIG_NUMBER" PROTOCOLFILE
 
 end=`date +%s`
 runtime=$((end - start))

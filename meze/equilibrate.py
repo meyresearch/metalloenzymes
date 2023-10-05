@@ -141,14 +141,14 @@ def equilibrate(system, name, workdir, time, start_t=300, end_t=300, temperature
     return equilibrated_system
 
 
-def heat_unbound(ligand_number, equilibration_dir, ligand_dir, min_steps, min_dt, min_tol, short_nvt, nvt_runtime, npt_runtime, temperature=300., pressure=1.):
+def heat_unbound(ligand_name, equilibration_dir, ligand_dir, min_steps, min_dt, min_tol, short_nvt, nvt_runtime, npt_runtime, temperature=300., pressure=1.):
     """
     Perform minimisation and NVT and NPT equilibrations on ligand
 
     Parameters:
     -----------
-    ligand_number: int
-        ligand number used in ligand file name
+    ligand_name: int
+        ligand file name
     equilibration_dir: str
         full path to /equilibration/
     ligand_dir: str
@@ -170,10 +170,10 @@ def heat_unbound(ligand_number, equilibration_dir, ligand_dir, min_steps, min_dt
     """
     temperature = functions.convert_to_units(temperature, KELVIN)
     pressure = functions.convert_to_units(pressure, ATM)
-    directory = functions.mkdir(equilibration_dir + f"/unbound/ligand_{ligand_number}/")
-    files = functions.read_files(f"{ligand_dir}/ligand_{ligand_number}_solvated.*")
+    directory = functions.mkdir(equilibration_dir + f"/unbound/{ligand_name}/")
+    files = functions.read_files(f"{ligand_dir}/{ligand_name}_solvated.*")
     solvated_ligand = bss.IO.readMolecules(files)
-    print(f"Equilibrating unbound ligand {ligand_number}")
+    print(f"Equilibrating unbound ligand {ligand_name}")
     directories = lambda step: functions.mkdir(directory+step)
     min_directory = directories("min")
     r_nvt_directory = directories("r_nvt")
@@ -211,18 +211,18 @@ def heat_unbound(ligand_number, equilibration_dir, ligand_dir, min_steps, min_dt
                                         pressure=pressure,
                                         temperature=temperature,
                                         checkpoint=r_npt_directory + "/r_npt.cpt")
-    unbound_savename = npt_directory + f"/ligand_{ligand_number}"
+    unbound_savename = npt_directory + f"/{ligand_name}"
     bss.IO.saveMolecules(filebase=unbound_savename, system=equilibrated_molecule, fileformat=["PRM7", "RST7"])        
 
     
-def heat_bound(ligand_number, equilibration_dir, protein_dir, min_steps, min_dt, min_tol, short_nvt, nvt_runtime, npt_runtime, temperature=300., pressure=1.):
+def heat_bound(ligand_name, equilibration_dir, protein_dir, min_steps, min_dt, min_tol, short_nvt, nvt_runtime, npt_runtime, temperature=300., pressure=1.):
     """
     Perform minimisation and NVT and NPT equilibrations on bound ligand 
 
     Parameters:
     -----------
-    ligand_number: int
-        ligand number used in ligand file name
+    ligand_name: int
+        ligand file name
     equilibration_dir: str
         full path to /equilibration/
     protein_dir: str
@@ -244,8 +244,8 @@ def heat_bound(ligand_number, equilibration_dir, protein_dir, min_steps, min_dt,
     """ 
     temperature = functions.convert_to_units(temperature, KELVIN)
     pressure = functions.convert_to_units(pressure, ATM)           
-    directory = functions.mkdir(equilibration_dir+f"/bound/ligand_{ligand_number}/")
-    files = functions.read_files(f"{protein_dir}/bound_ligand_{ligand_number}_solvated.*")
+    directory = functions.mkdir(equilibration_dir+f"/bound/{ligand_name}/")
+    files = functions.read_files(f"{protein_dir}/bound_{ligand_name}_solvated.*")
     solvated_system = bss.IO.readMolecules(files)
     directories = lambda step: functions.mkdir(directory+step)
     min_dir = directories("min")
@@ -255,7 +255,7 @@ def heat_bound(ligand_number, equilibration_dir, protein_dir, min_steps, min_dt,
     r_npt_dir = directories("r_npt")
     npt_dir = directories("npt")     
     start_temp = functions.convert_to_units(0, KELVIN)
-    print(f"Equilibrating bound ligand {ligand_number}")
+    print(f"Equilibrating bound ligand {ligand_name}")
     minimised_system = minimise(system=solvated_system, workdir=min_dir, min_steps=min_steps, min_dt=min_dt, min_tol=min_tol)
     restrained_nvt = equilibrate(system=minimised_system,
                                  workdir=r_nvt_dir,
@@ -292,7 +292,7 @@ def heat_bound(ligand_number, equilibration_dir, protein_dir, min_steps, min_dt,
                                        pressure=pressure,
                                        temperature=temperature,
                                        checkpoint=r_npt_dir + "/r_npt.cpt")
-    bound_savename = npt_dir + f"/system_{ligand_number}"
+    bound_savename = npt_dir + f"/bound_{ligand_name}"
     bss.IO.saveMolecules(filebase=bound_savename, system=equilibrated_protein, fileformat=["PRM7", "RST7"])     
    
 
@@ -365,7 +365,7 @@ def main():
     arguments = parser.parse_args()
     protocol = functions.input_to_dict(file=arguments.protocol_file)
 
-    heat_unbound(ligand_number=arguments.ligand_number,
+    heat_unbound(ligand_name=arguments.ligand_number,
                  equilibration_dir=protocol["equilibration directory"],
                  ligand_dir=protocol["ligand directory"],
                  min_steps=protocol["minimisation steps"],
@@ -377,7 +377,7 @@ def main():
                  pressure=protocol["pressure"],
                  temperature=protocol["temperature"])
     
-    heat_bound(ligand_number=arguments.ligand_number,
+    heat_bound(ligand_name=arguments.ligand_number,
                equilibration_dir=protocol["equilibration directory"],
                protein_dir=protocol["protein directory"],
                min_steps=protocol["minimisation steps"],
