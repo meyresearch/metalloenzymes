@@ -498,36 +498,28 @@ class Network(object):
         return self
 
 
-    def get_equilibrated(self):
+    def get_equilibrated(self, ligand_a, ligand_b):
         """
-        Read in equilibrated files and update Network class object
+        Read in equilibrated ligand files and update Network class object
 
         Parameters:
         -----------
-
+        ligand_a: str
+            name of ligand a 
+        ligand_b: str
+            name of ligand b
         Return:
         -------
         self: Network
             (equilibrated) Network object
         """
         print("\n")
-        print("Getting equilibrated systems")
-        unbound_paths = functions.read_files(self.equilibration_directory+"/unbound/ligand_*/npt/")
-        paths = list(map(lambda x: x + "ligand_*", unbound_paths))
-        with multiprocessing.pool.Pool() as pool:
-            unbound_equilibrated = list(pool.imap(functions.read_files, paths))
+        print(f"Getting equilibrated ligands {ligand_a} and {ligand_b}")
 
-        with multiprocessing.pool.Pool() as pool:
-            self.ligand_molecules = list(pool.imap(bss.IO.readMolecules, unbound_equilibrated))
-
-        bound_paths = functions.read_files(self.equilibration_directory+"/bound/ligand_*/npt/")
-        paths = list(map(lambda x: x + "system_*", bound_paths))
-
-        with multiprocessing.pool.Pool() as pool:
-            bound_equilibrated = list(pool.imap(functions.read_files, paths))
-
-        with multiprocessing.pool.Pool() as pool:
-            self.bound_ligand_molecules = list(pool.imap(bss.IO.readMolecules, bound_equilibrated))
+        unbound_files = [functions.read_files(self.equilibration_directory+f"/unbound/{ligand}/npt/{ligand}.*") for ligand in [ligand_a, ligand_b]]
+        self.ligand_molecules = [bss.IO.readMolecules(files) for files in unbound_files]
+        bound_files = [functions.read_files(self.equilibration_directory+f"/bound/{ligand}/npt/bound_{ligand}.*") for ligand in [ligand_a, ligand_b]]
+        self.bound_ligand_molecules = [bss.IO.readMolecules(files) for files in bound_files]
 
         return self
 
