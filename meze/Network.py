@@ -133,8 +133,8 @@ def combine_unbound_ligands(system_a, system_b):
 
     Parameters:
     -----------
-    a: Ligand() 
-    b: Ligand()
+    system_a: bss.Molecule
+    system_b: bss.Molecule
 
     Return:
     -------
@@ -258,11 +258,10 @@ def create_minimisation_configs(files, min_cycles=1, min_moves=50000):
     Return:
     -------
     """
-    # minimisation_config = [f"minimise maximum iterations = 10000\n"]
+
     for i in range(len(files)):
         with open(files[0], "r") as f:
             old_config = f.readlines()
-        
         for line in old_config:
             if "ncycles" in line and "ncycles_per_snap" not in line:
                 idx = old_config.index(line)
@@ -280,8 +279,6 @@ def create_minimisation_configs(files, min_cycles=1, min_moves=50000):
         replaced_config = old_config
 
         with open(files[i], "w") as f:
-            # for setting in minimisation_config:
-            #     replaced_config.append(setting)
             f.writelines(replaced_config)
 
 
@@ -316,7 +313,7 @@ class Network(object):
     Return:
     -------
     """
-    def __init__(self, protein_file, workdir=os.getcwd(), prepared=False, afe_input_path=None, equilibration_path=None,
+    def __init__(self, protein_file, workdir=os.getcwd(), prepared=False, afe_input_path=None, equilibration_path=None, outputs=None,
                  ligand_path=os.getcwd()+"/inputs/ligands/", ligand_charge=0, ligand_ff="gaff2", 
                  group_name=None, protein_path=os.getcwd()+"/inputs/protein/", water_model="tip3p", protein_ff="ff14SB", 
                  engine="SOMD", sampling_time=4, box_edges=20, box_shape="cubic", min_steps=5000, short_nvt=5, nvt=50, npt=200, 
@@ -325,7 +322,10 @@ class Network(object):
         Class constructor
         """
         self.workding_directory = functions.path_exists(workdir)
-
+        self.md_engine = engine
+        self.md_time = functions.convert_to_units(sampling_time, NANOSECOND)
+        self.n_repeats = repeats
+        
         self.prepared = prepared
         if self.prepared:
             self.prepared_protein = functions.read_files(protein_file + ".*")
@@ -339,6 +339,10 @@ class Network(object):
             self.equilibration_directory = equilibration_path
         else:
             self.equilibration_directory = self.create_directory("/equilibration/")
+        if outputs:
+            self.output_directories = functions.read_files(outputs + "/*")
+        else:
+            self.output_directories = self.create_output_directories()
 
         self.ligand_path = functions.path_exists(ligand_path)
         self.ligand_forcefield = ligand_ff
@@ -385,9 +389,7 @@ class Network(object):
         self.temperature = functions.convert_to_units(temperature, KELVIN)
         self.pressure = functions.convert_to_units(pressure, ATM)
         
-        self.md_engine = engine
-        self.md_time = functions.convert_to_units(sampling_time, NANOSECOND)
-        self.n_repeats = repeats
+
 
 
     def get_ligand_by_name(self, name):
@@ -464,7 +466,6 @@ class Network(object):
         self.protein_water_complex = self.protein.create_complex()
         self.prepared_protein = self.protein.tleap(self.protein_water_complex)
         self.log_directory = self.create_directory("/logs/")
-        self.output_directories = self.create_output_directories()
         self.transformations, self.network_file = self.set_transformations()
         self.n_transformations = len(self.transformations)
         self.ligands_dat_file = self.create_ligand_dat_file()
@@ -518,55 +519,55 @@ class Network(object):
         unbound_files = [functions.read_files(self.equilibration_directory+f"/unbound/{ligand}/npt/{ligand}.*") for ligand in [ligand_a, ligand_b]]
         self.ligands = [Ligand.Ligand(files, parameterised=True) for files in unbound_files]
         self.names = [ligand.get_name() for ligand in self.ligands]
-        self.ligand_molecules = [ligand.get_ligand() for ligand in self.ligands]
+        self.ligand_molecules = [bss.IO.readMolecules(files) for files in unbound_files]
         bound_files = [functions.read_files(self.equilibration_directory+f"/bound/{ligand}/npt/bound_{ligand}.*") for ligand in [ligand_a, ligand_b]]
         self.bound_ligands = [Ligand.Ligand(files, parameterised=True) for files in bound_files]
         self.bound_ligand_molecules = [bss.IO.readMolecules(files) for files in bound_files]
         return self
 
 
-    def afe_prep(self):
+    def prepare_afe(self, ligand_a_name, ligand_b_name):
         """
         Prepare minimisation and free energy lambda windows directory tree
 
         Parameters:
         -----------
+        ligand_a_name: str
+            name of first ligand
+        ligand_b_name: str
+            name of second ligand
 
         Return:
         -------
         """
         self.transformations = self.get_transformations()
         self.n_transformations = len(self.transformations)
-        columns_to_list = lambda column: self.transformations[column].tolist()
-        ligands_a, ligands_b = columns_to_list("ligand_a"), columns_to_list("ligand_b")
-        indices_a, indices_b = columns_to_list("index_a"), columns_to_list("index_b")
-        lambda_list = columns_to_list("lambdas")
-        lambdas = [list(map(float, lambda_list[i].split(" "))) for i in range(len(lambda_list))]
-        print("\n")
-        arguments = [(self.ligand_molecules[indices_a[i]], self.ligand_molecules[indices_b[i]]) for i in range(self.n_transformations)]
-        unbound_systems = []
-        with multiprocessing.pool.Pool() as pool:
-            for result in tqdm.tqdm(pool.istarmap(combine_unbound_ligands, arguments), desc="Merging unbound", total=len(arguments)):
-                unbound_systems.append(result)
-        print("\n")
-        
-        arguments = [(self.bound_ligand_molecules[indices_a[i]], self.bound_ligand_molecules[indices_b[i]]) for i in range(self.n_transformations)]
-        bound_systems = []
-        with multiprocessing.pool.Pool() as pool:
-            for result in tqdm.tqdm(pool.istarmap(combine_bound_ligands, arguments), desc="Merging bound", total=len(arguments)):
-                bound_systems.append(result)
-        print("\n")
-        
-        free_energy_protocols = [bss.Protocol.FreeEnergy(lam_vals=lambdas[i], runtime=self.md_time, restart_interval=200, report_interval=200) for i in tqdm.tqdm(range(self.n_transformations), desc="Free energy protocols")]
-        print("\n")
+        dataframe = self.transformations.copy()
+        condition_1 = dataframe["ligand_a"] == ligand_a_name
+        condition_2 = dataframe["ligand_b"] == ligand_b_name
+        row_index = dataframe[condition_1 & condition_2].index.tolist()[0]
 
-        # Create ligand transformation directory tree in the first repeat directory, e.g. SOMD_1/lig_a~lig_b/ for bound/unbound 
-        first_run_directory = self.output_directories[0]
-        transformation_directories = [first_run_directory + f"/{ligands_a[i]}~{ligands_b[i]}/" for i in range(self.n_transformations)]
-        bound_directories = [directory + "/bound/" for directory in transformation_directories]
-        unbound_directories = [directory + "/unbound/" for directory in transformation_directories]
+        lambda_strings = dataframe.iloc[row_index]["lambdas"].split(" ")
+        lambda_values = list(map(float, lambda_strings))
+   
+        ligand_a = self.ligand_molecules[0]
+        ligand_b = self.ligand_molecules[1]
+        unbound = combine_unbound_ligands(ligand_a, ligand_b)
 
+        bound_ligand_a = self.bound_ligand_molecules[0]
+        bound_ligand_b = self.bound_ligand_molecules[1]
+        bound = combine_bound_ligands(bound_ligand_a, bound_ligand_b)
+    
+        
+        # Create ligand transformation directory tree in the first repeat directory, e.g. SOMD_1/lig_a~lig_b/ for bound/unbound
         # Only construct the BioSimSpace Relative AFE objects in the first repeat directory, to save on computation
+        first_run_directory = self.output_directories[0]
+        transformation_directory = first_run_directory + f"/{ligand_a_name}~{ligand_b_name}/"
+        unbound_directory = transformation_directory + "/unbound/"
+        bound_directory = transformation_directory + "/bound/"
+
+        free_energy_protocol = bss.Protocol.FreeEnergy(lam_vals=lambda_values, runtime=self.md_time, restart_interval=200, report_interval=200)
+
         n_cycles = 5 #TODO make editable
         n_moves = self.set_n_moves()
         frames = n_moves // 100
@@ -575,32 +576,27 @@ class Network(object):
                           "buffered coordinates frequency": frames, 
                           "cutoff distance": "8 angstrom", 
                           "minimise": False}
-        _ = [bss.FreeEnergy.Relative(system=unbound_systems[i], protocol=free_energy_protocols[i], engine=self.md_engine, work_dir=unbound_directories[i], extra_options=config_options) for i in tqdm.tqdm(range(self.n_transformations), desc="Unbound AFE")]
-        print("\n")
-        _ = [bss.FreeEnergy.Relative(system=bound_systems[i], protocol=free_energy_protocols[i], engine=self.md_engine, work_dir=bound_directories[i], extra_options=config_options) for i in tqdm.tqdm(range(self.n_transformations), desc="Bound AFE")]
-
-        # For SOMD only: create a minimisation directory manually and copy the AFE MD configuration files to the minimisation directory for the first repeat
-        bound_lambda_minimisation_directories = [functions.mkdir(directory + "/minimisation/") for directory in bound_directories]
-        unbound_lambda_minimisation_directories = [functions.mkdir(directory + "/minimisation/") for directory in unbound_directories]
-
-        print("\n")
-        _ = [os.system(f"cp -r {unbound_directories[i]}/lambda_* {unbound_lambda_minimisation_directories[i]}") for i in tqdm.tqdm(range(len(unbound_lambda_minimisation_directories)), desc="Unbound minimisation")]
-        print("\n")
-        _ = [os.system(f"cp -r {bound_directories[i]}/lambda_* {bound_lambda_minimisation_directories[i]}") for i in tqdm.tqdm(range(len(bound_lambda_minimisation_directories)), desc="Bound minimisation")]
         
-        # For SOMD only: Open the AFE MD configuration files and convert to minimisation configurations for the first repeat
-        bound_configurations = list(map(lambda x: x + "/*/*.cfg", bound_lambda_minimisation_directories))
-        unbound_configurations = list(map(lambda x: x + "/*/*.cfg", unbound_lambda_minimisation_directories))
-        bound_configuration_files = [functions.read_files(file) for file in bound_configurations]
-        unbound_configuration_files = [functions.read_files(file) for file in unbound_configurations]
-        _ = [create_minimisation_configs(config_files) for config_files in bound_configuration_files]
-        _ = [create_minimisation_configs(config_files) for config_files in unbound_configuration_files]
-        print("\n")
-        # Copy lambda transformation directories (including minimisation) from first repeat directory to the rest of the repeat directories, e.g. SOMD_2, SOMD_3
-        _ = [os.system(f"cp -r {transformation_directories[i].rstrip('/')} {self.output_directories[j]}") for i in tqdm.tqdm(range(len(unbound_directories)), desc="Copy unbound") for j in range(1, self.n_repeats)]
-        print("\n")
-        _ = [os.system(f"cp -r {transformation_directories[i].rstrip('/')} {self.output_directories[j]}") for i in tqdm.tqdm(range(len(bound_directories)), desc="Copy bound") for j in range(1, self.n_repeats)]
+        bss.FreeEnergy.Relative(system=unbound, protocol=free_energy_protocol, engine=self.md_engine, work_dir=unbound_directory, extra_options=config_options)
+        bss.FreeEnergy.Relative(system=bound, protocol=free_energy_protocol, engine=self.md_engine, work_dir=bound_directory, extra_options=config_options)
+        
+        # For SOMD only: create a minimisation directory manually and copy the AFE MD configuration files to the minimisation directory for the first repeat
+        unbound_lambda_minimisation_directory = functions.mkdir(unbound_directory + "/minimisation/")
+        bound_lambda_minimisation_directory = functions.mkdir(bound_directory + "/minimisation/")
+        os.system(f"cp -r  {unbound_directory}/lambda_* {unbound_lambda_minimisation_directory}")
+        os.system(f"cp -r {bound_directory}/lambda_* {bound_lambda_minimisation_directory}")
 
+        # For SOMD only: Open the AFE MD configuration files and convert to minimisation configurations for the first repeat
+        unbound_configurations = functions.read_files(unbound_lambda_minimisation_directory + "/*/*.cfg")
+        bound_configurations = functions.read_files(bound_lambda_minimisation_directory + "/*/*.cfg")
+        create_minimisation_configs(unbound_configurations)
+        create_minimisation_configs(bound_configurations)
+        print("\n")
+
+        # Copy lambda transformation directories (including minimisation) from first repeat directory to the rest of the repeat directories, e.g. SOMD_2, SOMD_3
+        _ = [os.system(f"cp -r {transformation_directory.rstrip('/')} {self.output_directories[i]}") for i in range(1, self.n_repeats)]
+
+        
 
     def set_n_moves(self, stepsize=2, number_of_cycles=5):
         """
@@ -806,6 +802,17 @@ class Network(object):
     
 
     def get_transformations(self):
+        """
+        Getter for transformations csv file
+
+        Parameters:
+        -----------
+
+        Return:
+        -------
+        pd.DataFrame: 
+            meze network as a csv file
+        """
         return pd.read_csv(self.afe_input_directory+f"/meze_network.csv", header=0, index_col=0)
     
 
