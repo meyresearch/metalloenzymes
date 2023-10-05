@@ -28,13 +28,16 @@ heating_job_id=$(sbatch --dependency=afterok:${solvation_job_id} --parsable --ar
 echo "Heating meze with slurm job $heating_job_id"
 
 
-# meze_job_id=$(sbatch --dependency=afterok:${heating_job_id} --parsable --array=0-$((${#transformations_array[@]}-1)) $AFE_INPUT_DIR/slurm_meze.sh)
+meze_job_id=$(sbatch --dependency=afterok:${heating_job_id} --parsable --array=0-$((${#transformations_array[@]}-1)) $AFE_INPUT_DIR/slurm_meze.sh)
 
-prepafe_job_id=$(sbatch --dependency=afterok:${heating_job_id} --parsable $AFE_INPUT_DIR/slurm_meze.sh)
 echo "Preparing AFE with slurm job $prepafe_job_id"
 
-for i in "${!transformations_array[@]}"
-do
-    afe_job_id=$(sbatch --parsable --job-name=${transformations_array[i]} --array=0-$((${n_windows_array[i]}-1)) $AFE_INPUT_DIR/run_$ENGINE.sh ${transformations_array[i]} "${lambdas_array[i]}")
-    echo "Submitted AFE slurm job $afe_job_id"
-done
+# DELETE: prepafe_job_id=$(sbatch --dependency=afterok:${heating_job_id} --parsable $AFE_INPUT_DIR/slurm_meze.sh)
+
+# echo "Preparing AFE with slurm job $prepafe_job_id"
+
+# for i in "${!transformations_array[@]}"
+# do
+#     afe_job_id=$(sbatch --parsable --job-name=${transformations_array[i]} --array=0-$((${n_windows_array[i]}-1)) $AFE_INPUT_DIR/run_$ENGINE.sh ${transformations_array[i]} "${lambdas_array[i]}")
+#     echo "Submitted AFE slurm job $afe_job_id"
+# done

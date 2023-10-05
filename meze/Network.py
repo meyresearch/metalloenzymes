@@ -465,7 +465,7 @@ class Network(object):
         self.prepared_protein = self.protein.tleap(self.protein_water_complex)
         self.log_directory = self.create_directory("/logs/")
         self.output_directories = self.create_output_directories()
-        self.transformations = self.set_transformations()
+        self.transformations, self.network_file = self.set_transformations()[0], self.set_transformations()[1]
         self.n_transformations = len(self.transformations)
         self.ligands_dat_file = self.create_ligand_dat_file()
         self.protocol_file = self.create_protocol_file()
@@ -800,8 +800,9 @@ class Network(object):
             self.lambdas.append(lambda_windows)
         dataframe["n_windows"] = self.n_windows
         dataframe["lambdas"] = self.lambdas
-        dataframe.to_csv(self.afe_input_directory+f"/meze_network.csv")
-        return dataframe
+        save_name = self.afe_input_directory+f"/meze_network.csv"
+        dataframe.to_csv(save_name)
+        return dataframe, save_name
     
 
     def get_transformations(self):
@@ -958,6 +959,7 @@ class Network(object):
                     f"engine = {self.md_engine}",
                     f"outputs = {path_to_outputs}",
                     f"repeats = {self.n_repeats}",
+                    f"network file = {self.network_file}",
                     f"project directory = {self.workding_directory}",
                     f"equilibration directory = {self.equilibration_directory}",
                     f"ligand directory = {self.ligand_path}",
