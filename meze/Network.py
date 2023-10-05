@@ -515,12 +515,13 @@ class Network(object):
         """
         print("\n")
         print(f"Getting equilibrated ligands {ligand_a} and {ligand_b}")
-
         unbound_files = [functions.read_files(self.equilibration_directory+f"/unbound/{ligand}/npt/{ligand}.*") for ligand in [ligand_a, ligand_b]]
-        self.ligand_molecules = [bss.IO.readMolecules(files) for files in unbound_files]
+        self.ligands = [Ligand.Ligand(files, parameterised=True) for files in unbound_files]
+        self.names = [ligand.get_name() for ligand in self.ligands]
+        self.ligand_molecules = [ligand.get_ligand() for ligand in self.ligands]
         bound_files = [functions.read_files(self.equilibration_directory+f"/bound/{ligand}/npt/bound_{ligand}.*") for ligand in [ligand_a, ligand_b]]
+        self.bound_ligands = [Ligand.Ligand(files, parameterised=True) for files in bound_files]
         self.bound_ligand_molecules = [bss.IO.readMolecules(files) for files in bound_files]
-
         return self
 
 
@@ -833,7 +834,7 @@ class Network(object):
         len(self.files): int
             number of ligands
         """
-        return(len(self.input_files))
+        return(len(self.ligands))
 
 
     def create_new_lomap_directory(self):
