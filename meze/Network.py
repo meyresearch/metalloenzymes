@@ -260,7 +260,7 @@ def create_minimisation_configs(files, min_cycles=1, min_moves=50000):
     """
 
     for i in range(len(files)):
-        with open(files[0], "r") as f:
+        with open(files[i], "r") as f:
             old_config = f.readlines()
         for line in old_config:
             if "ncycles" in line and "ncycles_per_snap" not in line:
@@ -558,7 +558,6 @@ class Network(object):
         bound_ligand_b = self.bound_ligand_molecules[1]
         bound = combine_bound_ligands(bound_ligand_a, bound_ligand_b)
     
-        
         # Create ligand transformation directory tree in the first repeat directory, e.g. SOMD_1/lig_a~lig_b/ for bound/unbound
         # Only construct the BioSimSpace Relative AFE objects in the first repeat directory, to save on computation
         first_run_directory = self.output_directories[0]

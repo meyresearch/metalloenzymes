@@ -65,39 +65,36 @@ def main():
     
     protocol = functions.input_to_dict(arguments.protocol_file)
 
-    equilibrated_network = Network.Network(prepared=True,
-                                           equilibration_path=protocol["equilibration directory"],
-                                           outputs=protocol["outputs"],
-                                           workdir=protocol["project directory"],
-                                           ligand_path=protocol["ligand directory"],
-                                           group_name=protocol["group name"],
-                                           protein_file=protocol["prepared protein file"],
-                                           protein_path=protocol["protein directory"],
-                                           water_model=protocol["water model"],
-                                           ligand_ff=protocol["ligand forcefield"],
-                                           protein_ff=protocol["protein forcefield"],
-                                           ligand_charge=protocol["ligand charge"],
-                                           engine=protocol["engine"],
-                                           sampling_time=protocol["sampling time"],
-                                           box_edges=protocol["box edges"],
-                                           box_shape=protocol["box shape"],
-                                           min_steps=protocol["minimisation steps"],
-                                           short_nvt=protocol["short nvt"],
-                                           nvt=protocol["nvt"],
-                                           npt=protocol["npt"],
-                                           min_dt=protocol["minimisation stepsize"],
-                                           min_tol=protocol["minimisation tolerance"],
-                                           repeats=protocol["repeats"],
-                                           temperature=protocol["temperature"],
-                                           pressure=protocol["pressure"])
+    network = Network.Network(prepared=True,
+                              equilibration_path=protocol["equilibration directory"],
+                              outputs=protocol["outputs"],
+                              workdir=protocol["project directory"],
+                              ligand_path=protocol["ligand directory"],
+                              group_name=protocol["group name"],
+                              protein_file=protocol["prepared protein file"],
+                              protein_path=protocol["protein directory"],
+                              water_model=protocol["water model"],
+                              ligand_ff=protocol["ligand forcefield"],
+                              protein_ff=protocol["protein forcefield"],
+                              ligand_charge=protocol["ligand charge"],
+                              engine=protocol["engine"],
+                              sampling_time=protocol["sampling time"],
+                              box_edges=protocol["box edges"],
+                              box_shape=protocol["box shape"],
+                              min_steps=protocol["minimisation steps"],
+                              short_nvt=protocol["short nvt"],
+                              nvt=protocol["nvt"],
+                              npt=protocol["npt"],
+                              min_dt=protocol["minimisation stepsize"],
+                              min_tol=protocol["minimisation tolerance"],
+                              repeats=protocol["repeats"],
+                              temperature=protocol["temperature"],
+                              pressure=protocol["pressure"])
     
     ligand_a, ligand_b = functions.separate(arguments.transformation)
-    equilibrated_network = equilibrated_network.get_equilibrated(ligand_a, ligand_b)
 
-    equilibrated_network.prepare_afe(ligand_a, ligand_b) #or something like that
-    print("")
-
-    
+    equilibrated_network = network.get_equilibrated(ligand_a, ligand_b)
+    equilibrated_network.prepare_afe(ligand_a, ligand_b) 
 
 if __name__ == "__main__":
     main()

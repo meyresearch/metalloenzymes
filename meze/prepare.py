@@ -162,22 +162,32 @@ def main():
     
     prepared_network = network.prepare_network()
 
-    functions.write_slurm_script(template_file="slurm_add_water.sh", 
+    functions.write_slurm_script(template_file="add_water.sh", 
                                  path=prepared_network.afe_input_directory, 
                                  log_dir=prepared_network.log_directory,
                                  protocol_file=prepared_network.protocol_file)
     
-    functions.write_slurm_script(template_file="slurm_heat_meze.sh", 
+    functions.write_slurm_script(template_file="heat_meze.sh", 
                                  path=prepared_network.afe_input_directory, 
                                  log_dir=prepared_network.log_directory,
                                  protocol_file=prepared_network.protocol_file)
     
-    functions.write_slurm_script(template_file="slurm_meze.sh",
+    functions.write_slurm_script(template_file="meze.sh",
                                  path=prepared_network.afe_input_directory, 
                                  log_dir=prepared_network.log_directory,
                                  protocol_file=prepared_network.protocol_file)
      
     prepared_network.write_afe_run_script()
+
+    functions.write_slurm_script(template_file="slurm_all.sh",
+                                 path=prepared_network.afe_input_directory,
+                                 log_dir=prepared_network.log_directory,
+                                 protocol_file=prepared_network.protocol_file,
+                                 extra_lines={"NUMBER_OF_LIGANDS": prepared_network.n_ligands,
+                                              "ENGINE": prepared_network.md_engine,
+                                              "AFE_PATH": prepared_network.afe_input_directory,
+                                              "LIGANDS_DATA_FILE": prepared_network.ligands_dat_file,
+                                              "TRANSFORMATIONS_DATA_FILE": prepared_network.network_file})
 
 if __name__ == "__main__":
     main()

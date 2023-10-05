@@ -242,7 +242,7 @@ def input_to_dict(file):
     return dictionary
 
 
-def write_slurm_script(template_file, path, log_dir, protocol_file):
+def write_slurm_script(template_file, path, log_dir, protocol_file, extra_options=None, extra_lines=None):
     """
     Write a slurm script for running different stages of MEZE
     Parameters:
@@ -255,6 +255,10 @@ def write_slurm_script(template_file, path, log_dir, protocol_file):
         directory for outputting slurm logs
     protocol_file: str
         full path to the protocol file
+    extra_options: None or dict
+        a dictionary of options to add to the slurm script; "REPLACE": value. Overrides defaults.
+    extra_lines: None or dict
+        a dictionary of options to append to the default options
 
     Return:
     -------
@@ -267,14 +271,20 @@ def write_slurm_script(template_file, path, log_dir, protocol_file):
     with open(template, "r") as file:
         lines = file.readlines()
     
-    options = {"PATH_TO_LOGS": log_dir,
-               "N_TASKS": str(1),
-               "N_GPUS": str(1), 
-               "N_CPUS": str(10),
-               "MEMORY": str(4069),
-               "PATH_TO_MEZE": meze,
-               "PROTOCOLFILE": protocol_file}    
-    
+    if extra_options:
+        options = extra_options
+    elif not extra_options:
+        options = {"PATH_TO_LOGS": log_dir,
+                   "N_TASKS": str(1),
+                   "N_GPUS": str(1), 
+                   "N_CPUS": str(10),
+                   "MEMORY": str(4069),
+                   "PATH_TO_MEZE": meze,
+                   "PROTOCOLFILE": protocol_file}    
+    if extra_lines:
+        for key, value in extra_lines.items():
+            options[key] = str(value)
+
     with open(output, "w") as file:
         for line in lines:
             for key, value in options.items():
