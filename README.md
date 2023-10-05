@@ -113,10 +113,10 @@ The above project directory three will then be updated as:
 
 ```
 /path/to/project/
-    |--- inputs/                Input files (set-up by user)
-    |   |--- ligands/           Ligand .sdf or .mol2 files (set-up by user)
-    |   |--- protein/           Protein .pdb file (set-up by user)
-    |--- outputs/               Folder for saving the results of AFE runs
+    |--- inputs/                            Input files (set-up by user)
+    |   |--- ligands/                       Ligand .sdf or .mol2 files (set-up by user)
+    |   |--- protein/                       Protein .pdb file (set-up by user)
+    |--- outputs/                           Folder for saving the results of AFE runs
     |   |--- SOMD_1/
     |   |   |--- ligand_1~ligand_2/
     |   |   |   |--- bound/
@@ -125,24 +125,33 @@ The above project directory three will then be updated as:
     |   |   |--- ...
     |   |--- SOMD_2/
     |   |--- SOMD_3/
-    |--- afe/                   Input files for running the meze workflow and AFE runs [same as above]
-    |--- equilibration/         Folder for saving the minimisation and equilibration outputs for unbound and bound ligands
+    |--- afe/                               Input files for running the meze workflow and AFE runs [same as above]
+    |--- equilibration/                     Folder for saving the minimisation and equilibration outputs for unbound and bound ligands
     |   |--- bound/
     |   |   |--- ligand_1
-    |   |   |   |--- min/       Minimisation
-    |   |   |   |--- bb_r_nvt/  Backbone-restrained NVT equilibration
-    |   |   |   |--- r_nvt/     Restrained NVT equilibration
-    |   |   |   |--- nvt/       NVT equilibration
-    |   |   |   |--- r_npt/     Restrained NPT equilibration
-    |   |   |   |--- npt/       NPT equilibration
+    |   |   |   |--- min/                   Minimisation
+    |   |   |   |--- bb_r_nvt/              Backbone-restrained NVT equilibration
+    |   |   |   |--- r_nvt/                 Restrained NVT equilibration
+    |   |   |   |--- nvt/                   NVT equilibration
+    |   |   |   |--- r_npt/                 Restrained NPT equilibration
+    |   |   |   |--- npt/                   NPT equilibration
     |   |   |--- ...
     |   |--- unbound/
     |   |   |--- ligand_1
-    |   |   |   |--- min/       Minimisation
-    |   |   |   |--- r_nvt/     Restrained NVT equilibration
-    |   |   |   |--- nvt/       NVT equilibration
-    |   |   |   |--- r_npt/     Restrained NPT equilibration
-    |   |   |   |--- npt/       NPT equilibration
+    |   |   |   |--- min/                   Minimisation
+    |   |   |   |--- r_nvt/                 Restrained NVT equilibration
+    |   |   |   |--- nvt/                   NVT equilibration
+    |   |   |   |--- r_npt/                 Restrained NPT equilibration
+    |   |   |   |--- npt/                   NPT equilibration
     |   |   |--- ...    
-    |--- logs/                  Folder for keeping SLURM log files
+    |--- logs/                              Folder for keeping SLURM log files
+    |   |--- add_water_1.slurm.out          Solvation SLURM output for ligand 1 etc
+    |   |--- add_water_1.slurm.err          Solvation SLURM error output for ligand 1 etc
+    |   |--- heat_meze_1.slurm.out          Minimisation and equilibration SLURM output for ligand 1 etc
+    |   |--- heat_meze_1.slurm.err          Minimisation and equilibration SLURM error output for ligand 1 etc
+    |   |--- meze_1.slurm.out               AFE preparation SLURM output for ligand 1 etc
+    |   |--- meze_1.slurm.err               AFE preparation SLURM error output for ligand 1 etc
+    |   |--- ligand_1_ligand_2_1.slurm.out  AFE calculation SLURM output for the first lambda window for transformation ligand_1~ligand_2
+    |   |--- ligand_1_ligand_2_1.slurm.err  AFE calculation SLURM error output for the first lambda window for transformation ligand_1~ligand_2
+    |   |--- ...
     ```
