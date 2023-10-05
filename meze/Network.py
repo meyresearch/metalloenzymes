@@ -1,5 +1,4 @@
 import BioSimSpace as bss
-bss.setVerbose(True)
 import functions
 import pandas as pd
 import sys
@@ -12,10 +11,6 @@ import Ligand
 import csv
 import Protein
 import pathlib
-import multiprocessing.pool
-import tqdm
-import istarmap
-import subprocess
 import shutil
 from BioSimSpace import _Exceptions
 
@@ -177,26 +172,6 @@ def create_lambda_windows(n_windows):
         string of lambdas as strings formatted to 4 decimal places
     """
     return " ".join([format(item, ".4f") for item in np.linspace(0, 1, int(n_windows))])
-
-
-# def create_lambda_list_bash(n_windows): 
-#     """
-#     Create a bash-readable list of evenly spaced lambda values between 0 and n_windows
-
-#     Parameters:
-#     -----------
-#     n_windows: 
-#         number of lambda windows
-
-#     Return:
-#     -------
-#     bash_list: str
-#         a bash-readable list of lambda values
-#     """
-#     lambda_list_numpy = create_lambda_windows(n_windows)
-#     lambda_list = [format(item, ".4f") for item in lambda_list_numpy]
-#     return " ".join(lambda_list)
-
 
 
 def create_minimisation_configs(files, min_cycles=1, min_moves=50000):
@@ -406,6 +381,37 @@ class Network(object):
         self.protocol_file = self.create_protocol_file()
         self.prepared = True
         return self
+
+
+    def create_box(self, molecule):
+        """
+        Create a bss.Box object for solvation.
+
+        Parameters:
+        -----------
+        molecule: 
+            bss.Molecule: usually either a protein or a ligand
+
+        Return:
+        -------
+        tuple: 
+            bss.Box and angles
+        """
+        box_min, box_max = molecule.getAxisAlignedBoundingBox()
+        box_size = [y - x for x, y in zip(box_min, box_max)]
+        box_area = [x + int(self.box_edges) * ANGSTROM for x in box_size]
+        self.box, self.box_angles = None, None
+        if self.box_shape == "cubic":
+            self.box, self.box_angles = bss.Box.cubic(max(box_area))
+        elif self.box_shape == "rhombicDodecahedronHexagon":
+            self.box, self.box_angles = bss.Box.rhombicDodecahedronHexagon(max(box_area))
+        elif self.box_shape == "rhombicDodecahedronSquare":
+            self.box, self.box_angles = bss.Box.rhombicDodecahedronSquare(max(box_area))
+        elif self.box_shape == "truncatedOctahedron":
+            self.box, self.box_angles = bss.Box.truncatedOctahedron(max(box_area))
+        else:
+            print(f"Box shape {self.box_shape} not supported.")
+        return self.box, self.box_angles
 
 
     def get_equilibrated(self, ligand_a, ligand_b):

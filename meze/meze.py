@@ -3,8 +3,6 @@ import argparse
 import os
 import Network
 import logging
-import time
-import equilibrate
 logger = logging.getLogger()
 logger.setLevel(logging.CRITICAL)
 

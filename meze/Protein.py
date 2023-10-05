@@ -23,6 +23,7 @@ def get_water_file(working_directory, name="water.pdb"):
     try:
         water_file = functions.file_exists(water_file)
     except argparse.ArgumentTypeError:
+        print("\n")
         print("No separate water file detected in working directory. Continuing without it.")
         water_file = None
     return water_file

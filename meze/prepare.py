@@ -2,7 +2,9 @@ import argparse
 import functions
 import os
 import Network
-
+import logging
+logger = logging.getLogger()
+logger.setLevel(logging.CRITICAL)
 
 def main():
 
@@ -179,7 +181,7 @@ def main():
      
     prepared_network.write_afe_run_script()
 
-    functions.write_slurm_script(template_file="05_slurm_all.sh",
+    functions.write_slurm_script(template_file="slurm_all.sh",
                                  path=prepared_network.afe_input_directory,
                                  log_dir=prepared_network.log_directory,
                                  protocol_file=prepared_network.protocol_file,
@@ -188,6 +190,10 @@ def main():
                                               "AFE_PATH": prepared_network.afe_input_directory,
                                               "LIGANDS_DATA_FILE": prepared_network.ligands_dat_file,
                                               "TRANSFORMATIONS_DATA_FILE": prepared_network.network_file})
+    
+    print("\n")
+    print("Successfully prepared meze network for AFE calculations.")
+    print(f"Run scripts saved in: {prepared_network.afe_input_directory}")
 
 if __name__ == "__main__":
     main()
