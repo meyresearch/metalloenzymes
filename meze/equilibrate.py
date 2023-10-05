@@ -245,7 +245,7 @@ def heat_bound(ligand_number, equilibration_dir, protein_dir, min_steps, min_dt,
     temperature = functions.convert_to_units(temperature, KELVIN)
     pressure = functions.convert_to_units(pressure, ATM)           
     directory = functions.mkdir(equilibration_dir+f"/bound/ligand_{ligand_number}/")
-    files = functions.read_files(f"{protein_dir}/system_{ligand_number}_solvated.*")
+    files = functions.read_files(f"{protein_dir}/bound_ligand_{ligand_number}_solvated.*")
     solvated_system = bss.IO.readMolecules(files)
     directories = lambda step: functions.mkdir(directory+step)
     min_dir = directories("min")
