@@ -147,8 +147,8 @@ def heat_unbound(ligand_name, equilibration_dir, ligand_dir, min_steps, min_dt, 
 
     Parameters:
     -----------
-    ligand_name: int
-        ligand file name
+    ligand_name: str
+        ligand name
     equilibration_dir: str
         full path to /equilibration/
     ligand_dir: str
@@ -221,8 +221,8 @@ def heat_bound(ligand_name, equilibration_dir, protein_dir, min_steps, min_dt, m
 
     Parameters:
     -----------
-    ligand_name: int
-        ligand file name
+    ligand_name: str
+        ligand name
     equilibration_dir: str
         full path to /equilibration/
     protein_dir: str
@@ -300,8 +300,8 @@ def main():
 
     parser = argparse.ArgumentParser(description="minimisation and equilibration for meze workflow")
 
-    parser.add_argument("ligand_number",
-                        help="ligand number used in ligand file name",
+    parser.add_argument("ligand_name",
+                        help="ligand name",
                         type=str)
     
     parser.add_argument("protocol_file",
@@ -365,7 +365,7 @@ def main():
     arguments = parser.parse_args()
     protocol = functions.input_to_dict(file=arguments.protocol_file)
 
-    heat_unbound(ligand_name=arguments.ligand_number,
+    heat_unbound(ligand_name=arguments.ligand_name,
                  equilibration_dir=protocol["equilibration directory"],
                  ligand_dir=protocol["ligand directory"],
                  min_steps=protocol["minimisation steps"],
@@ -377,7 +377,7 @@ def main():
                  pressure=protocol["pressure"],
                  temperature=protocol["temperature"])
     
-    heat_bound(ligand_name=arguments.ligand_number,
+    heat_bound(ligand_name=arguments.ligand_name,
                equilibration_dir=protocol["equilibration directory"],
                protein_dir=protocol["protein directory"],
                min_steps=protocol["minimisation steps"],
@@ -389,7 +389,6 @@ def main():
                pressure=protocol["pressure"],
                temperature=protocol["temperature"])
     
-
 
 if __name__ == "__main__":
     main()
