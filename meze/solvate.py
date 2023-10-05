@@ -23,15 +23,14 @@ def solvate_unbound(network, ligand_name):
         (solvated) Ligand object whose file attribute is the prm7 and rst7 files 
     """ 
     ligand = network.get_ligand_by_name(ligand_name)
-    ligand_number = ligand_name.split("_")[-1]
-    print(f"Solvating unbound ligand {ligand_number}")
+    print(f"Solvating unbound ligand {ligand_name}")
     ligand_parameters = ligand.parameterise(network.ligand_forcefield, network.ligand_charge)
     unbound_box, unbound_box_angles = network.create_box(ligand_parameters)
     solvated_molecule = bss.Solvent.solvate(model=network.protein.water_model, 
                                             molecule=ligand_parameters, 
                                             box=unbound_box,
                                             angles=unbound_box_angles)
-    ligand_savename = network.ligand_path + "ligand_" + ligand_number + "_solvated"
+    ligand_savename = network.ligand_path + ligand_name + "_solvated"
     solvated_files = bss.IO.saveMolecules(ligand_savename, solvated_molecule, ["PRM7", "RST7"])
     solvated_ligand = Ligand.Ligand(file=solvated_files, parameterised=True)
     return solvated_ligand
@@ -53,7 +52,6 @@ def solvate_bound(network, ligand_name):
         (solvated) Ligand object whose file attribute is the prm7 and rst7 files         
     """
     ligand = network.get_ligand_by_name(ligand_name)
-    ligand_number = ligand_name.split("_")[-1]
     print(f"Solvating bound ligand {ligand_name}")
     ligand_parameters = ligand.parameterise(network.ligand_forcefield, network.ligand_charge)    
     protein = network.protein.get_molecule()
@@ -64,7 +62,7 @@ def solvate_bound(network, ligand_name):
                                                 box=bound_box,
                                                 angles=bound_box_angles)
     
-    system_savename = network.protein_path + "system_" + ligand_number + "_solvated"
+    system_savename = network.protein_path + "bound_" + ligand_name + "_solvated"
     solvated_files = bss.IO.saveMolecules(system_savename, solvated_molecules, ["PRM7", "RST7"])
     solvated_system = Ligand.Ligand(file=solvated_files, parameterised=True)
     return solvated_system
@@ -108,8 +106,8 @@ def main():
 
     parser = argparse.ArgumentParser(description="solvation for meze workflow")
 
-    parser.add_argument("ligand_number",
-                        help="ligand number used in ligand file name",
+    parser.add_argument("ligand_name",
+                        help="ligand name",
                         type=str)
     
     parser.add_argument("protocol_file",
@@ -118,7 +116,6 @@ def main():
                         default=os.getcwd() + "/afe/protocol.dat")
     
     arguments = parser.parse_args()
-    ligand_name = "ligand_" + arguments.ligand_number
     
     protocol = functions.input_to_dict(arguments.protocol_file)
 
@@ -146,8 +143,8 @@ def main():
                               temperature=protocol["temperature"],
                               pressure=protocol["pressure"])
 
-    solvate_unbound(network=network, ligand_name=ligand_name)
-    solvate_bound(network=network, ligand_name=ligand_name)
+    solvate_unbound(network=network, ligand_name=arguments.ligand_name)
+    solvate_bound(network=network, ligand_name=arguments.ligand_name)
 
 if __name__ == "__main__":
     main()
