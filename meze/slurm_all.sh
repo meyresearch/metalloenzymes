@@ -9,7 +9,7 @@ AFE_INPUT_DIR="/home/jguven/projects/alchemistry/kpc2/partially_protonated_ligan
 ### Needs to be figured out:
 N_LIGANDS=16
 ENGINE="SOMD"
-# AND HOW INPUT FILE NAMES FOR LIGANDS.DAT AND MEZE_NETWORK.DAT ARE TAKEN
+# AND HOW INPUT FILE NAMES FOR LIGANDS.DAT AND MEZE_NETWORK.DAT ARE TAKEN; set up in setup.py?
 
 INPUT_FILE=$1
 LIGAND_CHARGE=$2
