@@ -154,4 +154,5 @@ The above project directory three will then be updated as:
     |   |--- ligand_1_ligand_2_1.slurm.out  AFE calculation SLURM output for the first lambda window for transformation ligand_1~ligand_2
     |   |--- ligand_1_ligand_2_1.slurm.err  AFE calculation SLURM error output for the first lambda window for transformation ligand_1~ligand_2
     |   |--- ...
+    
     ```

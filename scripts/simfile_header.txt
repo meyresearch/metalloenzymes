@@ -1,7 +1,0 @@
-#This file was generated on Wed Feb 15 15:36:14 2023
-#Using the somd command, of the molecular library Sire version <2023.1.2> 
-#For more information visit: https://github.com/michellab/Sire
-#
-#General information on simulation parameters:
-#Simulation used 200000 moves, 5 cycles and 2000 ps of simulation time
-

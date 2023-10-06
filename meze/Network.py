@@ -174,7 +174,32 @@ def create_lambda_windows(n_windows):
     return " ".join([format(item, ".4f") for item in np.linspace(0, 1, int(n_windows))])
 
 
-def create_minimisation_configs(files, min_cycles=1, min_moves=50000):
+def fix_afe_configurations(files):
+    """
+    Open FreeEnergy configuration file and remove the gpu id specification line
+    Fixes: #TODO raise issue
+
+    Parameters:
+    -----------
+    files: list
+        list of configuration files in each lambda minimisation window
+    
+    Return:
+    -------
+    """
+    for i in range(len(files)):
+        with open(files[i], "r") as f:
+            old_config = f.readlines()
+        for line in old_config:
+            if "gpu" in line:
+                idx = old_config.index(line)
+                del old_config[idx]
+        replaced_config = old_config
+        with open(files[i], "w") as f:
+            f.writelines(replaced_config)
+
+
+def create_minimisation_configurations(files, min_cycles=1, min_moves=50000):
     """
     Open FreeEnergy configuration file and convert it into a minimisation configuration
 
@@ -186,6 +211,7 @@ def create_minimisation_configs(files, min_cycles=1, min_moves=50000):
         number of cycles for the SOMD minimisation
     min_moves: int
         number of moves for the SOMD minimisation
+    
     Return:
     -------
     """
@@ -491,9 +517,14 @@ class Network(object):
                           "cutoff distance": "8 angstrom", 
                           "minimise": False}
         
-        bss.FreeEnergy.Relative(system=unbound, protocol=free_energy_protocol, engine=self.md_engine, work_dir=unbound_directory, extra_options=config_options)
-        bss.FreeEnergy.Relative(system=bound, protocol=free_energy_protocol, engine=self.md_engine, work_dir=bound_directory, extra_options=config_options)
+        bss.FreeEnergy.Relative(system=unbound, protocol=free_energy_protocol, engine=self.md_engine, work_dir=unbound_directory, extra_options=config_options, setup_only=True)
+        bss.FreeEnergy.Relative(system=bound, protocol=free_energy_protocol, engine=self.md_engine, work_dir=bound_directory, extra_options=config_options, setup_only=True)
         
+        unbound_configurations = functions.read_files(unbound_directory + "/*/*.cfg")
+        bound_configurations = functions.read_files(bound_directory + "/*/*.cfg")
+        fix_afe_configurations(unbound_configurations)
+        fix_afe_configurations(bound_configurations)
+
         # For SOMD only: create a minimisation directory manually and copy the AFE MD configuration files to the minimisation directory for the first repeat
         unbound_lambda_minimisation_directory = functions.mkdir(unbound_directory + "/minimisation/")
         bound_lambda_minimisation_directory = functions.mkdir(bound_directory + "/minimisation/")
@@ -503,8 +534,8 @@ class Network(object):
         # For SOMD only: Open the AFE MD configuration files and convert to minimisation configurations for the first repeat
         unbound_configurations = functions.read_files(unbound_lambda_minimisation_directory + "/*/*.cfg")
         bound_configurations = functions.read_files(bound_lambda_minimisation_directory + "/*/*.cfg")
-        create_minimisation_configs(unbound_configurations)
-        create_minimisation_configs(bound_configurations)
+        create_minimisation_configurations(unbound_configurations)
+        create_minimisation_configurations(bound_configurations)
         print("\n")
 
         # Copy lambda transformation directories (including minimisation) from first repeat directory to the rest of the repeat directories, e.g. SOMD_2, SOMD_3
@@ -530,7 +561,7 @@ class Network(object):
             number of moves for SOMD 
         """
          
-        time = float(str(self.md_time).split()[0]) * 1000000
+        time = float(self.md_time._value) * 1000000
         number_of_steps = int(time / stepsize)
         return  number_of_steps // number_of_cycles
 
