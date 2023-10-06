@@ -27,7 +27,7 @@ def file_exists(file):
     """
     if not os.path.isfile(file):
         raise argparse.ArgumentTypeError(f"{file} does not exist")
-    return file
+    return os.path.abspath(file)
 
 
 def path_exists(path):
@@ -224,7 +224,7 @@ def input_to_dict(file):
     """
     with open(file, "r") as file:
         lines = file.readlines()
-    clean_lines = [line.strip().split("=") for line in lines]
+    clean_lines = [line.strip().split("=") for line in lines if "=" in line]
     
     dictionary = {}
     for _key, _value in clean_lines:

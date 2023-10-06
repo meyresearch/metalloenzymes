@@ -8,22 +8,7 @@ import argparse
 import os 
 import subprocess
 
-
-# def write_equilibration_file(path, project_dir, equil_dir, min_steps, min_dt, min_tol, short_nvt, nvt, npt):
-    
-#     file = path + "heat.in"
-#     with open(file, "w") as f:
-#         f.write(f"min_steps={min_steps}\n")
-#         f.write(f"min_dt={min_dt}\n")
-#         f.write(f"min_tol={min_tol}\n")
-#         f.write(f"short_nvt={short_nvt}\n")
-#         f.write(f"nvt={nvt}\n")
-#         f.write(f"npt={npt}\n")
-#         f.write(f"project_dir={project_dir}\n")
-#         f.write(f"equilibration_dir={equil_dir}\n")
-#     return file
-
-
+ 
 def slurm_heat(n_ligands, script):
     """
     Run equilibration with slurm

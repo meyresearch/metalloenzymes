@@ -177,7 +177,7 @@ def create_lambda_windows(n_windows):
 def fix_afe_configurations(files):
     """
     Open FreeEnergy configuration file and remove the gpu id specification line
-    Fixes: #TODO raise issue
+    Fixes https://github.com/OpenBioSim/biosimspace/issues/180 
 
     Parameters:
     -----------

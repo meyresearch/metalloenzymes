@@ -1,0 +1,16 @@
+QM/MM Minimisation 
+&cntrl
+ imin=1,
+ ntx=1,
+ maxcyc=1000,
+ ncyc=500,
+ ntb=1,
+ ntmin=1,
+ ntwx=50,
+ ntpr=50,
+ ioutfm=1,
+ iwrap=0,
+ ntxo=2,
+ cut=12.0,
+ ifqnt=1
+ /

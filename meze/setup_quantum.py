@@ -45,7 +45,7 @@ def main():
                         "--water-file",
                         dest="water_file",
                         help="water file, default is water.pdb",
-                        default=os.getcwd()+"/inputs/protein/water.pdb")
+                        default=None)
     
     parser.add_argument("-lpd",
                         "--ligand-prep-directory",
@@ -133,12 +133,35 @@ def main():
                         help="kJ mol-1 nm-1, Maximum force tolerance for energy minimisation",
                         type=float,
                         default=1000)
-
+    
+    parser.add_argument("-m",
+                        "--metal",
+                        dest="metal", 
+                        help="name of the metal ion",
+                        default="ZN",
+                        type=str)
+    
+    parser.add_argument("-co",
+                        "--cut-off",
+                        dest="cut_off",
+                        help="cut off distance in Å, used to define zinc coordinating ligands and active site",
+                        default=2.6,
+                        type=float)
+    
+    parser.add_argument("-fc0",
+                        "--force-constant-0",
+                        dest="force_constant_0",
+                        help="force constant for model 0",
+                        default=100,
+                        type=float)
 
     arguments = parser.parse_args()
 
 
-    meze = Meze.Meze(workdir=arguments.working_directory,
+    meze = Meze.Meze(metal=arguments.metal,
+                     cut_off=arguments.cut_off,
+                     force_constant_0=arguments.force_constant_0,
+                     workdir=arguments.working_directory,
                      ligand_path=arguments.ligand_directory,
                      group_name=arguments.group_name,
                      protein_file=arguments.protein,
@@ -157,9 +180,16 @@ def main():
                      min_dt=arguments.emstep,
                      min_tol=arguments.emtol,
                      water_file=arguments.water_file)
-    
-    solvated_meze = meze.solvate_bound(0)
 
+    prepared_meze = meze.prepare_meze()
+    
+    functions.write_slurm_script(template_file="/02_add_water.sh", 
+                                 path=prepared_meze.qmmm_input_directory, 
+                                 log_dir=prepared_meze.log_directory,
+                                 protocol_file=prepared_meze.protocol_file)
+
+    
+    ### Write slurm_all.sh script
 
 
 

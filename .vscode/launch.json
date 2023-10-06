@@ -7,6 +7,7 @@
 
 
 
+
         
 
 
@@ -20,8 +21,9 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": false,
-            "args": ["/home/jguven/projects/alchemistry/kpc2/partially_protonated_ligand/afe/protocol.dat",
-                     "ligand_11~ligand_5"]
+            "args": ["ligand_1",
+                        "/home/jguven/projects/alchemistry/vim2/deprotonated_ligand/qmmm/qmmm_input_files/protocol.dat"
+                     ]
             // "args": ["-if", "/home/jguven/projects/alchemistry/kpc2/partially_protonated_ligand/inputs/protein/kpc2.input.pdb", "-g", "kpc2", 
             // "-ppd", "/home/jguven/projects/alchemistry/kpc2/partially_protonated_ligand/inputs/protein/",
             // "-pwd", "/home/jguven/projects/alchemistry/kpc2/partially_protonated_ligand/",
