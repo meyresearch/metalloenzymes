@@ -14,8 +14,6 @@ import tqdm
 import seaborn as sns
 
 
-
-
 def inhibition_to_ddg(ki_a, ki_b, temperature=300.0) -> float:
     """
     Convert experimental inhibition constant (K_i) values to relative binding free energy
@@ -179,7 +177,7 @@ def fix_simfile(protocol): # ONLY FOR SOMD
     -------
     """
     #TODO: How do I set the path to this file?
-    template = "/home/jguven/projects/metalloenzymes/meze/simfile_header.txt"
+    template = os.environ["MEZEHOME"] + "simfile_header.txt"
     with open(template, "r") as file:
         template_header = file.readlines()
 
@@ -188,6 +186,7 @@ def fix_simfile(protocol): # ONLY FOR SOMD
     engine = protocol["engine"]
     repeat_paths = functions.read_files(outputs + "/" + engine + "_*/*/")
     print("\n")
+
     for path in tqdm.tqdm(repeat_paths, desc="Fixing headers"): 
 
         unbound_directory = path + "unbound/"
@@ -201,21 +200,23 @@ def fix_simfile(protocol): # ONLY FOR SOMD
 
             with open(unbound_minimisation_simfiles[i], "r") as file:
                 minimisation_simfile = file.readlines()
-            
-            with open(unbound_minimisation_simfiles[i], "r") as file:
-                for j, line in enumerate(file):
-                    if "lambda" in line:
-                        start = j
-                    if "#" not in line:
-                        end = j
-                        break
+            if "#" not in minimisation_simfile[0]:
+                with open(unbound_minimisation_simfiles[i], "r") as file:
+                    for j, line in enumerate(file):
+                        if "lambda" in line:
+                            start = j
+                        if "#" not in line:
+                            end = j
+                            break
 
-            lambda_lines = minimisation_simfile[start:end]
-            correct_lambda_header = template_header + lambda_lines
+                lambda_lines = minimisation_simfile[start:end]
+                correct_lambda_header = template_header + lambda_lines
 
-            write_header(unbound_simfiles[i], correct_lambda_header)
-            write_header(bound_simfiles[i], correct_lambda_header)
-            
+                write_header(unbound_simfiles[i], correct_lambda_header)
+                write_header(bound_simfiles[i], correct_lambda_header)
+            else: 
+                continue
+                
 
 def get_results(protocol):
     """
@@ -236,22 +237,23 @@ def get_results(protocol):
     outputs = protocol["outputs"]
     repeat_paths = functions.read_files(outputs + engine + "_*/")
     get_transformations = functions.read_files(repeat_paths[0] + "*/")
-    transformations = [path.split("/")[-2] for path in get_transformations] # the transformations are the same for each repeat
+    transformations = [path.split("/")[-2] for path in get_transformations if "error" not in path] # the transformations are the same for each repeat
     values_dictionary = {"transformations": transformations}
     errors_dictionary = {"transformations": transformations}
     print("\n")
-    for i in tqdm.tqdm(range(len(repeat_paths)), desc="Getting results"):
+    for i in range(len(repeat_paths)):
         transformation_paths = functions.read_files(repeat_paths[i] + "*/")
         repeat = "repeat_"+ str(i + 1)
         values, errors = [], []
         for transformation in transformation_paths:
-            unbound = transformation + "unbound/"
-            bound = transformation + "bound/"
-            unbound_pmf, unbound_matrix = bss.FreeEnergy.Relative.analyse(unbound)
-            bound_pmf, bound_matrix = bss.FreeEnergy.Relative.analyse(bound)
-            relative_binding_free_energy, error = bss.FreeEnergy.Relative.difference(bound_pmf, unbound_pmf)
-            values.append(relative_binding_free_energy._value)
-            errors.append(error._value)
+            if "error" not in transformation:
+                unbound = transformation + "unbound/"
+                bound = transformation + "bound/"
+                unbound_pmf, unbound_matrix = bss.FreeEnergy.Relative.analyse(unbound)
+                bound_pmf, bound_matrix = bss.FreeEnergy.Relative.analyse(bound)
+                relative_binding_free_energy, error = bss.FreeEnergy.Relative.difference(bound_pmf, unbound_pmf)
+                values.append(relative_binding_free_energy._value)
+                errors.append(error._value)
         values_dictionary[repeat] = values
         errors_dictionary[repeat] = errors
 
