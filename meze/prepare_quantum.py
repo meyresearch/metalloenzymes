@@ -50,9 +50,10 @@ def main():
                      pressure=protocol["pressure"],
                      output=protocol["outputs"])
 
-    solvated_meze = meze.set_universe(file_name=meze.protein_path + "/bound_" + arguments.ligand_name + "_solvated")
+    solvated_meze = meze.set_universe(file_name=meze.protein_path + "bound_" + arguments.ligand_name + "_solvated")
 
-    solvated_meze.write_restraints_file_0()
+
+    solvated_meze.minimisation_0(ligand_name=arguments.ligand_name)
 
 
 

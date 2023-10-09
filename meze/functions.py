@@ -3,11 +3,7 @@
 import argparse
 import os
 import glob
-import BioSimSpace as bss
-import pathlib
-import csv
-import numpy as np
-import Network 
+import re
 from definitions import ROOT_DIRECTORY
 
 
@@ -32,7 +28,7 @@ def file_exists(file):
 
 def path_exists(path):
     """ 
-    Check that given path exists
+    Check that given path exists & clean any repeating '/' characters
 
     Parameters:
     -----------
@@ -48,8 +44,8 @@ def path_exists(path):
         path = os.getcwd()
     elif not os.path.isdir(path):
         raise argparse.ArgumentTypeError(f"{path} does not exist")
-    return path + "/"
-
+    checked_path = path + "/"
+    return re.sub(r"/+", "/", checked_path)
 
 def check_int(input):
     """

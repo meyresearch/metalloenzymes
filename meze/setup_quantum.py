@@ -99,7 +99,7 @@ def main():
                         dest="min_steps",
                         help="number of minimisation steps for equilibration stage",
                         type=int,
-                        default=5000)
+                        default=1000)
     
     parser.add_argument("-snvt",
                         "--short-nvt-runtime",
@@ -183,7 +183,7 @@ def main():
 
     prepared_meze = meze.prepare_meze()
     
-    functions.write_slurm_script(template_file="/02_add_water.sh", 
+    functions.write_slurm_script(template_file="02_add_water.sh", 
                                  path=prepared_meze.qmmm_input_directory, 
                                  log_dir=prepared_meze.log_directory,
                                  protocol_file=prepared_meze.protocol_file)

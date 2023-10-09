@@ -1,3 +1,4 @@
+import re
 import BioSimSpace as bss
 import functions
 import pandas as pd
@@ -365,7 +366,8 @@ class Network(object):
             print(f"Could not create directory {directory}. Pathlib raised error: {e}")
         except FileExistsError as e:
             print(f"Could not create directory {directory}. Pathlib raised error: {e}")
-        return directory   
+        # https://chat.openai.com/share/6bf91255-5a4c-4a4f-b7d8-b489e784397f 
+        return re.sub(r"/+", "/", directory)
 
 
     def create_output_directories(self):
