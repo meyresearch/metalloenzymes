@@ -52,15 +52,11 @@ def main():
 
     solvated_meze = meze.set_universe(file_name=meze.protein_path + "bound_" + arguments.ligand_name + "_solvated")
 
+    # solvated_meze.minimisation_0(ligand_name=arguments.ligand_name) # put in model_0() ---> rename as this doesn't actually run it, only prepares it
+    # solvated_meze.equilibration_0(ligand_name=arguments.ligand_name) # put in model_0() --> rename as this doesn't actually run it, only prepares it
+    solvated_meze.production_0(arguments.ligand_name) # put in model_0() --> rename as this doesn't actually run it, only prepares it
 
-    solvated_meze.minimisation_0(ligand_name=arguments.ligand_name)
-
-
-
-# create qm/mm input files: min.in equilibration.in production.in
-# these need to contain restraints: nmropt=1 
-    # min = functions.input_to_dict(meze_home + "/01_min.in")
-    # Add extra lines from qm_options
+#TODO create qm/mm input file: production.in
     # process = bss.Process.Amber()
 
 if "__name__" == main():

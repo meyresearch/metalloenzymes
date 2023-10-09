@@ -3,7 +3,7 @@ import os
 import BioSimSpace as bss
 import numpy as np
 import functions
-from definitions import PICOSECOND
+from definitions import PICOSECOND, KELVIN, NANOSECOND
 import csv
 import MDAnalysis as mda
 import MDAnalysis.analysis.distances 
@@ -348,16 +348,17 @@ class Meze(Network):
         restraints_file = shutil.copy(template_restraints_file, min_dir).split("/")[-1]
 
         max_cycles = self.min_steps
-        output_frequency = max_cycles // 10
-        minimisation_options = {"ntmin": "1",
-                                "ntpr": str(output_frequency),
-                                "ntwx": str(output_frequency),
-                                "ntb": "1",
-                                "ioutfm": "1",
-                                "cut": str(nonbonded_cut_off),
-                                "iwrap": "0",
-                                "ifqnt": "1",
-                                "nmropt": "1"}
+        output_frequency = max_cycles // 20
+        minimisation_options = {"ntmin": 1,
+                                "ntpr": output_frequency,
+                                "ntwx": output_frequency,
+                                "ntpr": output_frequency,
+                                "ntb": 1,
+                                "ioutfm": 1,
+                                "cut": nonbonded_cut_off,
+                                "iwrap": 0,
+                                "ifqnt": 1,
+                                "nmropt": 1}
         
         qm_region = self.get_qm_region()
         qm_options = self.get_dftb3_options(qm_region)
@@ -392,11 +393,11 @@ class Meze(Network):
             file.write(f"DUMPAVE=distances.out\n")
 
 
-    def equilibration_0(self, ligand_name, nonbonded_cut_off=12.0):
+    def equilibration_0(self, ligand_name, nonbonded_cut_off=12.0, dt=0.001, runtime=1): # runtime in ps 
 
         directory = functions.mkdir(self.equilibration_directory+f"{ligand_name}/")
         files = functions.read_files(f"{self.protein_path}/bound_{ligand_name}_solvated.*")
-        solvated_system = bss.IO.readMolecules(files)
+        solvated_system = bss.IO.readMolecules(files) # just a dummy system for setting up the process
         directories = lambda step: functions.mkdir(directory + step)
         heat_dir = directories("heat")
 
@@ -405,16 +406,20 @@ class Meze(Network):
         restraints_file = shutil.copy(template_restraints_file, heat_dir).split("/")[-1]
 
         max_cycles = self.min_steps
-        output_frequency = max_cycles // 10
-        minimisation_options = {"ntmin": "1",
-                                "ntpr": str(output_frequency),
-                                "ntwx": str(output_frequency),
-                                "ntb": "1",
-                                "ioutfm": "1",
-                                "cut": str(nonbonded_cut_off),
-                                "iwrap": "0",
-                                "ifqnt": "1",
-                                "nmropt": "1"}
+        output_frequency = max_cycles // 20
+        
+        equilibration_options = {"ioutfm": 1,
+                                 "cut": nonbonded_cut_off,
+                                 "iwrap": 0,
+                                 "nscm": int(runtime / dt),
+                                 "barostat": 2,
+                                 "ntp": 1,
+                                 "taup": 1.0,
+                                 "gamma_ln": 5.0,
+                                 "ntc": 1,
+                                 "ntf": 1,   
+                                 "ifqnt": 1,
+                                 "nmropt": 1}
         
         qm_region = self.get_qm_region()
         qm_options = self.get_dftb3_options(qm_region)
@@ -425,28 +430,99 @@ class Meze(Network):
         restraints_namelist = ["&wt type='DUMPFREQ', istep1=1 /"]
         namelist = qm_namelist + restraints_namelist
 
-        equilibration_protocol = bss.Protocol.Minimisation(steps=max_cycles)
-
+        runtime_ns = functions.convert_to_units(runtime / 1000, NANOSECOND)
+        equilibration_protocol = bss.Protocol.Equilibration(timestep=dt*PICOSECOND, 
+                                                            runtime=runtime_ns, 
+                                                            temperature_start=0.0*KELVIN, 
+                                                            temperature_end=self.temperature, 
+                                                            report_interval=output_frequency, 
+                                                            restart_interval=output_frequency)
 
         equilibration_process = bss.Process.Amber(system=solvated_system, 
                                                   protocol=equilibration_protocol, 
                                                   name="heat", 
                                                   work_dir=heat_dir, 
-                                                  extra_options=minimisation_options,
+                                                  extra_options=equilibration_options,
                                                   extra_lines=namelist)
         
-        min_config = heat_dir + "/*.cfg"
-        config_file = functions.read_files(min_config)[0]
+        heat_config = heat_dir + "/*.cfg"
+        config_file = functions.read_files(heat_config)[0]
 
         with open(config_file, "r") as file:
             config = file.readlines()
-        new_config = [line for line in config if "ig=" not in line]
+
+        new_config = [line for line in config if "tempi=" not in line and "TEMP0" not in line]
         
         with open(config_file, "w") as file:
             file.writelines(new_config)
             file.write("\n")
             file.write(f"DISANG={restraints_file}\n")
             file.write(f"DUMPAVE=distances.out\n")
+        
+
+    def production_0(self, ligand_name, nonbonded_cut_off=12.0, dt=0.001, runtime=10): # runtime in ps 
+
+        directory = functions.mkdir(self.output_directory+f"{ligand_name}/")
+        files = functions.read_files(f"{self.protein_path}/bound_{ligand_name}_solvated.*") 
+        solvated_system = bss.IO.readMolecules(files) # just a dummy system for setting up the process
+
+        template_restraints_file = self.write_restraints_file_0()
+        
+        restraints_file = shutil.copy(template_restraints_file, directory).split("/")[-1]
+
+        max_cycles = self.min_steps
+        output_frequency = max_cycles // 20
+        ncsm = runtime // 10
+        production_options = {"ioutfm": 1,
+                              "cut": nonbonded_cut_off,
+                              "iwrap": 0,
+                              "nscm": ncsm,
+                              "barostat": 2,
+                              "ntp": 1,
+                              "taup": 1.0,
+                              "gamma_ln": 5.0,
+                              "ntc": 1,
+                              "ntf": 1,   
+                              "ifqnt": 1,
+                              "nmropt": 1}
+        
+        qm_region = self.get_qm_region()
+        qm_options = self.get_dftb3_options(qm_region)
+        qm_namelist = [f"  {key}={value}" for key, value in qm_options.items()]
+        qm_namelist.insert(0, "&qmmm")
+        qm_namelist.append("/")
+
+        restraints_namelist = ["&wt type='DUMPFREQ', istep1=1 /"]
+        namelist = qm_namelist + restraints_namelist
+
+        runtime_ns = functions.convert_to_units(runtime / 1000, NANOSECOND)
+        production_protocol = bss.Protocol.Production(timestep=dt*PICOSECOND, 
+                                                      runtime=runtime_ns, 
+                                                      temperature=self.temperature, 
+                                                      restart=True,
+                                                      report_interval=output_frequency, 
+                                                      restart_interval=output_frequency)
+
+        production_process = bss.Process.Amber(system=solvated_system, 
+                                               protocol=production_protocol, 
+                                               name="qmmm", 
+                                               work_dir=directory, 
+                                               extra_options=production_options,
+                                               extra_lines=namelist)
+        
+        production_config = directory + "/*.cfg"
+        config_file = functions.read_files(production_config)[0]
+
+        with open(config_file, "r") as file:
+            config = file.readlines()
+
+        new_config = [line for line in config if "tempi=" not in line and "TEMP0" not in line and "pres0" not in line]
+        
+        with open(config_file, "w") as file:
+            file.writelines(new_config)
+            file.write("\n")
+            file.write(f"DISANG={restraints_file}\n")
+            file.write(f"DUMPAVE=distances.out\n")              
 
 
     def write_restraints_file_0(self):
