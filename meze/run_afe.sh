@@ -4,7 +4,8 @@
 #SBATCH -n N_TASKS
 #SBATCH --gres=gpu:N_GPUS
 #SBATCH --cpus-per-gpu N_CPUS
-#SBATCH --mem MEMORY
+
+#try without this: #SBATCH --mem MEMORY
 
 start=`date +%s`
 
