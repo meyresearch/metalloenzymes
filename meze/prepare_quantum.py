@@ -21,7 +21,7 @@ def main():
     parser.add_argument("protocol_file",
                         help="protocol file containing equilibration options",
                         type=str,
-                        default=os.getcwd() + "/afe/protocol.dat")
+                        default=os.getcwd() + "/qmmm_input_files/protocol.dat")
 
     arguments = parser.parse_args()
     protocol = functions.input_to_dict(arguments.protocol_file)
@@ -54,7 +54,7 @@ def main():
 
     # solvated_meze.minimisation_0(ligand_name=arguments.ligand_name) # put in model_0() ---> rename as this doesn't actually run it, only prepares it
     # solvated_meze.equilibration_0(ligand_name=arguments.ligand_name) # put in model_0() --> rename as this doesn't actually run it, only prepares it
-    solvated_meze.production_0(arguments.ligand_name) # put in model_0() --> rename as this doesn't actually run it, only prepares it
+    solvated_meze.qmmm_production(arguments.ligand_name) # put in model_0() --> rename as this doesn't actually run it, only prepares it
 
 #TODO create qm/mm input file: production.in
     # process = bss.Process.Amber()

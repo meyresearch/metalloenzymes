@@ -10,6 +10,11 @@ def main():
 
     parser = argparse.ArgumentParser(description="MEZE: MetalloEnZymE FF-builder for alchemistry")
 
+
+    parser.add_argument("ligand_name",
+                        help="ligand name",
+                        type=str)
+    
     parser.add_argument("-if",
                         "--input-pdb-file",
                         dest="protein",
@@ -160,6 +165,7 @@ def main():
 
     meze = Meze.Meze(metal=arguments.metal,
                      cut_off=arguments.cut_off,
+                     is_qm=False,
                      force_constant_0=arguments.force_constant_0,
                      workdir=arguments.working_directory,
                      ligand_path=arguments.ligand_directory,
@@ -180,18 +186,13 @@ def main():
                      min_dt=arguments.emstep,
                      min_tol=arguments.emtol,
                      water_file=arguments.water_file)
-
-    prepared_meze = meze.prepare_meze()
     
-    functions.write_slurm_script(template_file="02_add_water.sh", 
-                                 path=prepared_meze.input_directory, 
-                                 log_dir=prepared_meze.log_directory,
-                                 protocol_file=prepared_meze.protocol_file)
-
-    
-    ### Write slurm_all.sh script
+    prepared_meze = meze.prepare_meze() # copied solvated files from qmmm run
+    prepared_meze.set_universe(file_name=meze.protein_path + "bound_" + arguments.ligand_name + "_solvated")
+    prepared_meze.model_0(arguments.ligand_name)
 
 
 
-if __name__ == "__main__":
-   main()
+
+if "__name__" == main():
+    main()
