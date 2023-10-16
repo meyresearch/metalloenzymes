@@ -884,17 +884,13 @@ class Meze(Network):
                                 "ioutfm": 1,
                                 "cut": nonbonded_cut_off,
                                 "iwrap": 0,
-                                "ifqnt": 1,
-                                "nmropt": 1}
+                                "ifqnt": 1}
         
         qm_region = self.get_qm_region()
         qm_options = self.get_dftb3_options(qm_region)
         qm_namelist = [f"  {key}={value}" for key, value in qm_options.items()]
         qm_namelist.insert(0, "&qmmm")
         qm_namelist.append("/")
-
-        restraints_namelist = ["&wt TYPE='DUMPFREQ', istep1=1 /"]
-        namelist = qm_namelist + restraints_namelist
 
         minimisation_protocol = bss.Protocol.Minimisation(steps=max_cycles)
 
@@ -904,7 +900,7 @@ class Meze(Network):
                                                  name="min", 
                                                  work_dir=min_dir, 
                                                  extra_options=minimisation_options,
-                                                 extra_lines=namelist)
+                                                 extra_lines=qm_namelist)
         
         min_config = min_dir + "/*.cfg"
         config_file = functions.read_files(min_config)[0]
@@ -915,9 +911,6 @@ class Meze(Network):
         
         with open(config_file, "w") as file:
             file.writelines(new_config)
-            file.write("\n")
-            file.write(f"DISANG={restraints_file}\n")
-            file.write(f"DUMPAVE=distances.out\n")
 
 
     def qmmm_equilibration(self, ligand_name, nonbonded_cut_off=12.0, dt=0.001, runtime=1): # runtime in ps 
@@ -945,17 +938,13 @@ class Meze(Network):
                                  "gamma_ln": 5.0,
                                  "ntc": 1,
                                  "ntf": 1,   
-                                 "ifqnt": 1,
-                                 "nmropt": 1}
+                                 "ifqnt": 1}
         
         qm_region = self.get_qm_region()
         qm_options = self.get_dftb3_options(qm_region)
         qm_namelist = [f"  {key}={value}" for key, value in qm_options.items()]
         qm_namelist.insert(0, "&qmmm")
         qm_namelist.append("/")
-
-        restraints_namelist = ["&wt TYPE='DUMPFREQ', istep1=1 /"]
-        namelist = qm_namelist + restraints_namelist
 
         runtime_ns = functions.convert_to_units(runtime / 1000, NANOSECOND)
         equilibration_protocol = bss.Protocol.Equilibration(timestep=dt*PICOSECOND, 
@@ -970,7 +959,7 @@ class Meze(Network):
                                                   name="heat", 
                                                   work_dir=heat_dir, 
                                                   extra_options=equilibration_options,
-                                                  extra_lines=namelist)
+                                                  extra_lines=qm_namelist)
         
         heat_config = heat_dir + "/*.cfg"
         config_file = functions.read_files(heat_config)[0]
@@ -982,9 +971,6 @@ class Meze(Network):
         
         with open(config_file, "w") as file:
             file.writelines(new_config)
-            file.write("\n")
-            file.write(f"DISANG={restraints_file}\n")
-            file.write(f"DUMPAVE=distances.out\n")
         
 
     def qmmm_production(self, ligand_name, nonbonded_cut_off=12.0, dt=0.001, runtime=10): # runtime in ps 
@@ -1010,8 +996,7 @@ class Meze(Network):
                               "gamma_ln": 5.0,
                               "ntc": 1,
                               "ntf": 1,   
-                              "ifqnt": 1,
-                              "nmropt": 1}
+                              "ifqnt": 1}
         
         qm_region = self.get_qm_region()
         qm_options = self.get_dftb3_options(qm_region)
@@ -1019,8 +1004,6 @@ class Meze(Network):
         qm_namelist.insert(0, "&qmmm")
         qm_namelist.append("/")
 
-        restraints_namelist = ["&wt TYPE='DUMPFREQ', istep1=1 /"]
-        namelist = qm_namelist + restraints_namelist
 
         runtime_ns = functions.convert_to_units(runtime / 1000, NANOSECOND)
         production_protocol = bss.Protocol.Production(timestep=dt*PICOSECOND, 
@@ -1035,7 +1018,7 @@ class Meze(Network):
                                                name="qmmm", 
                                                work_dir=directory, 
                                                extra_options=production_options,
-                                               extra_lines=namelist)
+                                               extra_lines=qm_namelist)
         
         production_config = directory + "/*.cfg"
         config_file = functions.read_files(production_config)[0]
@@ -1047,9 +1030,6 @@ class Meze(Network):
         
         with open(config_file, "w") as file:
             file.writelines(new_config)
-            file.write("\n")
-            file.write(f"DISANG={restraints_file}\n")
-            file.write(f"DUMPAVE=distances.out\n")              
 
 
     def write_restraints_file_0(self):
