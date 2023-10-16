@@ -27,6 +27,7 @@ def main():
     protocol = functions.input_to_dict(arguments.protocol_file)
 
     meze = Meze.Meze(workdir=protocol["project directory"],
+                     is_qm=True,
                      ligand_path=protocol["ligand directory"],
                      group_name=protocol["group name"],
                      protein_file=protocol["protein input file"],
@@ -51,13 +52,8 @@ def main():
                      output=protocol["outputs"])
 
     solvated_meze = meze.set_universe(file_name=meze.protein_path + "bound_" + arguments.ligand_name + "_solvated")
-
-    # solvated_meze.minimisation_0(ligand_name=arguments.ligand_name) # put in model_0() ---> rename as this doesn't actually run it, only prepares it
-    # solvated_meze.equilibration_0(ligand_name=arguments.ligand_name) # put in model_0() --> rename as this doesn't actually run it, only prepares it
-    solvated_meze.qmmm_production(arguments.ligand_name) # put in model_0() --> rename as this doesn't actually run it, only prepares it
-
-#TODO create qm/mm input file: production.in
-    # process = bss.Process.Amber()
+    solvated_meze.model_0(ligand_name=arguments.ligand_name)
+    
 
 if "__name__" == main():
     main()
