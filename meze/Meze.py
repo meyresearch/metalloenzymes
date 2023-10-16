@@ -351,6 +351,7 @@ class Meze(Network):
 
             self.production_0(ligand_name, equilibrated_system)
 
+
     def production_0(self, ligand_name, equilibrated_system, nonbonded_cut_off=9.0, dt=0.002, runtime=50):
 
         directory = self.output_directory+f"{ligand_name}/"
@@ -530,21 +531,21 @@ class Meze(Network):
 
         lower_04_options = relax_03_options
         lower_04_protocol = bss.Protocol.Equilibration(timestep=dt*PICOSECOND, 
-                                                    runtime=runtime_ns, 
-                                                    temperature_start=0.0*KELVIN, 
-                                                    temperature_end=self.temperature, 
-                                                    report_interval=output_frequency, 
-                                                    restart_interval=output_frequency,
-                                                    restraint="heavy",
-                                                    force_constant=self.force_constant_0 / 10)
+                                                       runtime=runtime_ns, 
+                                                       temperature_start=0.0*KELVIN, 
+                                                       temperature_end=self.temperature, 
+                                                       report_interval=output_frequency, 
+                                                       restart_interval=output_frequency,
+                                                       restraint="heavy",
+                                                       force_constant=self.force_constant_0 / 10)
 
         lower_04_process = bss.Process.Amber(system=relax_03_system,  #CHANGE
-                                          protocol=lower_04_protocol, 
-                                          name="04_lower", 
-                                          work_dir=lower_04_dir, 
-                                          extra_options=lower_04_options,
-                                          extra_lines=namelist,
-                                          exe=amber_home + "/bin/pmemd.cuda")
+                                             protocol=lower_04_protocol, 
+                                             name="04_lower", 
+                                             work_dir=lower_04_dir, 
+                                             extra_options=lower_04_options,
+                                             extra_lines=namelist,
+                                             exe=amber_home + "/bin/pmemd.cuda")
         lower_04_config = lower_04_dir + "/*.cfg"
         lower_04_config_file = functions.read_files(lower_04_config)[0]
 
@@ -870,10 +871,6 @@ class Meze(Network):
         directories = lambda step: functions.mkdir(directory + step)
         min_dir = directories("min")
 
-        template_restraints_file = self.write_restraints_file_0()
-        
-        restraints_file = shutil.copy(template_restraints_file, min_dir).split("/")[-1]
-
         max_cycles = self.min_steps
         output_frequency = max_cycles // 20
         minimisation_options = {"ntmin": 1,
@@ -893,7 +890,6 @@ class Meze(Network):
         qm_namelist.append("/")
 
         minimisation_protocol = bss.Protocol.Minimisation(steps=max_cycles)
-
 
         minimisation_process = bss.Process.Amber(system=solvated_system, 
                                                  protocol=minimisation_protocol, 
@@ -916,14 +912,10 @@ class Meze(Network):
     def qmmm_equilibration(self, ligand_name, nonbonded_cut_off=12.0, dt=0.001, runtime=1): # runtime in ps 
 
         directory = functions.mkdir(self.equilibration_directory+f"{ligand_name}/")
-        files = functions.read_files(f"{self.protein_path}/bound_{ligand_name}_solvated.*")
-        solvated_system = bss.IO.readMolecules(files) # just a dummy system for setting up the process
+        files = [f"{directory}/min/min.prm7", f"{directory}/min/min.rst7"]
+        minimised_system = bss.IO.readMolecules(files) 
         directories = lambda step: functions.mkdir(directory + step)
         heat_dir = directories("heat")
-
-        template_restraints_file = self.write_restraints_file_0()
-        
-        restraints_file = shutil.copy(template_restraints_file, heat_dir).split("/")[-1]
 
         max_cycles = self.min_steps
         output_frequency = max_cycles // 20
@@ -954,7 +946,7 @@ class Meze(Network):
                                                             report_interval=output_frequency, 
                                                             restart_interval=output_frequency)
 
-        equilibration_process = bss.Process.Amber(system=solvated_system, 
+        equilibration_process = bss.Process.Amber(system=minimised_system, 
                                                   protocol=equilibration_protocol, 
                                                   name="heat", 
                                                   work_dir=heat_dir, 
@@ -976,13 +968,9 @@ class Meze(Network):
     def qmmm_production(self, ligand_name, nonbonded_cut_off=12.0, dt=0.001, runtime=10): # runtime in ps 
 
         directory = functions.mkdir(self.output_directory+f"{ligand_name}/")
-        files = functions.read_files(f"{self.protein_path}/bound_{ligand_name}_solvated.*") 
-        solvated_system = bss.IO.readMolecules(files) # just a dummy system for setting up the process
-
-        template_restraints_file = self.write_restraints_file_0()
-        
-        restraints_file = shutil.copy(template_restraints_file, directory).split("/")[-1]
-
+        files = [f"{directory}/heat/heat.prm7", f"{directory}/heat/heat.rst7"]
+        heated_system = bss.IO.readMolecules(files) 
+      
         max_cycles = self.min_steps
         output_frequency = max_cycles // 20
         ncsm = runtime // 10
@@ -1004,7 +992,6 @@ class Meze(Network):
         qm_namelist.insert(0, "&qmmm")
         qm_namelist.append("/")
 
-
         runtime_ns = functions.convert_to_units(runtime / 1000, NANOSECOND)
         production_protocol = bss.Protocol.Production(timestep=dt*PICOSECOND, 
                                                       runtime=runtime_ns, 
@@ -1013,7 +1000,7 @@ class Meze(Network):
                                                       report_interval=output_frequency, 
                                                       restart_interval=output_frequency)
 
-        production_process = bss.Process.Amber(system=solvated_system, 
+        production_process = bss.Process.Amber(system=heated_system, 
                                                protocol=production_protocol, 
                                                name="qmmm", 
                                                work_dir=directory, 

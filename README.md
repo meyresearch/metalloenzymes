@@ -2,6 +2,17 @@
 
 **Authors**: J. Jasmin Güven
 
+# Table of Contents
+
+[1. Prerequisites](#1-prerequisites)
+
+[2. System setup](#2-system-setup)
+
+[3. Prepare meze](#3-prepare-meze)
+
+[4. Run meze AFE](#4-run-meze-afe)
+
+
 # 1. Prerequisites 
 
 Software requirements: 

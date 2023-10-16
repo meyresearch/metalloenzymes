@@ -43,6 +43,8 @@ def run_process(system, protocol, process, working_directory, configuration=None
         process name for saving process output
     working_directory: str
         save output into this directory
+    configuration: dict 
+        extra options to pass to the Gromacs process
     checkpoint: str
         path to a checkpoint file forom a previous run; corresponds to the -t flag for gmx grompp
 
@@ -51,18 +53,18 @@ def run_process(system, protocol, process, working_directory, configuration=None
     system: bss.System
         equilibrated or minimised system
     """
-    process = bss.Process.Gromacs(system, protocol, name=process, work_dir=working_directory, checkpoint_file=checkpoint)
-    config = process.getConfig()
-    if configuration:
-        for setting in configuration:
-            key = setting.split()[0]
-            try:
-                index = [i for i, string in enumerate(config) if key in string][0]
-                config[index] = setting
-                process.setConfig(config)
-            except IndexError:
-                process.addToConfig(setting)
-                config = process.getConfig()
+    process = bss.Process.Gromacs(system, protocol, name=process, work_dir=working_directory, extra_options=configuration, ncheckpoint_file=checkpoint)
+    # config = process.getConfig()
+    # if configuration:
+    #     for setting in configuration:
+    #         key = setting.split()[0]
+    #         try:
+    #             index = [i for i, string in enumerate(config) if key in string][0]
+    #             config[index] = setting
+    #             process.setConfig(config)
+    #         except IndexError:
+    #             process.addToConfig(setting)
+    #             config = process.getConfig()
     process.setArg("-ntmpi", 1)
     process.start()
     process.wait()
@@ -91,7 +93,7 @@ def minimise(system, workdir, min_steps, min_dt, min_tol):
         minimised system
     """
     protocol = bss.Protocol.Minimisation(steps=min_steps)
-    configuration = [f"emstep = {min_dt}", f"emtol = {min_tol}"]
+    configuration = {"emstep": min_dt, "emtol": min_tol}
     minimised_system = run_process(system, protocol, "min", workdir, configuration=configuration)
     return minimised_system   
 
@@ -173,14 +175,14 @@ def heat_unbound(ligand_name, equilibration_dir, ligand_dir, min_steps, min_dt, 
                                  workdir=r_nvt_directory,
                                  time=short_nvt,
                                  start_t=start_temp, end_t=temperature,
-                                 configuration=["dt = 0.0005"], # need to be able to change
+                                 configuration={"dt": 0.0005}, # need to be able to change
                                  restraints="all")
     nvt = equilibrate(system=restrained_nvt,
                       name="nvt",
                       workdir=nvt_directory,
                       time=nvt_runtime,
                       temperature=temperature,
-                      configuration=["gen-vel = no"], #https://github.com/OpenBioSim/biosimspace/issues/168
+                      configuration={"gen-vel": "no"}, #https://github.com/OpenBioSim/biosimspace/issues/168
                       checkpoint=r_nvt_directory + "/r_nvt.cpt")
     restrained_npt = equilibrate(system=nvt,
                                  name="r_npt",
@@ -189,7 +191,7 @@ def heat_unbound(ligand_name, equilibration_dir, ligand_dir, min_steps, min_dt, 
                                  pressure=pressure,
                                  temperature=temperature,
                                  restraints="heavy",
-                                 configuration=["gen-vel = no"],
+                                 configuration={"gen-vel": "no"}, #https://github.com/OpenBioSim/biosimspace/issues/168
                                  checkpoint=nvt_directory + "/nvt.cpt")
     equilibrated_molecule = equilibrate(system=restrained_npt,
                                         name="npt",
@@ -197,7 +199,7 @@ def heat_unbound(ligand_name, equilibration_dir, ligand_dir, min_steps, min_dt, 
                                         time=npt_runtime,
                                         pressure=pressure,
                                         temperature=temperature,
-                                        configuration=["gen-vel = no"],
+                                        configuration={"gen-vel": "no"}, #https://github.com/OpenBioSim/biosimspace/issues/168
                                         checkpoint=r_npt_directory + "/r_npt.cpt")
     unbound_savename = npt_directory + f"/{ligand_name}"
     bss.IO.saveMolecules(filebase=unbound_savename, system=equilibrated_molecule, fileformat=["PRM7", "RST7"])        
@@ -251,21 +253,21 @@ def heat_bound(ligand_name, equilibration_dir, protein_dir, min_steps, min_dt, m
                                  time=short_nvt,
                                  start_t=start_temp, end_t=temperature,
                                  restraints="all",
-                                 configuration=["dt = 0.0005"]) # need to be able to change
+                                 configuration={"dt": 0.0005}) # need to be able to change
     backbone_restrained_nvt = equilibrate(system=restrained_nvt,
                                           name="bb_r_nvt",
                                           workdir=bb_r_nvt_dir,
                                           time=nvt_runtime,
                                           temperature=temperature,
                                           restraints="backbone",
-                                          configuration=["gen-vel = no"],
+                                          configuration={"gen-vel": "no"}, #https://github.com/OpenBioSim/biosimspace/issues/168
                                           checkpoint=r_nvt_dir + "/r_nvt.cpt")
     nvt = equilibrate(system=backbone_restrained_nvt,
                       name="nvt",
                       workdir=nvt_dir,
                       time=nvt_runtime,
                       temperature=temperature,
-                      configuration=["gen-vel = no"],
+                      configuration={"gen-vel": "no"}, #https://github.com/OpenBioSim/biosimspace/issues/168
                       checkpoint=bb_r_nvt_dir + "/bb_r_nvt.cpt")
     restrained_npt = equilibrate(system=nvt,
                                  name="r_npt",
@@ -274,7 +276,7 @@ def heat_bound(ligand_name, equilibration_dir, protein_dir, min_steps, min_dt, m
                                  pressure=pressure,
                                  temperature=temperature,
                                  restraints="heavy",
-                                 configuration=["gen-vel = no"],
+                                 configuration={"gen-vel": "no"}, #https://github.com/OpenBioSim/biosimspace/issues/168
                                  checkpoint=nvt_dir + "/nvt.cpt")
     equilibrated_protein = equilibrate(system=restrained_npt,
                                        name="npt",
@@ -282,7 +284,7 @@ def heat_bound(ligand_name, equilibration_dir, protein_dir, min_steps, min_dt, m
                                        time=npt_runtime,
                                        pressure=pressure,
                                        temperature=temperature,
-                                       configuration=["gen-vel = no"],
+                                       configuration={"gen-vel": "no"}, #https://github.com/OpenBioSim/biosimspace/issues/168
                                        checkpoint=r_npt_dir + "/r_npt.cpt")
     bound_savename = npt_dir + f"/bound_{ligand_name}"
     bss.IO.saveMolecules(filebase=bound_savename, system=equilibrated_protein, fileformat=["PRM7", "RST7"])     
