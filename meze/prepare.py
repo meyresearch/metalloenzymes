@@ -88,7 +88,7 @@ def main():
     parser.add_argument("-st",
                         "--sampling-time",
                         dest="sampling_time",
-                         help="sampling time in nanoseconds",
+                        help="sampling time in nanoseconds",
                         type=float,
                         default=4) 
     

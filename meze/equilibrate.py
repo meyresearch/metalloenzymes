@@ -180,6 +180,7 @@ def heat_unbound(ligand_name, equilibration_dir, ligand_dir, min_steps, min_dt, 
                       workdir=nvt_directory,
                       time=nvt_runtime,
                       temperature=temperature,
+                      configuration=["gen-vel = no"], #https://github.com/OpenBioSim/biosimspace/issues/168
                       checkpoint=r_nvt_directory + "/r_nvt.cpt")
     restrained_npt = equilibrate(system=nvt,
                                  name="r_npt",
@@ -188,6 +189,7 @@ def heat_unbound(ligand_name, equilibration_dir, ligand_dir, min_steps, min_dt, 
                                  pressure=pressure,
                                  temperature=temperature,
                                  restraints="heavy",
+                                 configuration=["gen-vel = no"],
                                  checkpoint=nvt_directory + "/nvt.cpt")
     equilibrated_molecule = equilibrate(system=restrained_npt,
                                         name="npt",
@@ -195,6 +197,7 @@ def heat_unbound(ligand_name, equilibration_dir, ligand_dir, min_steps, min_dt, 
                                         time=npt_runtime,
                                         pressure=pressure,
                                         temperature=temperature,
+                                        configuration=["gen-vel = no"],
                                         checkpoint=r_npt_directory + "/r_npt.cpt")
     unbound_savename = npt_directory + f"/{ligand_name}"
     bss.IO.saveMolecules(filebase=unbound_savename, system=equilibrated_molecule, fileformat=["PRM7", "RST7"])        
@@ -255,12 +258,14 @@ def heat_bound(ligand_name, equilibration_dir, protein_dir, min_steps, min_dt, m
                                           time=nvt_runtime,
                                           temperature=temperature,
                                           restraints="backbone",
+                                          configuration=["gen-vel = no"],
                                           checkpoint=r_nvt_dir + "/r_nvt.cpt")
     nvt = equilibrate(system=backbone_restrained_nvt,
                       name="nvt",
                       workdir=nvt_dir,
                       time=nvt_runtime,
                       temperature=temperature,
+                      configuration=["gen-vel = no"],
                       checkpoint=bb_r_nvt_dir + "/bb_r_nvt.cpt")
     restrained_npt = equilibrate(system=nvt,
                                  name="r_npt",
@@ -269,6 +274,7 @@ def heat_bound(ligand_name, equilibration_dir, protein_dir, min_steps, min_dt, m
                                  pressure=pressure,
                                  temperature=temperature,
                                  restraints="heavy",
+                                 configuration=["gen-vel = no"],
                                  checkpoint=nvt_dir + "/nvt.cpt")
     equilibrated_protein = equilibrate(system=restrained_npt,
                                        name="npt",
@@ -276,6 +282,7 @@ def heat_bound(ligand_name, equilibration_dir, protein_dir, min_steps, min_dt, m
                                        time=npt_runtime,
                                        pressure=pressure,
                                        temperature=temperature,
+                                       configuration=["gen-vel = no"],
                                        checkpoint=r_npt_dir + "/r_npt.cpt")
     bound_savename = npt_dir + f"/bound_{ligand_name}"
     bss.IO.saveMolecules(filebase=bound_savename, system=equilibrated_protein, fileformat=["PRM7", "RST7"])     

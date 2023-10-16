@@ -27,7 +27,7 @@ $MEZEHOME/01_prepare.sh <path-to-input-files>/protein.pdb <ligand_charge>
 For example, with KPC-2 with ligands whose net charge is -1:
 
 ```
-$MEZEHOME/01_prepare.sh inputs/protein/kpc2.input.pdb -1
+$MEZEHOME/01_prepare.sh inputs/protein/kpc2.input.pdb -1 
 ```
 
 Example output:
