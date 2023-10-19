@@ -510,8 +510,9 @@ class Network(object):
 
         free_energy_protocol = bss.Protocol.FreeEnergy(lam_vals=lambda_values, runtime=self.md_time, restart_interval=200, report_interval=200)
 
-        n_cycles = 5 #TODO make editable
-        n_moves = self.set_n_moves()
+        n_cycles = int(5 * self.md_time._value) #TODO make editable
+        # n_moves = self.set_n_moves()
+        n_moves = 100000 # keep n moves the same, change n cycles
         frames = n_moves // 100
         config_options = {"ncycles": n_cycles, 
                           "nmoves": n_moves, 

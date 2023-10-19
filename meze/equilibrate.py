@@ -53,7 +53,7 @@ def run_process(system, protocol, process, working_directory, configuration=None
     system: bss.System
         equilibrated or minimised system
     """
-    process = bss.Process.Gromacs(system, protocol, name=process, work_dir=working_directory, extra_options=configuration, ncheckpoint_file=checkpoint)
+    process = bss.Process.Gromacs(system, protocol, name=process, work_dir=working_directory, extra_options=configuration, checkpoint_file=checkpoint)
     # config = process.getConfig()
     # if configuration:
     #     for setting in configuration:
