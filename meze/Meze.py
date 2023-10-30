@@ -76,7 +76,7 @@ def residue_restraint_mask(residue_ids):
 class Meze(Network):
 
     def __init__(self, protein_file, metal="ZN", cut_off=2.6, force_constant_0=100,
-                 water_file=None, workdir=os.getcwd(), is_qm=True, qmmm_inputs=None, equilibration_path=None, output=None,
+                 water_file=None, workdir=os.getcwd(), is_qm=False, qmmm_inputs=None, equilibration_path=None, output=None,
                  ligand_path=os.getcwd()+"/inputs/ligands/", ligand_charge=0, ligand_ff="gaff2",
                  group_name=None, protein_path=os.getcwd()+"/inputs/protein/", water_model="tip3p", protein_ff="ff14SB", 
                  engine=None, sampling_time=10, box_edges=20, box_shape="cubic", min_steps=1000, short_nvt=0, nvt=1, npt=1, 
@@ -90,7 +90,11 @@ class Meze(Network):
         self.md_time = functions.convert_to_units(sampling_time, PICOSECOND)
         self.universe = mda.Universe(self.protein_file, format="pdb")
         self.force_constant_0 = functions.check_float(force_constant_0)
-        self.is_qm = is_qm
+        
+        if mode == "qm":
+            self.is_qm = True
+
+        
         if qmmm_inputs and self.is_qm:
             self.input_directory = functions.path_exists(qmmm_inputs)
         elif not qmmm_inputs and self.is_qm:
@@ -344,14 +348,56 @@ class Meze(Network):
             self.qmmm_minimisation(ligand_name)
             self.qmmm_equilibration(ligand_name)
             self.qmmm_production(ligand_name)
-        else:
+        elif self.:
             minimised_system = self.minimisation_0(ligand_name)
-    
             equilibrated_system = self.equilibration_0(ligand_name, minimised_system)
-
             self.production_0(ligand_name, equilibrated_system)
 
 
+    def write_restraints_file_0(self):
+        """
+        Write an Amber-compatible restraint file for model 0. 
+
+        Parameters:
+        -----------
+
+        Return:
+        -------
+        output_file: str
+            amber-format restraints file for model 0
+        """
+        metal_ligands = self.get_metal_ligands()
+        protein = self.universe.select_atoms("protein")
+        atom_ids = []
+        r1, r2, r3, r4 = [], [], [], []
+        for i in range(len(self.metal_atomids)):
+            metal_id = self.metal_atomids[i]
+            for ligating_atom in metal_ligands[metal_id]:
+                if ligating_atom in protein or ligating_atom.resname == "WAT":
+                    atom_ids.append(f"iat={metal_id},{ligating_atom.id}")
+                    atom_group_1 = self.universe.select_atoms(f"resid {self.metal_resids[i]}")
+                    atom_group_2 = self.universe.select_atoms(f"resid {ligating_atom.resid} and name {ligating_atom.name}")
+                    distance = MDAnalysis.analysis.distances.dist(atom_group_1, atom_group_2)[-1][0]
+                    linear_response_region_lower_bound = np.round(distance - 1.0, decimals=2)
+                    flat_region_lower_bound = np.round(distance - 0.5, decimals=2)
+                    flat_region_upper_bound = np.round(distance + 0.5, decimals=2)
+                    linear_response_region_upper_bound = np.round(distance + 1.0, decimals=2)
+                    r1.append("r1="+str(linear_response_region_lower_bound))
+                    r2.append("r2="+str(flat_region_lower_bound))
+                    r3.append("r3="+str(flat_region_upper_bound))
+                    r4.append("r4="+str(linear_response_region_upper_bound))
+        rk2 = ["rk2="+str(self.force_constant_0)] * len(atom_ids)
+        rk3 = ["rk3="+str(self.force_constant_0)] * len(atom_ids)
+        output_file = self.input_directory + "restraints_0.RST"
+        with open(output_file, "w") as file:
+            file.write(f"# Harmonic bond restraints between {self.metal_resname} and coordinating protein residues\n")
+            for i in range(len(atom_ids)):
+                line = f"&rst {atom_ids[i]}, {r1[i]}, {r2[i]}, {r3[i]}, {r4[i]}, {rk2[i]}, {rk3[i]},/\n"
+                file.write(line)
+        return output_file
+
+
+    # Potentially to be depracated:
     def production_0(self, ligand_name, equilibrated_system, nonbonded_cut_off=9.0, dt=0.002, runtime=50):
 
         directory = self.output_directory+f"{ligand_name}/"
@@ -796,7 +842,6 @@ class Meze(Network):
         return equilibrated_system  
 
 
-
     def minimisation_0(self, ligand_name, nonbonded_cut_off=10.0):
 
         directory = functions.mkdir(self.equilibration_directory+f"{ligand_name}/")
@@ -1019,46 +1064,7 @@ class Meze(Network):
             file.writelines(new_config)
 
 
-    def write_restraints_file_0(self):
-        """
-        Write an Amber-compatible restraint file for model 0. 
 
-        Parameters:
-        -----------
-
-        Return:
-        -------
-        """
-        metal_ligands = self.get_metal_ligands()
-        protein = self.universe.select_atoms("protein")
-        atom_ids = []
-        r1, r2, r3, r4 = [], [], [], []
-        for i in range(len(self.metal_atomids)):
-            metal_id = self.metal_atomids[i]
-            for ligating_atom in metal_ligands[metal_id]:
-                if ligating_atom in protein or ligating_atom.resname == "WAT":
-                    atom_ids.append(f"iat={metal_id},{ligating_atom.id}")
-                    atom_group_1 = self.universe.select_atoms(f"resid {self.metal_resids[i]}")
-                    atom_group_2 = self.universe.select_atoms(f"resid {ligating_atom.resid} and name {ligating_atom.name}")
-                    distance = MDAnalysis.analysis.distances.dist(atom_group_1, atom_group_2)[-1][0]
-                    linear_response_region_lower_bound = np.round(distance - 1.0, decimals=2)
-                    flat_region_lower_bound = np.round(distance - 0.5, decimals=2)
-                    flat_region_upper_bound = np.round(distance + 0.5, decimals=2)
-                    linear_response_region_upper_bound = np.round(distance + 1.0, decimals=2)
-                    r1.append("r1="+str(linear_response_region_lower_bound))
-                    r2.append("r2="+str(flat_region_lower_bound))
-                    r3.append("r3="+str(flat_region_upper_bound))
-                    r4.append("r4="+str(linear_response_region_upper_bound))
-
-        rk2 = ["rk2="+str(self.force_constant_0)] * len(atom_ids)
-        rk3 = ["rk3="+str(self.force_constant_0)] * len(atom_ids)
-        output_file = self.input_directory + "restraints_0.RST"
-        with open(output_file, "w") as file:
-            file.write(f"# Harmonic bond restraints between {self.metal_resname} and coordinating protein residues\n")
-            for i in range(len(atom_ids)):
-                line = f"&rst {atom_ids[i]}, {r1[i]}, {r2[i]}, {r3[i]}, {r4[i]}, {rk2[i]}, {rk3[i]},/\n"
-                file.write(line)
-        return output_file
 
 
 

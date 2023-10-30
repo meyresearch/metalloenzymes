@@ -165,7 +165,7 @@ def main():
 
     meze = Meze.Meze(metal=arguments.metal,
                      cut_off=arguments.cut_off,
-                     is_qm=False,
+                     mode=False,
                      force_constant_0=arguments.force_constant_0,
                      workdir=arguments.working_directory,
                      ligand_path=arguments.ligand_directory,

@@ -2,7 +2,7 @@
 Protein class object
 """
 import os
-import functions
+from meze import functions
 import BioSimSpace as bss
 import argparse
 

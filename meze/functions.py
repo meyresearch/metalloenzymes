@@ -4,7 +4,7 @@ import argparse
 import os
 import glob
 import re
-from definitions import ROOT_DIRECTORY
+from meze.definitions import ROOT_DIRECTORY
 
 
 def file_exists(file):

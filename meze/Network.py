@@ -1,16 +1,14 @@
 import re
 import BioSimSpace as bss
-import functions
+from meze import functions, Protein, Ligand
 import pandas as pd
 import sys
-from definitions import ADJUST_OPTIONS, PICOSECOND, NANOSECOND, ANGSTROM, KELVIN, ATM
+from meze.definitions import ADJUST_OPTIONS, PICOSECOND, NANOSECOND, ANGSTROM, KELVIN, ATM
 import numpy as np
 import shutil
 import os
 import logging
-import Ligand
 import csv
-import Protein
 import pathlib
 import shutil
 from BioSimSpace import _Exceptions

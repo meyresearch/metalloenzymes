@@ -1,10 +1,8 @@
 """
 Ligands class object
 """
-import functions
+from meze import functions
 import BioSimSpace as bss
-import Network 
-import csv
 
 
 class Ligand(object):

@@ -52,6 +52,7 @@ def main():
                      output=protocol["outputs"])
 
     solvated_meze = meze.set_universe(file_name=meze.protein_path + "bound_" + arguments.ligand_name + "_solvated")
+    # write scripts
     solvated_meze.model_0(ligand_name=arguments.ligand_name)
     
 
