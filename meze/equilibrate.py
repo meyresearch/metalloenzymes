@@ -1,6 +1,7 @@
 """
 Minimise and equilibrate bound and unbound stages.
 """
+import Network
 from definitions import PICOSECOND, KELVIN, ATM
 import functions
 import BioSimSpace as bss
@@ -108,7 +109,7 @@ def equilibrate(system, name, workdir, time, start_t=300, end_t=300, temperature
     return equilibrated_system
 
 
-def heat_unbound(ligand_name, equilibration_dir, ligand_dir, min_steps, min_dt, min_tol, short_nvt, nvt_runtime, npt_runtime, temperature=300., pressure=1.):
+def heat_unbound(ligand_name, solvated_network):
     """
     Perform minimisation and NVT and NPT equilibrations on ligand
 
@@ -116,29 +117,16 @@ def heat_unbound(ligand_name, equilibration_dir, ligand_dir, min_steps, min_dt, 
     -----------
     ligand_name: str
         ligand name
-    equilibration_dir: str
-        full path to /equilibration/
-    ligand_dir: str
-        full path to folder containing solvated ligands
-    short_nvt: float
-        runtime in ps for short NVT equilibration
-    nvt_runtime: float
-        runtime in ps for NVT equilibration
-    npt_runtime: float 
-        runtime in ps for NPT equilibration
-    temperature: bss.Units.Temperature
-        system temperature in Kelvin
-    pressure: bss.Unites.atm
-        system pressure in ATM
-
+    solvated_network: Network
+        solvated network object
+ 
     Return:
     -------
 
     """
-    temperature = functions.convert_to_units(temperature, KELVIN)
-    pressure = functions.convert_to_units(pressure, ATM)
-    directory = functions.mkdir(equilibration_dir + f"/unbound/{ligand_name}/")
-    files = functions.read_files(f"{ligand_dir}/{ligand_name}_solvated.*")
+
+    directory = functions.mkdir(solvated_network.equilibration_directory + f"/unbound/{ligand_name}/")
+    files = functions.read_files(f"{solvated_network.ligand_path}/{ligand_name}_solvated.*")
     solvated_ligand = bss.IO.readMolecules(files)
     print(f"Equilibrating unbound ligand {ligand_name}")
     directories = lambda step: functions.mkdir(directory+step)
@@ -148,44 +136,44 @@ def heat_unbound(ligand_name, equilibration_dir, ligand_dir, min_steps, min_dt, 
     r_npt_directory = directories("r_npt")
     npt_directory = directories("npt")
 
-    minimised_ligand = minimise(system=solvated_ligand, workdir=min_directory, min_steps=min_steps, min_dt=min_dt, min_tol=min_tol)
+    minimised_ligand = minimise(system=solvated_ligand, workdir=min_directory, min_steps=solvated_network.min_steps, min_dt=solvated_network.min_dt, min_tol=solvated_network.min_tol)
     start_temp = functions.convert_to_units(0, KELVIN)
     restrained_nvt = equilibrate(system=minimised_ligand,
                                  name="r_nvt",
                                  workdir=r_nvt_directory,
-                                 time=short_nvt,
-                                 start_t=start_temp, end_t=temperature,
+                                 time=solvated_network.short_nvt,
+                                 start_t=start_temp, end_t=solvated_network.temperature,
                                  configuration={"dt": 0.0005}, # need to be able to change
                                  restraints="all")
     nvt = equilibrate(system=restrained_nvt,
                       name="nvt",
                       workdir=nvt_directory,
-                      time=nvt_runtime,
-                      temperature=temperature,
+                      time=solvated_network.nvt,
+                      temperature=solvated_network.temperature,
                       configuration={"gen-vel": "no"}, #https://github.com/OpenBioSim/biosimspace/issues/168
                       checkpoint=r_nvt_directory + "/r_nvt.cpt")
     restrained_npt = equilibrate(system=nvt,
                                  name="r_npt",
                                  workdir=r_npt_directory,
-                                 time=npt_runtime,
-                                 pressure=pressure,
-                                 temperature=temperature,
+                                 time=solvated_network.npt,
+                                 pressure=solvated_network.pressure,
+                                 temperature=solvated_network.temperature,
                                  restraints="heavy",
                                  configuration={"gen-vel": "no"}, #https://github.com/OpenBioSim/biosimspace/issues/168
                                  checkpoint=nvt_directory + "/nvt.cpt")
     equilibrated_molecule = equilibrate(system=restrained_npt,
                                         name="npt",
                                         workdir=npt_directory,
-                                        time=npt_runtime,
-                                        pressure=pressure,
-                                        temperature=temperature,
+                                        time=solvated_network.npt,
+                                        pressure=solvated_network.pressure,
+                                        temperature=solvated_network.temperature,
                                         configuration={"gen-vel": "no"}, #https://github.com/OpenBioSim/biosimspace/issues/168
                                         checkpoint=r_npt_directory + "/r_npt.cpt")
     unbound_savename = npt_directory + f"/{ligand_name}"
     bss.IO.saveMolecules(filebase=unbound_savename, system=equilibrated_molecule, fileformat=["PRM7", "RST7"])        
 
     
-def heat_bound(ligand_name, equilibration_dir, protein_dir, min_steps, min_dt, min_tol, short_nvt, nvt_runtime, npt_runtime, temperature=300., pressure=1.):
+def heat_bound(ligand_name, solvated_network):
     """
     Perform minimisation and NVT and NPT equilibrations on bound ligand 
 
@@ -193,29 +181,16 @@ def heat_bound(ligand_name, equilibration_dir, protein_dir, min_steps, min_dt, m
     -----------
     ligand_name: str
         ligand name
-    equilibration_dir: str
-        full path to /equilibration/
-    protein_dir: str
-        full path to working directory containing solvated bound ligands
-    short_nvt: float
-        runtime in ps for short NVT equilibration
-    nvt_runtime: float
-        runtime in ps for NVT equilibration
-    npt_runtime: float 
-        runtime in ps for NPT equilibration
-    temperature: bss.Units.Temperature
-        system temperature in Kelvin
-    pressure: bss.Unites.atm
-        system pressure in ATM
+    solvated_network: Network
+        solvated network object
 
     Return:
     -------
     
     """ 
-    temperature = functions.convert_to_units(temperature, KELVIN)
-    pressure = functions.convert_to_units(pressure, ATM)           
-    directory = functions.mkdir(equilibration_dir+f"/bound/{ligand_name}/")
-    files = functions.read_files(f"{protein_dir}/bound_{ligand_name}_solvated.*")
+        
+    directory = functions.mkdir(solvated_network.equilibration_directory+f"/bound/{ligand_name}/")
+    files = functions.read_files(f"{solvated_network.protein_path}/bound_{ligand_name}_solvated.*")
     solvated_system = bss.IO.readMolecules(files)
     directories = lambda step: functions.mkdir(directory+step)
     min_dir = directories("min")
@@ -226,44 +201,44 @@ def heat_bound(ligand_name, equilibration_dir, protein_dir, min_steps, min_dt, m
     npt_dir = directories("npt")     
     start_temp = functions.convert_to_units(0, KELVIN)
     print(f"Equilibrating bound ligand {ligand_name}")
-    minimised_system = minimise(system=solvated_system, workdir=min_dir, min_steps=min_steps, min_dt=min_dt, min_tol=min_tol)
+    minimised_system = minimise(system=solvated_system, workdir=min_dir, min_steps=solvated_network.min_steps, min_dt=solvated_network.min_dt, min_tol=solvated_network.min_tol)
     restrained_nvt = equilibrate(system=minimised_system,
                                  workdir=r_nvt_dir,
                                  name="r_nvt",
-                                 time=short_nvt,
-                                 start_t=start_temp, end_t=temperature,
+                                 time=solvated_network.short_nvt,
+                                 start_t=start_temp, end_t=solvated_network.temperature,
                                  restraints="all",
                                  configuration={"dt": 0.0005}) # need to be able to change
     backbone_restrained_nvt = equilibrate(system=restrained_nvt,
                                           name="bb_r_nvt",
                                           workdir=bb_r_nvt_dir,
-                                          time=nvt_runtime,
-                                          temperature=temperature,
+                                          time=solvated_network.nvt,
+                                          temperature=solvated_network.temperature,
                                           restraints="backbone",
                                           configuration={"gen-vel": "no"}, #https://github.com/OpenBioSim/biosimspace/issues/168
                                           checkpoint=r_nvt_dir + "/r_nvt.cpt")
     nvt = equilibrate(system=backbone_restrained_nvt,
                       name="nvt",
                       workdir=nvt_dir,
-                      time=nvt_runtime,
-                      temperature=temperature,
+                      time=solvated_network.nvt,
+                      temperature=solvated_network.temperature,
                       configuration={"gen-vel": "no"}, #https://github.com/OpenBioSim/biosimspace/issues/168
                       checkpoint=bb_r_nvt_dir + "/bb_r_nvt.cpt")
     restrained_npt = equilibrate(system=nvt,
                                  name="r_npt",
                                  workdir=r_npt_dir,
-                                 time=npt_runtime,
-                                 pressure=pressure,
-                                 temperature=temperature,
+                                 time=solvated_network.npt,
+                                 pressure=solvated_network.pressure,
+                                 temperature=solvated_network.temperature,
                                  restraints="heavy",
                                  configuration={"gen-vel": "no"}, #https://github.com/OpenBioSim/biosimspace/issues/168
                                  checkpoint=nvt_dir + "/nvt.cpt")
     equilibrated_protein = equilibrate(system=restrained_npt,
                                        name="npt",
                                        workdir=npt_dir,
-                                       time=npt_runtime,
-                                       pressure=pressure,
-                                       temperature=temperature,
+                                       time=solvated_network.npt,
+                                       pressure=solvated_network.pressure,
+                                       temperature=solvated_network.temperature,
                                        configuration={"gen-vel": "no"}, #https://github.com/OpenBioSim/biosimspace/issues/168
                                        checkpoint=r_npt_dir + "/r_npt.cpt")
     bound_savename = npt_dir + f"/bound_{ligand_name}"
@@ -282,86 +257,43 @@ def main():
                         help="protocol file containing equilibration options",
                         type=str,
                         default=os.getcwd() + "/afe/protocol.dat")
-
-    # parser.add_argument("-e",
-    #                     "--equil-dir",
-    #                     dest="equil_dir",
-    #                     help="full path to /equilibration/",
-    #                     default=os.getcwd() + "/equilibration/")
-    
-    # parser.add_argument("-pwd",
-    #                     "--project-dir",
-    #                     dest="project_dir",
-    #                     help="full path to project working directory",
-    #                     default=os.getcwd())   
-
-    # parser.add_argument("-s",
-    #                     "--minimisation-steps",
-    #                     dest="min_steps",
-    #                     help="number of minimisation steps for equilibration stage",
-    #                     type=int,
-    #                     default=500)
-
-    # parser.add_argument("-snvt",
-    #                     "--short-nvt-runtime",
-    #                     dest="short_nvt",
-    #                     help="runtime in ps for short NVT equilibration",
-    #                     type=float,
-    #                     default=5) 
-    
-    # parser.add_argument("-nvt",
-    #                     "--nvt-runtime",
-    #                     dest="nvt",
-    #                     help="runtime in ps for NVT equilibration",
-    #                     type=float,
-    #                     default=50)
-
-    # parser.add_argument("-npt",
-    #                     "--npt-runtime",
-    #                     dest="npt",
-    #                     help="runtime in ps for NPT equilibration",
-    #                     type=float,
-    #                     default=200)
-    
-    # parser.add_argument("--em-step",
-    #                     dest="emstep",
-    #                     help="Step size for energy minimisation",
-    #                     type=float,
-    #                     default=0.001) 
-    
-    # parser.add_argument("--em-tolerance",
-    #                     dest="emtol",
-    #                     help="kJ mol-1 nm-1, Maximum force tolerance for energy minimisation",
-    #                     type=float,
-    #                     default=1000)
-    
     
     arguments = parser.parse_args()
     protocol = functions.input_to_dict(file=arguments.protocol_file)
 
-    heat_unbound(ligand_name=arguments.ligand_name,
-                 equilibration_dir=protocol["equilibration directory"],
-                 ligand_dir=protocol["ligand directory"],
-                 min_steps=protocol["minimisation steps"],
-                 min_dt=protocol["minimisation stepsize"],
-                 min_tol=protocol["minimisation tolerance"],
-                 short_nvt=functions.convert_to_units(protocol["short nvt"], PICOSECOND),
-                 nvt_runtime=functions.convert_to_units(protocol["nvt"], PICOSECOND),
-                 npt_runtime=functions.convert_to_units(protocol["npt"], PICOSECOND),
-                 pressure=protocol["pressure"],
-                 temperature=protocol["temperature"])
+    keys = list(protocol.keys())
+    if "metal" in keys:
+        metal = True
+    else:
+        metal = False
     
-    heat_bound(ligand_name=arguments.ligand_name,
-               equilibration_dir=protocol["equilibration directory"],
-               protein_dir=protocol["protein directory"],
-               min_steps=protocol["minimisation steps"],
-               min_dt=protocol["minimisation stepsize"],
-               min_tol=protocol["minimisation tolerance"],     
-               short_nvt=functions.convert_to_units(protocol["short nvt"], PICOSECOND),
-               nvt_runtime=functions.convert_to_units(protocol["nvt"], PICOSECOND),
-               npt_runtime=functions.convert_to_units(protocol["npt"], PICOSECOND),
-               pressure=protocol["pressure"],
-               temperature=protocol["temperature"])
+    if metal:
+        pass
+    elif not metal:
+        network = Network.Network(prepared=True,
+                                  workdir=protocol["protein directory"],
+                                  afe_input_path=protocol["afe input directory"],
+                                  equilibration_path=protocol["equilibration directory"],
+                                  protein_file=protocol["prepared protein file"],
+                                  protein_path=protocol["protein directory"],
+                                  ligand_path=protocol["ligand directory"],
+                                  group_name=protocol["group name"],
+                                  engine=protocol["engine"],
+                                  sampling_time=protocol["sampling time"],
+                                  box_edges=protocol["box edges"],
+                                  box_shape=protocol["box shape"],
+                                  min_steps=protocol["minimisation steps"],
+                                  short_nvt=protocol["short nvt"],
+                                  nvt=protocol["nvt"],
+                                  npt=protocol["npt"],
+                                  min_dt=protocol["minimisation stepsize"],
+                                  min_tol=protocol["minimisation tolerance"],
+                                  repeats=protocol["repeats"],
+                                  temperature=protocol["temperature"],
+                                  pressure=protocol["pressure"])
+        
+    heat_unbound(ligand_name=arguments.ligand_name, solvated_network=network)
+    heat_bound(ligand_name=arguments.ligand_name, solvated_network=network)
     
 
 if __name__ == "__main__":
