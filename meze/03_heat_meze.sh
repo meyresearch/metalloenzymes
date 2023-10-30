@@ -5,7 +5,10 @@
 #SBATCH -n N_TASKS
 #SBATCH --gres=gpu:N_GPUS
 #SBATCH --cpus-per-gpu=N_CPUS
-#SBATCH --mem MEMORY
+
+eval "$(conda shell.bash hook)"
+conda activate obss
+
 
 export MEZEHOME=PATH_TO_MEZE
 
