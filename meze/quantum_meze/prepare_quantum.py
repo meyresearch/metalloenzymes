@@ -1,8 +1,8 @@
 import BioSimSpace as bss
 import argparse 
 import os
-import functions
-import Meze
+from meze import functions
+from meze import Meze
 import MDAnalysis as mda
 
 

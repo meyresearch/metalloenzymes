@@ -6,26 +6,6 @@ import functions
 import BioSimSpace as bss
 import argparse
 import os 
-import subprocess
-
- 
-def slurm_heat(n_ligands, script):
-    """
-    Run equilibration with slurm
-
-    Parameters:
-    -----------
-    n_ligands: int
-        number of ligands to equilibrate
-    script: str
-        full path to equilibration slurm script 
-
-    Return:
-    -------
-    int:
-        0: process successful, 1: process unsuccessful #DOESN'T WORK
-    """
-    return subprocess.call(["sbatch", "--wait", f"--array=1-{n_ligands}", f"{script}"])
 
 
 def run_process(system, protocol, process, working_directory, configuration=None, checkpoint=None):

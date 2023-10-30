@@ -80,7 +80,7 @@ class Meze(Network):
                  ligand_path=os.getcwd()+"/inputs/ligands/", ligand_charge=0, ligand_ff="gaff2",
                  group_name=None, protein_path=os.getcwd()+"/inputs/protein/", water_model="tip3p", protein_ff="ff14SB", 
                  engine=None, sampling_time=10, box_edges=20, box_shape="cubic", min_steps=1000, short_nvt=0, nvt=1, npt=1, 
-                 min_dt=None, min_tol=None, repeats=0, temperature=300, pressure=1, threshold=None, n_normal=None, n_difficult=None):
+                 min_dt=None, min_tol=None, repeats=0, temperature=300, pressure=1, threshold=0.4, n_normal=11, n_difficult=17):
         
         super().__init__(workdir=workdir, ligand_path=ligand_path, group_name=group_name, protein_file=protein_file, protein_path=protein_path, 
                          water_model=water_model, ligand_ff=ligand_ff, protein_ff=protein_ff, ligand_charge=ligand_charge, equilibration_path=equilibration_path, outputs=output,
@@ -90,19 +90,16 @@ class Meze(Network):
         self.md_time = functions.convert_to_units(sampling_time, PICOSECOND)
         self.universe = mda.Universe(self.protein_file, format="pdb")
         self.force_constant_0 = functions.check_float(force_constant_0)
-        
-        if mode == "qm":
-            self.is_qm = True
-
-        
+        self.is_qm = is_qm
         if qmmm_inputs and self.is_qm:
             self.input_directory = functions.path_exists(qmmm_inputs)
         elif not qmmm_inputs and self.is_qm:
             os.rmdir(self.afe_input_directory)
             self.input_directory = self.create_directory(f"/qmmm_input_files/")
-        elif not self.is_qm:
-            os.rmdir(self.afe_input_directory)
-            self.input_directory = self.create_directory(f"/md_input_files/")
+        # To be depracated
+        # elif not self.is_qm:
+        #     os.rmdir(self.afe_input_directory)
+        #     self.input_directory = self.create_directory(f"/md_input_files/")
 
         if output:
             self.output_directory = functions.path_exists(output)
@@ -138,63 +135,67 @@ class Meze(Network):
         self.protein_water_complex = self.protein.create_complex()
         self.prepared_protein = self.protein.tleap(self.protein_water_complex)
         self.log_directory = self.create_directory("/logs/")
-        self.protocol_file = self.create_protocol_file()
+        self.protocol_file = self.create_qm_protocol_file()
         self.prepared = True
         return self
 
 
     def create_protocol_file(self):
-            """
-            Create protocol.dat file for QM/MM runs
+        """
+        Create protocol.dat file for AFE runs
 
-            Parameters:
-            -----------
-            Network: Network
-                Network class object
+        Parameters:
+        -----------
+        Network: Network
+            Network class object
 
-            Return:
-            -------
-            protocol_file: str
-                protocol datafile
-            """
-            protocol = [f"metal = {self.metal_resname}",
-                        f"cut-off = {self.cut_off}",
-                        f"force constant 0 = {self.force_constant_0}",
-                        f"group name = {self.group_name}",
-                        f"ligand forcefield = {self.ligand_forcefield}", 
-                        f"ligand charge = {self.ligand_charge}",
-                        f"prepared protein file = {self.prepared_protein}",
-                        f"protein input file = {self.protein_file}",
-                        f"protein forcefield = {self.protein_forcefield}", 
-                        f"water model = {self.water_model}", 
-                        f"box edges = {self.box_edges}", # in angstrom 
-                        f"box shape = {self.box_shape}", 
-                        f"minimisation steps = {self.min_steps}",
-                        f"minimisation stepsize = {self.min_dt}",
-                        f"minimisation tolerance = {self.min_tol}",
-                        f"short nvt = {self.short_nvt._value}",
-                        f"nvt = {self.nvt._value}",
-                        f"npt = {self.npt._value}",
-                        f"temperature = {self.temperature._value}",
-                        f"pressure = {self.pressure._value}",
-                        f"sampling time = {self.md_time._value}",
-                        f"engine = {self.md_engine}",
-                        f"outputs = {self.output_directory}",
-                        f"repeats = {self.n_repeats}",
-                        f"project directory = {self.workding_directory}",
-                        f"equilibration directory = {self.equilibration_directory}",
-                        f"ligand directory = {self.ligand_path}",
-                        f"protein directory = {self.protein_path}",
-                        f"log directory = {self.log_directory}",
-                        f"input directory = {self.input_directory}"]
+        Return:
+        -------
+        protocol_file: str
+            protocol datafile
+        """
+        strip = self.output_directories[0].split("/")[-2]
+        path_to_outputs = self.output_directories[0].replace(strip, "")
+        protocol = [f"group name = {self.group_name}",
+                    f"metal = {self.metal_resname}",
+                    f"cutoff = {self.cut_off}",
+                    f"force constant = {self.force_constant_0}",
+                    f"ligand forcefield = {self.ligand_forcefield}", 
+                    f"ligand charge = {self.ligand_charge}",
+                    f"prepared protein file = {self.prepared_protein}",
+                    f"protein input file = {self.protein_file}",
+                    f"protein forcefield = {self.protein_forcefield}", 
+                    f"water model = {self.water_model}", 
+                    f"box edges = {self.box_edges}", # in angstrom 
+                    f"box shape = {self.box_shape}", 
+                    f"minimisation steps = {self.min_steps}",
+                    f"minimisation stepsize = {self.min_dt}",
+                    f"minimisation tolerance = {self.min_tol}",
+                    f"short nvt = {self.short_nvt._value}",
+                    f"nvt = {self.nvt._value}",
+                    f"npt = {self.npt._value}",
+                    f"temperature = {self.temperature._value}",
+                    f"pressure = {self.pressure._value}",
+                    f"sampling time = {self.md_time._value}",
+                    f"engine = {self.md_engine}",
+                    f"outputs = {path_to_outputs}",
+                    f"repeats = {self.n_repeats}",
+                    f"network file = {self.network_file}",
+                    f"project directory = {self.workding_directory}",
+                    f"equilibration directory = {self.equilibration_directory}",
+                    f"ligand directory = {self.ligand_path}",
+                    f"protein directory = {self.protein_path}",
+                    f"log directory = {self.log_directory}",
+                    f"afe input directory = {self.afe_input_directory}"]
 
-            protocol_file = self.input_directory + "/protocol.dat"
-            with open(protocol_file, "w") as file:
-                writer = csv.writer(file)
-                for protocol_line in protocol:
-                    writer.writerow([protocol_line])
-            return protocol_file
-    
+        protocol_file = self.afe_input_directory + "/protocol.dat"
+
+        with open(protocol_file, "w") as file:
+            writer = csv.writer(file)
+            for protocol_line in protocol:
+                writer.writerow([protocol_line])
+        return protocol_file
+            
 
     def set_universe(self, file_name):
         """
@@ -348,10 +349,11 @@ class Meze(Network):
             self.qmmm_minimisation(ligand_name)
             self.qmmm_equilibration(ligand_name)
             self.qmmm_production(ligand_name)
-        elif self.:
-            minimised_system = self.minimisation_0(ligand_name)
-            equilibrated_system = self.equilibration_0(ligand_name, minimised_system)
-            self.production_0(ligand_name, equilibrated_system)
+        # To be depracated
+        # elif not self.is_qm:
+        #     minimised_system = self.minimisation_0(ligand_name)
+        #     equilibrated_system = self.equilibration_0(ligand_name, minimised_system)
+        #     self.production_0(ligand_name, equilibrated_system)
 
 
     def write_restraints_file_0(self):
@@ -398,6 +400,58 @@ class Meze(Network):
 
 
     # Potentially to be depracated:
+    def create_qm_protocol_file(self):
+            """
+            Create protocol.dat file for QM/MM runs
+
+            Parameters:
+            -----------
+            Network: Network
+                Network class object
+
+            Return:
+            -------
+            protocol_file: str
+                protocol datafile
+            """
+            protocol = [f"metal = {self.metal_resname}",
+                        f"cut-off = {self.cut_off}",
+                        f"force constant 0 = {self.force_constant_0}",
+                        f"group name = {self.group_name}",
+                        f"ligand forcefield = {self.ligand_forcefield}", 
+                        f"ligand charge = {self.ligand_charge}",
+                        f"prepared protein file = {self.prepared_protein}",
+                        f"protein input file = {self.protein_file}",
+                        f"protein forcefield = {self.protein_forcefield}", 
+                        f"water model = {self.water_model}", 
+                        f"box edges = {self.box_edges}", # in angstrom 
+                        f"box shape = {self.box_shape}", 
+                        f"minimisation steps = {self.min_steps}",
+                        f"minimisation stepsize = {self.min_dt}",
+                        f"minimisation tolerance = {self.min_tol}",
+                        f"short nvt = {self.short_nvt._value}",
+                        f"nvt = {self.nvt._value}",
+                        f"npt = {self.npt._value}",
+                        f"temperature = {self.temperature._value}",
+                        f"pressure = {self.pressure._value}",
+                        f"sampling time = {self.md_time._value}",
+                        f"engine = {self.md_engine}",
+                        f"outputs = {self.output_directory}",
+                        f"repeats = {self.n_repeats}",
+                        f"project directory = {self.workding_directory}",
+                        f"equilibration directory = {self.equilibration_directory}",
+                        f"ligand directory = {self.ligand_path}",
+                        f"protein directory = {self.protein_path}",
+                        f"log directory = {self.log_directory}",
+                        f"input directory = {self.input_directory}"]
+
+            protocol_file = self.input_directory + "/protocol.dat"
+            with open(protocol_file, "w") as file:
+                writer = csv.writer(file)
+                for protocol_line in protocol:
+                    writer.writerow([protocol_line])
+            return protocol_file
+
     def production_0(self, ligand_name, equilibrated_system, nonbonded_cut_off=9.0, dt=0.002, runtime=50):
 
         directory = self.output_directory+f"{ligand_name}/"

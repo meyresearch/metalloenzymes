@@ -4,7 +4,7 @@ import argparse
 import os
 import glob
 import re
-from meze.definitions import ROOT_DIRECTORY
+from definitions import ROOT_DIRECTORY
 
 
 def file_exists(file):
@@ -274,7 +274,7 @@ def write_slurm_script(template_file, path, log_dir, protocol_file, extra_option
                    "N_TASKS": str(1),
                    "N_GPUS": str(1), 
                    "N_CPUS": str(10),
-                   "MEMORY": str(4069), # only for water and equilibration
+                #    "MEMORY": str(4069), # only for water and equilibration
                    "PATH_TO_MEZE": meze,
                    "PROTOCOLFILE": protocol_file}    
     if extra_lines:

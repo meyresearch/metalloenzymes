@@ -1,6 +1,6 @@
-import Meze
+from meze import Meze
 import argparse
-import functions
+from meze import functions
 import os
 
 
@@ -165,7 +165,7 @@ def main():
 
     meze = Meze.Meze(metal=arguments.metal,
                      cut_off=arguments.cut_off,
-                     mode=False,
+                     is_qm=False,
                      force_constant_0=arguments.force_constant_0,
                      workdir=arguments.working_directory,
                      ligand_path=arguments.ligand_directory,

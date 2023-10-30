@@ -1,9 +1,11 @@
 import re
 import BioSimSpace as bss
-from meze import functions, Protein, Ligand
+import functions
+import Protein
+import Ligand
 import pandas as pd
 import sys
-from meze.definitions import ADJUST_OPTIONS, PICOSECOND, NANOSECOND, ANGSTROM, KELVIN, ATM
+from definitions import ADJUST_OPTIONS, PICOSECOND, NANOSECOND, ANGSTROM, KELVIN, ATM
 import numpy as np
 import shutil
 import os
