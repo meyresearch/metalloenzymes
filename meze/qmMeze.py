@@ -75,14 +75,14 @@ def residue_restraint_mask(residue_ids):
 
 class Meze(Network):
 
-    def __init__(self, protein_file, metal="ZN", cut_off=2.6, force_constant_0=100,
+    def __init__(self, protein_file, prepared=False, metal="ZN", cut_off=2.6, force_constant_0=100,
                  water_file=None, workdir=os.getcwd(), is_qm=False, qmmm_inputs=None, equilibration_path=None, output=None,
                  ligand_path=os.getcwd()+"/inputs/ligands/", ligand_charge=0, ligand_ff="gaff2",
                  group_name=None, protein_path=os.getcwd()+"/inputs/protein/", water_model="tip3p", protein_ff="ff14SB", 
                  engine=None, sampling_time=10, box_edges=20, box_shape="cubic", min_steps=1000, short_nvt=0, nvt=1, npt=1, 
                  min_dt=None, min_tol=None, repeats=0, temperature=300, pressure=1, threshold=0.4, n_normal=11, n_difficult=17):
         
-        super().__init__(workdir=workdir, ligand_path=ligand_path, group_name=group_name, protein_file=protein_file, protein_path=protein_path, 
+        super().__init__(prepared=prepared, workdir=workdir, ligand_path=ligand_path, group_name=group_name, protein_file=protein_file, protein_path=protein_path, 
                          water_model=water_model, ligand_ff=ligand_ff, protein_ff=protein_ff, ligand_charge=ligand_charge, equilibration_path=equilibration_path, outputs=output,
                          engine=engine, sampling_time=sampling_time, box_edges=box_edges, box_shape=box_shape, min_steps=min_steps, short_nvt=short_nvt, nvt=nvt, npt=npt, 
                          min_dt=min_dt, min_tol=min_tol, repeats=repeats, temperature=temperature, pressure=pressure, threshold=threshold, n_normal=n_normal, n_difficult=n_difficult)
