@@ -75,37 +75,22 @@ def residue_restraint_mask(residue_ids):
 
 class Meze(Network):
 
-    def __init__(self, protein_file, metal="ZN", cut_off=2.6, force_constant_0=100,
-                 water_file=None, workdir=os.getcwd(), is_qm=False, qmmm_inputs=None, equilibration_path=None, output=None,
+    def __init__(self, protein_file, prepared=False, metal="ZN", cut_off=2.6, force_constant_0=100,
+                 water_file=None, workdir=os.getcwd(), equilibration_path=None, outputs=None,
                  ligand_path=os.getcwd()+"/inputs/ligands/", ligand_charge=0, ligand_ff="gaff2",
                  group_name=None, protein_path=os.getcwd()+"/inputs/protein/", water_model="tip3p", protein_ff="ff14SB", 
-                 engine=None, sampling_time=10, box_edges=20, box_shape="cubic", min_steps=1000, short_nvt=0, nvt=1, npt=1, 
-                 min_dt=None, min_tol=None, repeats=0, temperature=300, pressure=1, threshold=0.4, n_normal=11, n_difficult=17):
+                 engine=None, sampling_time=4, box_edges=20, box_shape="cubic", min_steps=5000, short_nvt=50, nvt=1, npt=200, 
+                 min_dt=None, min_tol=None, repeats=3, temperature=300, pressure=1, threshold=0.4, n_normal=11, n_difficult=17):
         
-        super().__init__(workdir=workdir, ligand_path=ligand_path, group_name=group_name, protein_file=protein_file, protein_path=protein_path, 
-                         water_model=water_model, ligand_ff=ligand_ff, protein_ff=protein_ff, ligand_charge=ligand_charge, equilibration_path=equilibration_path, outputs=output,
+        super().__init__(prepared=prepared, workdir=workdir, ligand_path=ligand_path, group_name=group_name, protein_file=protein_file, protein_path=protein_path, 
+                         water_model=water_model, ligand_ff=ligand_ff, protein_ff=protein_ff, ligand_charge=ligand_charge, equilibration_path=equilibration_path, outputs=outputs,
                          engine=engine, sampling_time=sampling_time, box_edges=box_edges, box_shape=box_shape, min_steps=min_steps, short_nvt=short_nvt, nvt=nvt, npt=npt, 
                          min_dt=min_dt, min_tol=min_tol, repeats=repeats, temperature=temperature, pressure=pressure, threshold=threshold, n_normal=n_normal, n_difficult=n_difficult)
         
-        self.md_time = functions.convert_to_units(sampling_time, PICOSECOND)
         self.universe = mda.Universe(self.protein_file, format="pdb")
         self.force_constant_0 = functions.check_float(force_constant_0)
-        self.is_qm = is_qm
-        if qmmm_inputs and self.is_qm:
-            self.input_directory = functions.path_exists(qmmm_inputs)
-        elif not qmmm_inputs and self.is_qm:
-            os.rmdir(self.afe_input_directory)
-            self.input_directory = self.create_directory(f"/qmmm_input_files/")
-        # To be depracated
-        # elif not self.is_qm:
-        #     os.rmdir(self.afe_input_directory)
-        #     self.input_directory = self.create_directory(f"/md_input_files/")
-
-        if output:
-            self.output_directory = functions.path_exists(output)
-        else:
-            self.output_directory = self.create_directory(f"/outputs/")
-            
+        self.cut_off = functions.check_positive(functions.check_float(cut_off))
+        
         if water_file:
             self.xtal_water = bss.IO.readMolecules(water_file)
 
@@ -117,7 +102,7 @@ class Meze(Network):
         else:
             print(f"Metal {metal} is not supported yet.")
         
-        self.cut_off = functions.check_positive(functions.check_float(cut_off))
+        
 
 
     def prepare_meze(self):
