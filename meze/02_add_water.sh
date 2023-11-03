@@ -7,10 +7,6 @@
 #SBATCH --cpus-per-gpu=N_CPUS
 
 
-eval "$(conda shell.bash hook)"
-conda activate obss
-
-
 export MEZEHOME=PATH_TO_MEZE
 
 LIG_NUMBER=$SLURM_ARRAY_TASK_ID
