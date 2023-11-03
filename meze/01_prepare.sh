@@ -1,8 +1,5 @@
 #!/bin/bash
 
-eval "$(conda shell.bash hook)"
-conda activate obss
-
 
 INPUT_FILE=$1
 LIGAND_CHARGE=$2
