@@ -7,6 +7,7 @@ import functions
 import BioSimSpace as bss
 import argparse
 import os 
+import Meze
 
 
 def run_process(system, protocol, process, working_directory, configuration=None, checkpoint=None):
@@ -268,7 +269,8 @@ def main():
         metal = False
     
     if metal:
-        pass
+        network = Meze.Meze(prepared=True,
+                            )
     elif not metal:
         network = Network.Network(prepared=True,
                                   workdir=protocol["protein directory"],
