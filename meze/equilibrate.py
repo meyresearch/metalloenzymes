@@ -36,17 +36,6 @@ def run_process(system, protocol, process, working_directory, configuration=None
         equilibrated or minimised system
     """
     process = bss.Process.Gromacs(system, protocol, name=process, work_dir=working_directory, extra_options=configuration, checkpoint_file=checkpoint)
-    # config = process.getConfig()
-    # if configuration:
-    #     for setting in configuration:
-    #         key = setting.split()[0]
-    #         try:
-    #             index = [i for i, string in enumerate(config) if key in string][0]
-    #             config[index] = setting
-    #             process.setConfig(config)
-    #         except IndexError:
-    #             process.addToConfig(setting)
-    #             config = process.getConfig()
     process.setArg("-ntmpi", 1)
     process.start()
     process.wait()
@@ -270,12 +259,37 @@ def main():
     
     if metal:
         network = Meze.Meze(prepared=True,
-                            )
+                            metal=protocol["metal"],
+                            cut_off=protocol["cutoff"],
+                            force_constant_0=protocol["force constant"],
+                            workdir=protocol["protein directory"],
+                            afe_input_path=protocol["afe input directory"],
+                            equilibration_path=protocol["equilibration directory"],
+                            outputs=protocol["outputs"],
+                            protein_file=protocol["prepared protein file"],
+                            protein_path=protocol["protein directory"],
+                            ligand_path=protocol["ligand directory"],
+                            group_name=protocol["group name"],
+                            engine=protocol["engine"],
+                            sampling_time=protocol["sampling time"],
+                            box_edges=protocol["box edges"],
+                            box_shape=protocol["box shape"],
+                            min_steps=protocol["minimisation steps"],
+                            short_nvt=protocol["short nvt"],
+                            nvt=protocol["nvt"],
+                            npt=protocol["npt"],
+                            min_dt=protocol["minimisation stepsize"],
+                            min_tol=protocol["minimisation tolerance"],
+                            repeats=protocol["repeats"],
+                            temperature=protocol["temperature"],
+                            pressure=protocol["pressure"])
+        
     elif not metal:
         network = Network.Network(prepared=True,
                                   workdir=protocol["protein directory"],
                                   afe_input_path=protocol["afe input directory"],
                                   equilibration_path=protocol["equilibration directory"],
+                                  outputs=protocol["outputs"],
                                   protein_file=protocol["prepared protein file"],
                                   protein_path=protocol["protein directory"],
                                   ligand_path=protocol["ligand directory"],

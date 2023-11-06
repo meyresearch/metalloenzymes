@@ -545,6 +545,43 @@ class Network(object):
         _ = [os.system(f"cp -r {transformation_directory.rstrip('/')} {self.output_directories[i]}") for i in range(1, self.n_repeats)]
 
         
+    def run_process(system, protocol, process, working_directory, configuration=None, checkpoint=None):
+        """
+        Run a Gromacs minimisation or equilibration process 
+        Adapted from https://tinyurl.com/BSSligprep
+
+        Parameters:
+        -----------
+        system: bss.System
+            run system
+        protocol: bss.Protocol 
+            minimisation or equilibration
+        process: name 
+            process name for saving process output
+        working_directory: str
+            save output into this directory
+        configuration: dict 
+            extra options to pass to the Gromacs process
+        checkpoint: str
+            path to a checkpoint file forom a previous run; corresponds to the -t flag for gmx grompp
+
+        Return:
+        -------
+        system: bss.System
+            equilibrated or minimised system
+        """
+        process = bss.Process.Gromacs(system, protocol, name=process, work_dir=working_directory, extra_options=configuration, checkpoint_file=checkpoint)
+        process.setArg("-ntmpi", 1)
+        process.start()
+        process.wait()
+        if process.isError():
+            print(process.stdout())
+            print(process.stderr())
+            raise bss._Exceptions.ThirdPartyError("The process exited with an error!")
+        system = process.getSystem()
+        return system       
+
+
 
     def set_n_moves(self, stepsize=2, number_of_cycles=5):
         """
