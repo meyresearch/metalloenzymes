@@ -11,6 +11,7 @@ ADJUST_OPTIONS = ["\tdel: delete perturbations by index",
                   "\ts: save and continue preparing",
                   "\tq: quit"]
 
+FEMTOSECOND = bss.Units.Time.femtosecond
 PICOSECOND = bss.Units.Time.picosecond
 NANOSECOND = bss.Units.Time.nanosecond
 ANGSTROM = bss.Units.Length.angstrom
