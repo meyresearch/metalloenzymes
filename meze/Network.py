@@ -265,9 +265,10 @@ class Network(object):
         self.md_time = functions.convert_to_units(sampling_time, NANOSECOND)
         self.n_repeats = repeats
         
-        self.prepared = prepared
-        if self.prepared:
+        self.prepared = prepared 
+        if self.prepared: 
             self.prepared_protein = functions.read_files(protein_file + ".*")
+            # with vim2 + equilibrate.py this returns None -> do a check here if None then prepared_protein = input protein?
         
         if afe_input_path:
             self.afe_input_directory = afe_input_path

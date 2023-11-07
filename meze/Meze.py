@@ -287,7 +287,7 @@ class Meze(Network):
                     r4.append("r4="+str(linear_response_region_upper_bound))
         rk2 = ["rk2="+str(self.force_constant_0)] * len(atom_ids)
         rk3 = ["rk3="+str(self.force_constant_0)] * len(atom_ids)
-        output_file = self.input_directory + "restraints_0.RST"
+        output_file = self.afe_input_directory + "restraints_0.RST"
         with open(output_file, "w") as file:
             file.write(f"# Harmonic bond restraints between {self.metal_resname} and coordinating protein residues\n")
             for i in range(len(atom_ids)):

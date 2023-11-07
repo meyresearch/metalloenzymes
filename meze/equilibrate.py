@@ -1,6 +1,7 @@
 """
 Minimise and equilibrate bound and unbound stages.
 """
+import shutil
 from definitions import FEMTOSECOND, PICOSECOND, KELVIN, ATM
 import functions
 import BioSimSpace as bss
@@ -10,17 +11,17 @@ from Meze import Meze
 
 
 class coldMeze(Meze):
-    def __init__(self, ligand_name, equilibration_directory, input_protein_file, protein_directory, ligand_directory, min_steps, short_nvt, nvt, npt, min_dt, min_tol, temperature, pressure, short_timestep=0.5, is_metal=True):
+    def __init__(self, group_name, ligand_name, equilibration_directory, input_protein_file, protein_directory, ligand_directory, min_steps, short_nvt, nvt, npt, min_dt, min_tol, temperature, pressure, short_timestep=0.5, is_metal=True):
         
         self.is_metal = is_metal
         if self.is_metal:
-            super().__init__(protein_file=input_protein_file, prepared=True)
-        
+            super().__init__(protein_file=input_protein_file, prepared=True, group_name=group_name)
+            self.restraints_file = self.write_restraints_file_0()
         self.ligand_name = ligand_name
         self.equilibration_directory = equilibration_directory
         self.ligand_path = functions.path_exists(ligand_directory)
         self.protein_path = functions.path_exists(protein_directory)
-        self.input_protein_file = functions.read_files(input_protein_file + ".*")
+        # self.input_protein_file = functions.read_files(input_protein_file + ".*")
         self.short_nvt = functions.convert_to_units(short_nvt, PICOSECOND)
         self.nvt = functions.convert_to_units(nvt, PICOSECOND)
         self.npt = functions.convert_to_units(npt, PICOSECOND)
@@ -32,7 +33,7 @@ class coldMeze(Meze):
         self.pressure = functions.convert_to_units(pressure, ATM)
         
 
-    def run(self, system, protocol, name, working_directory, configuration={}, namelist=[], checkpoint=None):
+    def run(self, system, protocol, name, working_directory, configuration={}, namelist=[], checkpoint=None, restraints_file=None):
         """
         Run a minimisation or equilibration process 
         Adapted from https://tinyurl.com/BSSligprep
@@ -60,7 +61,12 @@ class coldMeze(Meze):
         if self.is_metal:
             amber_path = os.environ["AMBERHOME"] + "/bin/pmemd.cuda"
             process = bss.Process.Amber(system, protocol, name, work_dir=working_directory, extra_options=configuration, extra_lines=namelist, exe=amber_path)
-            
+            config = working_directory + "/*.cfg"
+            config_file = functions.read_files(config)[0]
+            with open(config_file, "a") as file:
+                file.write("\n")
+                file.write(f"DISANG={restraints_file}\n")
+                file.write(f"DUMPAVE=distances.out\n")
         else:
             process = bss.Process.Gromacs(system, protocol, name=name, work_dir=working_directory, extra_options=configuration, checkpoint_file=checkpoint)
             process.setArg("-ntmpi", 1)
@@ -130,9 +136,10 @@ class coldMeze(Meze):
                                               restraint=restraints)
         # need to add restraint name list
         if self.is_metal:
-            # restraints_file = 
-            pass
-        equilibrated_system = self.run(system, protocol, process_name, working_directory, configuration, checkpoint) 
+            restraints_file = shutil.copy(self.restraints_file, working_directory).split("/")[-1]
+            namelist = ["&wt TYPE='DUMPFREQ', istep1=1 /"]
+
+        equilibrated_system = self.run(system, protocol, process_name, working_directory, configuration, checkpoint, restraints_file=restraints_file, namelist=namelist) 
         return equilibrated_system
 
 
@@ -280,9 +287,10 @@ def main():
         metal = False
 
     cold_meze = coldMeze(is_metal=metal,
+                         group_name=protocol["group name"],
                          ligand_name=arguments.ligand_name,
                          equilibration_directory=protocol["equilibration directory"],
-                         input_protein_file=protocol["prepared protein file"],
+                         input_protein_file=protocol["protein input file"],
                          protein_directory=protocol["protein directory"],
                          ligand_directory=protocol["ligand directory"],
                          min_steps=protocol["minimisation steps"],
