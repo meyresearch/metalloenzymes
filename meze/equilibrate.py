@@ -6,7 +6,7 @@ import functions
 import BioSimSpace as bss
 import argparse
 import os 
-import Meze
+from Meze import Meze
 
 
 class coldMeze(Meze):
