@@ -127,7 +127,8 @@ class coldMeze(Meze):
                                               restraint=restraints)
         # need to add restraint name list
         if self.is_metal:
-            restraints_file = 
+            # restraints_file = 
+            pass
         equilibrated_system = self.run(system, protocol, process_name, working_directory, configuration, checkpoint) 
         return equilibrated_system
 
