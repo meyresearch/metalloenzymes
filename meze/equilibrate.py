@@ -10,14 +10,17 @@ from Meze import Meze
 
 
 class coldMeze(Meze):
-    def __init__(self, ligand_name, equilibration_directory, prepared_protein, protein_directory, ligand_directory, min_steps, short_nvt, nvt, npt, min_dt, min_tol, temperature, pressure, short_timestep=0.5, is_metal=True):
-        super().__init__(protein_file=prepared_protein)
-        self.ligand_name = ligand_name
+    def __init__(self, ligand_name, equilibration_directory, input_protein_file, protein_directory, ligand_directory, min_steps, short_nvt, nvt, npt, min_dt, min_tol, temperature, pressure, short_timestep=0.5, is_metal=True):
+        
         self.is_metal = is_metal
+        if self.is_metal:
+            super().__init__(protein_file=input_protein_file, prepared=True)
+        
+        self.ligand_name = ligand_name
         self.equilibration_directory = equilibration_directory
         self.ligand_path = functions.path_exists(ligand_directory)
         self.protein_path = functions.path_exists(protein_directory)
-        self.prepared_protein = functions.read_files(prepared_protein + ".*")
+        self.input_protein_file = functions.read_files(input_protein_file + ".*")
         self.short_nvt = functions.convert_to_units(short_nvt, PICOSECOND)
         self.nvt = functions.convert_to_units(nvt, PICOSECOND)
         self.npt = functions.convert_to_units(npt, PICOSECOND)
@@ -279,7 +282,7 @@ def main():
     cold_meze = coldMeze(is_metal=metal,
                          ligand_name=arguments.ligand_name,
                          equilibration_directory=protocol["equilibration directory"],
-                         prepared_protein=protocol["prepared protein file"],
+                         input_protein_file=protocol["prepared protein file"],
                          protein_directory=protocol["protein directory"],
                          ligand_directory=protocol["ligand directory"],
                          min_steps=protocol["minimisation steps"],

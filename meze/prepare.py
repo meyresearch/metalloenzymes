@@ -42,7 +42,7 @@ def main():
                         "--group-name",
                         dest="group_name",
                         help="group name for system, e.g. vim2/kpc2/ndm1/etc.; default taken from input filename",
-                        default=None)
+                        default="meze")
 
     parser.add_argument("-ppd",
                         "--protein-prep-directory",

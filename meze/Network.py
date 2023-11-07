@@ -1047,7 +1047,10 @@ class Network(object):
         if given_group_name:
             return given_group_name
         else:
-            return self.protein_file.split("/")[-1].split(".")[0]
+            if len(self.protein_file) > 1:
+                return self.protein_file[0].split("/")[-1].split(".")[0]
+            else:
+                return self.protein_file.split("/")[-1].split(".")[0]
 
 
 def main():
