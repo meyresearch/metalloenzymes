@@ -32,7 +32,7 @@ class coldMeze(Meze):
         self.pressure = functions.convert_to_units(pressure, ATM)
         
 
-    def run(self, system, protocol, name, working_directory, configuration=None, namelist=None, checkpoint=None):
+    def run(self, system, protocol, name, working_directory, configuration={}, namelist=[], checkpoint=None):
         """
         Run a minimisation or equilibration process 
         Adapted from https://tinyurl.com/BSSligprep
@@ -99,7 +99,7 @@ class coldMeze(Meze):
         return minimised_system   
 
 
-    def heat(self, system, process_name, working_directory, time, timestep=2, start_t=300, end_t=300, temperature=None, pressure=None, configuration=None, restraints=None, checkpoint=None):
+    def heat(self, system, process_name, working_directory, time, timestep=2, start_t=300, end_t=300, temperature=None, pressure=None, configuration={}, restraints=None, checkpoint=None):
         """
         Run NVT or NPT equilibration
 
@@ -109,7 +109,7 @@ class coldMeze(Meze):
             system to be equilibrated
         name: str
             name of equilibration process
-        workdir: str
+        working_directory: str
             path to the equilibration step directory
         time: bss.Units.Time
             runtime for equilibration
@@ -159,36 +159,36 @@ class coldMeze(Meze):
         r_npt_directory = directories("r_npt")
         npt_directory = directories("npt")
 
-        minimised_ligand = self.minimise(system=solvated_ligand, workdir=min_directory)
+        minimised_ligand = self.minimise(system=solvated_ligand, working_directory=min_directory)
         start_temp = functions.convert_to_units(0, KELVIN)
         restrained_nvt = self.heat(system=minimised_ligand,
-                                   name="r_nvt",
-                                   workdir=r_nvt_directory,
+                                   process_name="r_nvt",
+                                   working_directory=r_nvt_directory,
                                    time=self.short_nvt,
                                    start_t=start_temp, end_t=self.temperature,
                                    timestep=self.short_timestep,
                                    restraints="all")
         nvt = self.heat(system=restrained_nvt,
-                        name="nvt",
-                        workdir=nvt_directory,
+                        process_name="nvt",
+                        working_directory=nvt_directory,
                         time=self.nvt,
                         temperature=self.temperature,
                         checkpoint=r_nvt_directory + "/r_nvt.cpt")
         restrained_npt = self.heat(system=nvt,
-                                   name="r_npt",
-                                   workdir=r_npt_directory,
+                                   process_name="r_npt",
+                                   working_directory=r_npt_directory,
                                    time=self.npt,
                                    pressure=self.pressure,
                                    temperature=self.temperature,
                                    restraints="heavy",
                                    checkpoint=nvt_directory + "/nvt.cpt")
         equilibrated_molecule = self.heat(system=restrained_npt,
-                                            name="npt",
-                                            workdir=npt_directory,
-                                            time=self.npt,
-                                            pressure=self.pressure,
-                                            temperature=self.temperature,
-                                            checkpoint=r_npt_directory + "/r_npt.cpt")
+                                          process_name="npt",
+                                          working_directory=npt_directory,
+                                          time=self.npt,
+                                          pressure=self.pressure,
+                                          temperature=self.temperature,
+                                          checkpoint=r_npt_directory + "/r_npt.cpt")
         unbound_savename = npt_directory + f"/{self.ligand_name}"
         bss.IO.saveMolecules(filebase=unbound_savename, system=equilibrated_molecule, fileformat=["PRM7", "RST7"])        
 
@@ -217,38 +217,38 @@ class coldMeze(Meze):
         npt_dir = directories("npt")     
         start_temp = functions.convert_to_units(0, KELVIN)
         print(f"Equilibrating bound ligand {self.ligand_name}")
-        minimised_system = self.minimise(system=solvated_system, workdir=min_dir)
+        minimised_system = self.minimise(system=solvated_system, working_directory=min_dir)
         restrained_nvt = self.heat(system=minimised_system,
-                                   workdir=r_nvt_dir,
-                                   name="r_nvt",
+                                   working_directory=r_nvt_dir,
+                                   process_name="r_nvt",
                                    time=self.short_nvt,
                                    start_t=start_temp, end_t=self.temperature,
                                    restraints="all",
                                    timestep=self.short_timestep) # need to be able to change
         backbone_restrained_nvt = self.heat(system=restrained_nvt,
-                                            name="bb_r_nvt",
-                                            workdir=bb_r_nvt_dir,
+                                            process_name="bb_r_nvt",
+                                            working_directory=bb_r_nvt_dir,
                                             time=self.nvt,
                                             temperature=self.temperature,
                                             restraints="backbone",
                                             checkpoint=r_nvt_dir + "/r_nvt.cpt")
         nvt = self.heat(system=backbone_restrained_nvt,
-                        name="nvt",
-                        workdir=nvt_dir,
+                        process_name="nvt",
+                        working_directory=nvt_dir,
                         time=self.nvt,
                         temperature=self.temperature,
                         checkpoint=bb_r_nvt_dir + "/bb_r_nvt.cpt")
         restrained_npt = self.heat(system=nvt,
-                                   name="r_npt",
-                                   workdir=r_npt_dir,
+                                   process_name="r_npt",
+                                   working_directory=r_npt_dir,
                                    time=self.npt,
                                    pressure=self.pressure,
                                    temperature=self.temperature,
                                    restraints="heavy",
                                    checkpoint=nvt_dir + "/nvt.cpt")
         equilibrated_protein = self.heat(system=restrained_npt,
-                                         name="npt",
-                                         workdir=npt_dir,
+                                         process_name="npt",
+                                         working_directory=npt_dir,
                                          time=self.npt,
                                          pressure=self.pressure,
                                          temperature=self.temperature,
