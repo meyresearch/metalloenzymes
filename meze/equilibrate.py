@@ -1,7 +1,6 @@
 """
 Minimise and equilibrate bound and unbound stages.
 """
-import Network
 from definitions import FEMTOSECOND, PICOSECOND, KELVIN, ATM
 import functions
 import BioSimSpace as bss
@@ -10,9 +9,10 @@ import os
 import Meze
 
 
-class coldMeze(object):
-    def __init__(self, parameters, equilibration_directory, prepared_protein, protein_directory, ligand_directory, min_steps, short_nvt, nvt, npt, min_dt, min_tol, temperature, pressure, short_timestep=0.5, is_metal=True):
-        self.parameters = parameters
+class coldMeze(Meze):
+    def __init__(self, ligand_name, equilibration_directory, prepared_protein, protein_directory, ligand_directory, min_steps, short_nvt, nvt, npt, min_dt, min_tol, temperature, pressure, short_timestep=0.5, is_metal=True):
+        super().__init__(protein_file=prepared_protein)
+        self.ligand_name = ligand_name
         self.is_metal = is_metal
         self.equilibration_directory = equilibration_directory
         self.ligand_path = functions.path_exists(ligand_directory)
@@ -29,7 +29,7 @@ class coldMeze(object):
         self.pressure = functions.convert_to_units(pressure, ATM)
         
 
-    def run(self, protocol, name, working_directory, configuration=None, checkpoint=None):
+    def run(self, system, protocol, name, working_directory, configuration=None, namelist=None, checkpoint=None):
         """
         Run a minimisation or equilibration process 
         Adapted from https://tinyurl.com/BSSligprep
@@ -40,7 +40,7 @@ class coldMeze(object):
             run system
         protocol: bss.Protocol 
             minimisation or equilibration
-        process: name 
+        name: str 
             process name for saving process output
         working_directory: str
             save output into this directory
@@ -55,10 +55,11 @@ class coldMeze(object):
             equilibrated or minimised system
         """
         if self.is_metal:
-            # process = bss.Process.Amber()
-            pass
+            amber_path = os.environ["AMBERHOME"] + "/bin/pmemd.cuda"
+            process = bss.Process.Amber(system, protocol, name, work_dir=working_directory, extra_options=configuration, extra_lines=namelist, exe=amber_path)
+            
         else:
-            process = bss.Process.Gromacs(self.parameters, protocol, name=name, work_dir=working_directory, extra_options=configuration, checkpoint_file=checkpoint)
+            process = bss.Process.Gromacs(system, protocol, name=name, work_dir=working_directory, extra_options=configuration, checkpoint_file=checkpoint)
             process.setArg("-ntmpi", 1)
         process.start()
         process.wait()
@@ -70,7 +71,7 @@ class coldMeze(object):
         return system
 
 
-    def minimise(self, working_directory):
+    def minimise(self, system, working_directory):
         """
         Minimise the system using Gromacs
 
@@ -88,15 +89,14 @@ class coldMeze(object):
         """
         protocol = bss.Protocol.Minimisation(steps=self.min_steps)
         if self.is_metal:
-            # configuration = {"nmropt:" 1}
-            pass
+            configuration = {"nmropt": 1}
         else:
             configuration = {"emstep": self.min_dt, "emtol": self.min_tol}
-        minimised_system = self.run(self.parameters, protocol, "min", working_directory, configuration=configuration)
+        minimised_system = self.run(system, protocol, "min", working_directory, configuration=configuration)
         return minimised_system   
 
 
-    def heat(self, process_name, working_directory, time, timestep=2, start_t=300, end_t=300, temperature=None, pressure=None, configuration=None, restraints=None, checkpoint=None):
+    def heat(self, system, process_name, working_directory, time, timestep=2, start_t=300, end_t=300, temperature=None, pressure=None, configuration=None, restraints=None, checkpoint=None):
         """
         Run NVT or NPT equilibration
 
@@ -126,30 +126,28 @@ class coldMeze(object):
                                               pressure=pressure,
                                               restraint=restraints)
         # need to add restraint name list
-        equilibrated_system = self.run(self.parameters, protocol, process_name, working_directory, configuration, checkpoint) 
+        if self.is_metal:
+            restraints_file = 
+        equilibrated_system = self.run(system, protocol, process_name, working_directory, configuration, checkpoint) 
         return equilibrated_system
 
 
-    def heat_unbound(self, ligand_name):
+    def heat_unbound(self):
         """
         Perform minimisation and NVT and NPT equilibrations on ligand
 
         Parameters:
         -----------
-        ligand_name: str
-            ligand name
-        solvated_network: Network
-            solvated network object
-    
+
         Return:
         -------
 
         """
 
-        directory = functions.mkdir(self.equilibration_directory + f"/unbound/{ligand_name}/")
-        files = functions.read_files(f"{self.ligand_path}/{ligand_name}_solvated.*")
+        directory = functions.mkdir(self.equilibration_directory + f"/unbound/{self.ligand_name}/")
+        files = functions.read_files(f"{self.ligand_path}/{self.ligand_name}_solvated.*")
         solvated_ligand = bss.IO.readMolecules(files)
-        print(f"Equilibrating unbound ligand {ligand_name}")
+        print(f"Equilibrating unbound ligand {self.ligand_name}")
         directories = lambda step: functions.mkdir(directory+step)
         min_directory = directories("min")
         r_nvt_directory = directories("r_nvt")
@@ -187,28 +185,24 @@ class coldMeze(object):
                                             pressure=self.pressure,
                                             temperature=self.temperature,
                                             checkpoint=r_npt_directory + "/r_npt.cpt")
-        unbound_savename = npt_directory + f"/{ligand_name}"
+        unbound_savename = npt_directory + f"/{self.ligand_name}"
         bss.IO.saveMolecules(filebase=unbound_savename, system=equilibrated_molecule, fileformat=["PRM7", "RST7"])        
 
     
-    def heat_bound(self, ligand_name):
+    def heat_bound(self):
         """
         Perform minimisation and NVT and NPT equilibrations on bound ligand 
 
         Parameters:
         -----------
-        ligand_name: str
-            ligand name
-        solvated_network: Network
-            solvated network object
 
         Return:
         -------
         
         """ 
             
-        directory = functions.mkdir(self.equilibration_directory+f"/bound/{ligand_name}/")
-        files = functions.read_files(f"{self.protein_path}/bound_{ligand_name}_solvated.*")
+        directory = functions.mkdir(self.equilibration_directory+f"/bound/{self.ligand_name}/")
+        files = functions.read_files(f"{self.protein_path}/bound_{self.ligand_name}_solvated.*")
         solvated_system = bss.IO.readMolecules(files)
         directories = lambda step: functions.mkdir(directory+step)
         min_dir = directories("min")
@@ -218,7 +212,7 @@ class coldMeze(object):
         r_npt_dir = directories("r_npt")
         npt_dir = directories("npt")     
         start_temp = functions.convert_to_units(0, KELVIN)
-        print(f"Equilibrating bound ligand {ligand_name}")
+        print(f"Equilibrating bound ligand {self.ligand_name}")
         minimised_system = self.minimise(system=solvated_system, workdir=min_dir)
         restrained_nvt = self.heat(system=minimised_system,
                                    workdir=r_nvt_dir,
@@ -255,7 +249,7 @@ class coldMeze(object):
                                          pressure=self.pressure,
                                          temperature=self.temperature,
                                          checkpoint=r_npt_dir + "/r_npt.cpt")
-        bound_savename = npt_dir + f"/bound_{ligand_name}"
+        bound_savename = npt_dir + f"/bound_{self.ligand_name}"
         bss.IO.saveMolecules(filebase=bound_savename, system=equilibrated_protein, fileformat=["PRM7", "RST7"])     
     
 
@@ -280,52 +274,25 @@ def main():
         metal = True
     else:
         metal = False
-    
-    if metal:
-        network = Meze.Meze(prepared=True,
-                            metal=protocol["metal"],
-                            cut_off=protocol["cutoff"],
-                            force_constant_0=protocol["force constant"],
-                            workdir=protocol["protein directory"],
-                            equilibration_path=protocol["equilibration directory"],
-                            outputs=protocol["outputs"],
-                            protein_file=protocol["prepared protein file"],
-                            protein_path=protocol["protein directory"],
-                            ligand_path=protocol["ligand directory"],
-                            group_name=protocol["group name"],
-                            engine=protocol["engine"],
-                            min_steps=protocol["minimisation steps"],
-                            short_nvt=protocol["short nvt"],
-                            nvt=protocol["nvt"],
-                            npt=protocol["npt"],
-                            min_dt=protocol["minimisation stepsize"],
-                            min_tol=protocol["minimisation tolerance"],
-                            repeats=protocol["repeats"],
-                            temperature=protocol["temperature"],
-                            pressure=protocol["pressure"])
-        
-    elif not metal:
-        network = coldMeze(
-                                  workdir=protocol["protein directory"],
 
-                                  protein_file=protocol["prepared protein file"],
-                                  protein_path=protocol["protein directory"],
-                                  ligand_path=protocol["ligand directory"],
-                                  group_name=protocol["group name"],
+    cold_meze = coldMeze(is_metal=metal,
+                         ligand_name=arguments.ligand_name,
+                         equilibration_directory=protocol["equilibration directory"],
+                         prepared_protein=protocol["prepared protein file"],
+                         protein_directory=protocol["protein directory"],
+                         ligand_directory=protocol["ligand directory"],
+                         min_steps=protocol["minimisation steps"],
+                         short_nvt=protocol["short nvt"],
+                         nvt=protocol["nvt"],
+                         npt=protocol["npt"],
+                         min_dt=protocol["minimisation stepsize"],
+                         min_tol=protocol["minimisation tolerance"],
+                         temperature=protocol["temperature"],
+                         pressure=protocol["pressure"])
 
-                                  min_steps=protocol["minimisation steps"],
-                                  short_nvt=protocol["short nvt"],
-                                  nvt=protocol["nvt"],
-                                  npt=protocol["npt"],
-                                  min_dt=protocol["minimisation stepsize"],
-                                  min_tol=protocol["minimisation tolerance"],
-                                  repeats=protocol["repeats"],
-                                  temperature=protocol["temperature"],
-                                  pressure=protocol["pressure"])
-        
-        heat_unbound(ligand_name=arguments.ligand_name, solvated_network=network)
-        heat_bound(ligand_name=arguments.ligand_name, solvated_network=network)
-    
+    cold_meze.heat_unbound()
+    cold_meze.heat_bound()
+
 
 if __name__ == "__main__":
     main()
