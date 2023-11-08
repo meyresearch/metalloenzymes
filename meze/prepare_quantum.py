@@ -28,7 +28,7 @@ def main():
 
     meze = Meze(workdir=protocol["project directory"],
                 is_qm=True,
-                ligand_path=protocol["ligand directory"],
+                # ligand_path=protocol["ligand directory"],
                 group_name=protocol["group name"],
                 protein_file=protocol["protein input file"],
                 protein_path=protocol["protein directory"],
