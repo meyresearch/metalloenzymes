@@ -265,11 +265,6 @@ class Network(object):
         self.md_time = functions.convert_to_units(sampling_time, NANOSECOND)
         self.n_repeats = repeats
         
-        self.prepared = prepared 
-        if self.prepared: 
-            self.prepared_protein = functions.read_files(protein_file + ".*")
-            # with vim2 + equilibrate.py this returns None -> do a check here if None then prepared_protein = input protein?
-        
         if afe_input_path:
             self.afe_input_directory = afe_input_path
         else: 
@@ -294,10 +289,18 @@ class Network(object):
         self.names = [ligand.get_name() for ligand in self.ligands]
 
         self.protein_forcefield = protein_ff
-        if self.prepared:
+        
+        self.prepared = prepared 
+        if self.prepared: 
+            self.prepared_protein = functions.read_files(protein_file + ".*")
+            # with vim2 + equilibrate.py this returns None 
+            # -> do a check here if None then prepared_protein = input protein?
+            if not self.prepared_protein:
+                self.prepared_protein = self.protein_file
             self.protein_file = self.prepared_protein
         else:
             self.protein_file = protein_file
+        
         self.protein_path = protein_path
         self.group_name = self.get_name(group_name)
         self.protein = Protein.Protein(name=self.group_name,

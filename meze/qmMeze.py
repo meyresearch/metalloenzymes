@@ -94,7 +94,7 @@ class Meze(Network):
         if qmmm_inputs and self.is_qm:
             self.input_directory = functions.path_exists(qmmm_inputs)
         elif not qmmm_inputs and self.is_qm:
-            os.rmdir(self.afe_input_directory)
+            # os.rmdir(self.afe_input_directory)
             self.input_directory = self.create_directory(f"/qmmm_input_files/")
         # To be depracated
         # elif not self.is_qm:

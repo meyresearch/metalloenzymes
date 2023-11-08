@@ -1,4 +1,4 @@
-import Meze
+from qmMeze import Meze
 import argparse
 import functions
 import os
@@ -158,28 +158,29 @@ def main():
     arguments = parser.parse_args()
 
 
-    meze = Meze.Meze(metal=arguments.metal,
-                     cut_off=arguments.cut_off,
-                     force_constant_0=arguments.force_constant_0,
-                     workdir=arguments.working_directory,
-                     ligand_path=arguments.ligand_directory,
-                     group_name=arguments.group_name,
-                     protein_file=arguments.protein,
-                     protein_path=arguments.protein_directory,
-                     water_model=arguments.water_model,
-                     protein_ff=arguments.forcefield,
-                     ligand_ff=arguments.ligand_forcefield,
-                     ligand_charge=arguments.ligand_charge,
-                     sampling_time=arguments.sampling_time,
-                     box_edges=arguments.box_edges,
-                     box_shape=arguments.box_shape,
-                     min_steps=arguments.min_steps,
-                     short_nvt=arguments.short_nvt,
-                     nvt=arguments.nvt,
-                     npt=arguments.npt,
-                     min_dt=arguments.emstep,
-                     min_tol=arguments.emtol,
-                     water_file=arguments.water_file)
+    meze = Meze(metal=arguments.metal,
+                is_qm=True,
+                cut_off=arguments.cut_off,
+                force_constant_0=arguments.force_constant_0,
+                workdir=arguments.working_directory,
+                ligand_path=arguments.ligand_directory,
+                group_name=arguments.group_name,
+                protein_file=arguments.protein,
+                protein_path=arguments.protein_directory,
+                water_model=arguments.water_model,
+                protein_ff=arguments.forcefield,
+                ligand_ff=arguments.ligand_forcefield,
+                ligand_charge=arguments.ligand_charge,
+                sampling_time=arguments.sampling_time,
+                box_edges=arguments.box_edges,
+                box_shape=arguments.box_shape,
+                min_steps=arguments.min_steps,
+                short_nvt=arguments.short_nvt,
+                nvt=arguments.nvt,
+                npt=arguments.npt,
+                min_dt=arguments.emstep,
+                min_tol=arguments.emtol,
+                water_file=arguments.water_file)
 
     prepared_meze = meze.prepare_meze()
     
