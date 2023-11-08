@@ -5,7 +5,7 @@ import functions
 from qmMeze import Meze
 
 
-s
+
 # def get_default_config(config_file):
 
 
