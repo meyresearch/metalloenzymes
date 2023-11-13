@@ -523,7 +523,7 @@ class Network(object):
                           "nmoves": n_moves, 
                           "buffered coordinates frequency": frames, 
                           "cutoff distance": "8 angstrom", 
-                          "minimise": False}
+                          "minimise": False} #TODO: Add metal constraint options here?? 
         
         bss.FreeEnergy.Relative(system=unbound, protocol=free_energy_protocol, engine=self.md_engine, work_dir=unbound_directory, extra_options=config_options, setup_only=True)
         bss.FreeEnergy.Relative(system=bound, protocol=free_energy_protocol, engine=self.md_engine, work_dir=bound_directory, extra_options=config_options, setup_only=True)
