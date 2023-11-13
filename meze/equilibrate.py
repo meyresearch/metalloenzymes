@@ -239,7 +239,8 @@ class coldMeze(Meze):
                                    start_t=start_temp, end_t=self.temperature,
                                    restraints="all",
                                    timestep=self.short_timestep, 
-                                   restraints_file=restraints_file) 
+                                   restraints_file=restraints_file,
+                                   configuration=configuration) 
         backbone_restrained_nvt = self.heat(system=restrained_nvt,
                                             process_name="bb_r_nvt",
                                             working_directory=bb_r_nvt_dir,
@@ -247,14 +248,16 @@ class coldMeze(Meze):
                                             temperature=self.temperature,
                                             restraints="backbone",
                                             checkpoint=r_nvt_dir + "/r_nvt.cpt", 
-                                            restraints_file=restraints_file)
+                                            restraints_file=restraints_file,
+                                            configuration=configuration)
         nvt = self.heat(system=backbone_restrained_nvt,
                         process_name="nvt",
                         working_directory=nvt_dir,
                         time=self.nvt,
                         temperature=self.temperature,
                         checkpoint=bb_r_nvt_dir + "/bb_r_nvt.cpt", 
-                        restraints_file=restraints_file)
+                        restraints_file=restraints_file,
+                        configuration=configuration)
         restrained_npt = self.heat(system=nvt,
                                    process_name="r_npt",
                                    working_directory=r_npt_dir,
@@ -263,7 +266,8 @@ class coldMeze(Meze):
                                    temperature=self.temperature,
                                    restraints="heavy",
                                    checkpoint=nvt_dir + "/nvt.cpt", 
-                                   restraints_file=restraints_file)
+                                   restraints_file=restraints_file,
+                                   configuration=configuration)
         equilibrated_protein = self.heat(system=restrained_npt,
                                          process_name="npt",
                                          working_directory=npt_dir,
@@ -271,7 +275,8 @@ class coldMeze(Meze):
                                          pressure=self.pressure,
                                          temperature=self.temperature,
                                          checkpoint=r_npt_dir + "/r_npt.cpt", 
-                                         restraints_file=restraints_file)
+                                         restraints_file=restraints_file,
+                                         configuration=configuration)
         bound_savename = npt_dir + f"/bound_{self.ligand_name}"
         bss.IO.saveMolecules(filebase=bound_savename, system=equilibrated_protein, fileformat=["PRM7", "RST7"])     
     
