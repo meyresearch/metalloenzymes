@@ -296,6 +296,7 @@ class Network(object):
             # with vim2 + equilibrate.py this returns None 
             # -> do a check here if None then prepared_protein = input protein?
             if not self.prepared_protein:
+                self.protein_file = protein_file
                 self.prepared_protein = self.protein_file
             self.protein_file = self.prepared_protein
         else:

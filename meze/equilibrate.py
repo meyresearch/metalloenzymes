@@ -16,7 +16,6 @@ class coldMeze(Meze):
         self.is_metal = is_metal
         if self.is_metal:
             super().__init__(protein_file=input_protein_file, prepared=True, group_name=group_name)
-            self.restraints_file = self.write_restraints_file_0()
         self.ligand_name = ligand_name
         self.equilibration_directory = equilibration_directory
         self.ligand_path = functions.path_exists(ligand_directory)
@@ -33,7 +32,7 @@ class coldMeze(Meze):
         self.pressure = functions.convert_to_units(pressure, ATM)
         
 
-    def run(self, system, protocol, name, working_directory, configuration={}, namelist=[], checkpoint=None, restraints_file=None):
+    def run(self, system, protocol, name, working_directory, configuration={}, checkpoint=None, restraints_file=None):
         """
         Run a minimisation or equilibration process 
         Adapted from https://tinyurl.com/BSSligprep
@@ -58,15 +57,20 @@ class coldMeze(Meze):
         system: bss.System
             equilibrated or minimised system
         """
-        if self.is_metal:
+        if self.is_metal and restraints_file: # restraints for bound
+            restraints_file = shutil.copy(restraints_file, working_directory).split("/")[-1]
+            namelist = ["&wt TYPE='DUMPFREQ', istep1=1 /"]
             amber_path = os.environ["AMBERHOME"] + "/bin/pmemd.cuda"
-            process = bss.Process.Amber(system, protocol, name, work_dir=working_directory, extra_options=configuration, extra_lines=namelist, exe=amber_path)
+            process = bss.Process.Amber(system=system, protocol=protocol, name=name, work_dir=working_directory, extra_options=configuration, extra_lines=namelist, exe=amber_path)
             config = working_directory + "/*.cfg"
             config_file = functions.read_files(config)[0]
             with open(config_file, "a") as file:
                 file.write("\n")
                 file.write(f"DISANG={restraints_file}\n")
                 file.write(f"DUMPAVE=distances.out\n")
+        elif self.is_metal and not restraints_file: # unbound doesn't have restraints
+            amber_path = os.environ["AMBERHOME"] + "/bin/pmemd.cuda"
+            process = bss.Process.Amber(system=system, protocol=protocol, name=name, work_dir=working_directory, extra_options=configuration, exe=amber_path)
         else:
             process = bss.Process.Gromacs(system, protocol, name=name, work_dir=working_directory, extra_options=configuration, checkpoint_file=checkpoint)
             process.setArg("-ntmpi", 1)
@@ -80,7 +84,7 @@ class coldMeze(Meze):
         return system
 
 
-    def minimise(self, system, working_directory):
+    def minimise(self, system, working_directory, configuration={}, restraints_file=None):
         """
         Minimise the system using Gromacs
 
@@ -90,6 +94,7 @@ class coldMeze(Meze):
             system to be minimised
         working_directory: str
             current working dir
+        configuration
 
         Return:
         -------
@@ -97,15 +102,11 @@ class coldMeze(Meze):
             minimised system
         """
         protocol = bss.Protocol.Minimisation(steps=self.min_steps)
-        if self.is_metal:
-            configuration = {"nmropt": 1}
-        else:
-            configuration = {"emstep": self.min_dt, "emtol": self.min_tol}
-        minimised_system = self.run(system, protocol, "min", working_directory, configuration=configuration)
+        minimised_system = self.run(system, protocol, "min", working_directory, configuration=configuration, restraints_file=restraints_file)
         return minimised_system   
 
 
-    def heat(self, system, process_name, working_directory, time, timestep=2, start_t=300, end_t=300, temperature=None, pressure=None, configuration={}, restraints=None, checkpoint=None):
+    def heat(self, system, process_name, working_directory, time, timestep=2, start_t=300, end_t=300, temperature=None, pressure=None, configuration={}, restraints=None, checkpoint=None, restraints_file=None):
         """
         Run NVT or NPT equilibration
 
@@ -134,12 +135,7 @@ class coldMeze(Meze):
                                               temperature=temperature,
                                               pressure=pressure,
                                               restraint=restraints)
-        # need to add restraint name list
-        if self.is_metal:
-            restraints_file = shutil.copy(self.restraints_file, working_directory).split("/")[-1]
-            namelist = ["&wt TYPE='DUMPFREQ', istep1=1 /"]
-
-        equilibrated_system = self.run(system, protocol, process_name, working_directory, configuration, checkpoint, restraints_file=restraints_file, namelist=namelist) 
+        equilibrated_system = self.run(system, protocol, process_name, working_directory, configuration, checkpoint, restraints_file) 
         return equilibrated_system
 
 
@@ -213,8 +209,12 @@ class coldMeze(Meze):
         """ 
             
         directory = functions.mkdir(self.equilibration_directory+f"/bound/{self.ligand_name}/")
-        files = functions.read_files(f"{self.protein_path}/bound_{self.ligand_name}_solvated.*")
+        filename = f"bound_{self.ligand_name}_solvated"
+        files = functions.read_files(f"{self.protein_path}/{filename}" + ".*")
         solvated_system = bss.IO.readMolecules(files)
+        
+        self.set_universe(self.protein_path + "/" + filename)
+
         directories = lambda step: functions.mkdir(directory+step)
         min_dir = directories("min")
         r_nvt_dir = directories("r_nvt")
@@ -224,27 +224,37 @@ class coldMeze(Meze):
         npt_dir = directories("npt")     
         start_temp = functions.convert_to_units(0, KELVIN)
         print(f"Equilibrating bound ligand {self.ligand_name}")
-        minimised_system = self.minimise(system=solvated_system, working_directory=min_dir)
+        if self.is_metal:
+            configuration = {"nmropt": 1}
+            restraints_file = self.write_restraints_file_0()
+
+        else:
+            configuration = {"emstep": self.min_dt, "emtol": self.min_tol}
+        minimised_system = self.minimise(system=solvated_system, working_directory=min_dir, configuration=configuration, restraints_file=restraints_file)
+
         restrained_nvt = self.heat(system=minimised_system,
                                    working_directory=r_nvt_dir,
                                    process_name="r_nvt",
                                    time=self.short_nvt,
                                    start_t=start_temp, end_t=self.temperature,
                                    restraints="all",
-                                   timestep=self.short_timestep) # need to be able to change
+                                   timestep=self.short_timestep, 
+                                   restraints_file=restraints_file) 
         backbone_restrained_nvt = self.heat(system=restrained_nvt,
                                             process_name="bb_r_nvt",
                                             working_directory=bb_r_nvt_dir,
                                             time=self.nvt,
                                             temperature=self.temperature,
                                             restraints="backbone",
-                                            checkpoint=r_nvt_dir + "/r_nvt.cpt")
+                                            checkpoint=r_nvt_dir + "/r_nvt.cpt", 
+                                            restraints_file=restraints_file)
         nvt = self.heat(system=backbone_restrained_nvt,
                         process_name="nvt",
                         working_directory=nvt_dir,
                         time=self.nvt,
                         temperature=self.temperature,
-                        checkpoint=bb_r_nvt_dir + "/bb_r_nvt.cpt")
+                        checkpoint=bb_r_nvt_dir + "/bb_r_nvt.cpt", 
+                        restraints_file=restraints_file)
         restrained_npt = self.heat(system=nvt,
                                    process_name="r_npt",
                                    working_directory=r_npt_dir,
@@ -252,14 +262,16 @@ class coldMeze(Meze):
                                    pressure=self.pressure,
                                    temperature=self.temperature,
                                    restraints="heavy",
-                                   checkpoint=nvt_dir + "/nvt.cpt")
+                                   checkpoint=nvt_dir + "/nvt.cpt", 
+                                   restraints_file=restraints_file)
         equilibrated_protein = self.heat(system=restrained_npt,
                                          process_name="npt",
                                          working_directory=npt_dir,
                                          time=self.npt,
                                          pressure=self.pressure,
                                          temperature=self.temperature,
-                                         checkpoint=r_npt_dir + "/r_npt.cpt")
+                                         checkpoint=r_npt_dir + "/r_npt.cpt", 
+                                         restraints_file=restraints_file)
         bound_savename = npt_dir + f"/bound_{self.ligand_name}"
         bss.IO.saveMolecules(filebase=bound_savename, system=equilibrated_protein, fileformat=["PRM7", "RST7"])     
     
