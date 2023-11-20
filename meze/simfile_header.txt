@@ -3,5 +3,4 @@
 # For more information visit: https://github.com/michellab/Sire
 #
 # General information on simulation parameters:
-# Simulation used 200000 moves, 5 cycles and 2000 ps of simulation time
-
+# Simulation used 100000 moves, 20 cycles and 4000 ps of simulation time

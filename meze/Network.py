@@ -289,14 +289,13 @@ class Network(object):
         self.names = [ligand.get_name() for ligand in self.ligands]
 
         self.protein_forcefield = protein_ff
-        
+
         self.prepared = prepared 
         if self.prepared: 
             self.prepared_protein = functions.read_files(protein_file + ".*")
             # with vim2 + equilibrate.py this returns None 
             # -> do a check here if None then prepared_protein = input protein?
             if not self.prepared_protein:
-                self.protein_file = protein_file
                 self.prepared_protein = self.protein_file
             self.protein_file = self.prepared_protein
         else:
@@ -356,7 +355,7 @@ class Network(object):
         Create AFE working directory in path.
 
         Parameters:
-        -----------xantham gum
+        -----------
         name: str
             name of new directory
         Return:
@@ -523,7 +522,7 @@ class Network(object):
                           "nmoves": n_moves, 
                           "buffered coordinates frequency": frames, 
                           "cutoff distance": "8 angstrom", 
-                          "minimise": False} #TODO: Add metal constraint options here?? 
+                          "minimise": False}
         
         bss.FreeEnergy.Relative(system=unbound, protocol=free_energy_protocol, engine=self.md_engine, work_dir=unbound_directory, extra_options=config_options, setup_only=True)
         bss.FreeEnergy.Relative(system=bound, protocol=free_energy_protocol, engine=self.md_engine, work_dir=bound_directory, extra_options=config_options, setup_only=True)
