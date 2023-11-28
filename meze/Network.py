@@ -514,16 +514,17 @@ class Network(object):
 
         free_energy_protocol = bss.Protocol.FreeEnergy(lam_vals=lambda_values, runtime=self.md_time, restart_interval=200, report_interval=200)
 
-        n_cycles = int(5 * self.md_time._value) #TODO make editable
-        # n_moves = self.set_n_moves()
-        n_moves = 100000 # keep n moves the same, change n cycles
+        #n_cycles = int(5 * self.md_time._value) #TODO make editable
+        n_cycles = 5
+        n_moves = self.set_n_moves(number_of_cycles=n_cycles)
+       # n_moves = 100000 # keep n moves the same, change n cycles
         frames = n_moves // 100
         config_options = {"ncycles": n_cycles, 
                           "nmoves": n_moves, 
                           "buffered coordinates frequency": frames, 
                           "cutoff distance": "8 angstrom", 
                           "minimise": False}
-        
+
         bss.FreeEnergy.Relative(system=unbound, protocol=free_energy_protocol, engine=self.md_engine, work_dir=unbound_directory, extra_options=config_options, setup_only=True)
         bss.FreeEnergy.Relative(system=bound, protocol=free_energy_protocol, engine=self.md_engine, work_dir=bound_directory, extra_options=config_options, setup_only=True)
         
