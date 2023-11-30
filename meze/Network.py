@@ -195,6 +195,16 @@ def fix_afe_configurations(files):
             if "gpu" in line:
                 idx = old_config.index(line)
                 del old_config[idx]
+            if "ncycles =" in line:
+                idx = old_config.index(line)
+                old_config[idx] = "ncycles = 5\n"
+            if "nmoves" in line:
+                idx = old_config.index(line)
+                old_config[idx] = "nmoves = 200000\n"
+            if "buffered coordinates frequency" in line:
+                idx = old_config.index(line)
+                old_config[idx] = "buffered coordinates frequency = 2000\n"
+
         replaced_config = old_config
         with open(files[i], "w") as f:
             f.writelines(replaced_config)
@@ -525,8 +535,11 @@ class Network(object):
                           "cutoff distance": "8 angstrom", 
                           "minimise": False}
 
-        bss.FreeEnergy.Relative(system=unbound, protocol=free_energy_protocol, engine=self.md_engine, work_dir=unbound_directory, extra_options=config_options, setup_only=True)
-        bss.FreeEnergy.Relative(system=bound, protocol=free_energy_protocol, engine=self.md_engine, work_dir=bound_directory, extra_options=config_options, setup_only=True)
+        # bss.FreeEnergy.Relative(system=unbound, protocol=free_energy_protocol, engine=self.md_engine, work_dir=unbound_directory, extra_options=config_options, setup_only=True)
+        # bss.FreeEnergy.Relative(system=bound, protocol=free_energy_protocol, engine=self.md_engine, work_dir=bound_directory, extra_options=config_options, setup_only=True)
+        
+        bss.FreeEnergy.Relative(system=unbound, protocol=free_energy_protocol, engine=self.md_engine, work_dir=unbound_directory, setup_only=True)
+        bss.FreeEnergy.Relative(system=bound, protocol=free_energy_protocol, engine=self.md_engine, work_dir=bound_directory, setup_only=True)
         
         unbound_configurations = functions.read_files(unbound_directory + "/*/*.cfg")
         bound_configurations = functions.read_files(bound_directory + "/*/*.cfg")
