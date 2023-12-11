@@ -8,6 +8,7 @@ import csv
 import MDAnalysis as mda
 import MDAnalysis.analysis.distances 
 import shutil
+import json 
 
 
 def residue_restraint_mask(residue_ids):
@@ -230,7 +231,8 @@ class Meze(Network):
         Return:
         -------
         metal_ligands: dict
-            dictionary where keys are metal ions (differentiated by subscripts) and values are the atom groups containing coordinating ligands for that ion
+            dictionary where keys are metal ions (differentiated by subscripts) and 
+            values are the atom groups containing coordinating ligands for that ion
         """
         metal_ligands = {}
         for i in range(len(self.metal_resids)):
@@ -240,17 +242,94 @@ class Meze(Network):
         return metal_ligands
 
 
+    def amber_restraints(self, restraints):
+        """
+        Write amber style restraints
+
+        Parameters:
+        -----------
+        restraints: dict
+            dictionary where keys are metal ions (differentiated by subscripts) and 
+            values are the atom groups containing coordinating ligands for that ion
+            
+        Return:
+        -------
+        output_file: str
+            amber style restraints file
+        """
+        atom_ids = []
+        r1, r2, r3, r4 = [], [], [], []
+
+        for key, value in restraints.items():
+            metal_id = key[0]
+            ligating_atom_id = key[1]
+            distance = value[0]
+            flat_bottom_radius = value[-1]
+            atom_ids.append(f"iat={metal_id},{ligating_atom_id}")
+
+            linear_response_region_lower_bound = np.round(distance - flat_bottom_radius, decimals=2)
+            flat_region_lower_bound = np.round(distance - (flat_bottom_radius / 2), decimals=2)
+            flat_region_upper_bound = np.round(distance + (flat_bottom_radius / 2), decimals=2)
+            linear_response_region_upper_bound = np.round(distance + flat_bottom_radius, decimals=2)
+            r1.append("r1="+str(linear_response_region_lower_bound))
+            r2.append("r2="+str(flat_region_lower_bound))
+            r3.append("r3="+str(flat_region_upper_bound))
+            r4.append("r4="+str(linear_response_region_upper_bound))
+
+        rk2 = ["rk2="+str(self.force_constant_0)] * len(atom_ids)
+        rk3 = ["rk3="+str(self.force_constant_0)] * len(atom_ids)
+
+        output_file = self.afe_input_directory + "restraints_0.RST"
+        with open(output_file, "w") as file:
+            file.write(f"# Harmonic bond restraints between {self.metal_resname} and coordinating protein residues\n")
+            for i in range(len(atom_ids)):
+                line = f"&rst {atom_ids[i]}, {r1[i]}, {r2[i]}, {r3[i]}, {r4[i]}, {rk2[i]}, {rk3[i]},/\n"
+                file.write(line)
+        return output_file
+
+
     def model_0(self, ligand_name):
 
         if self.is_qm:
             self.qmmm_minimisation(ligand_name)
             self.qmmm_equilibration(ligand_name)
             self.qmmm_production(ligand_name)
-        # To be depracated
+
         # elif not self.is_qm:
         #     minimised_system = self.minimisation_0(ligand_name)
         #     equilibrated_system = self.equilibration_0(ligand_name, minimised_system)
         #     self.production_0(ligand_name, equilibrated_system)
+
+
+    def build_restraints(self):
+        """
+        Build a dictionary of restraints for model 0
+
+        Parameters:
+        -----------
+
+        Return:
+        -------
+        restraints: dict    
+            keys: tuple(metal_id, ligating_atom_id), values: tuple(eq_distance, force_constant, flat_bottom_radius)
+        """
+        metal_ligands = self.get_metal_ligands()
+        protein = self.universe.select_atoms("protein")
+        restraints = {}
+        for i in range(len(self.metal_atomids)):
+            metal_id = self.metal_atomids[i]
+            for ligating_atom in metal_ligands[metal_id]:
+                if ligating_atom in protein or ligating_atom.resname == "WAT":
+                    key = (metal_id, ligating_atom.id)
+                    atom_group_1 = self.universe.select_atoms(f"resid {self.metal_resids[i]}")
+                    atom_group_2 = self.universe.select_atoms(f"resid {ligating_atom.resid} and name {ligating_atom.name}")
+                    distance = MDAnalysis.analysis.distances.dist(atom_group_1, atom_group_2)[-1][0]
+                    equilibrium_distance = np.round(distance, decimals=2)
+                    force_constant = np.round(self.force_constant_0, decimals=2)
+                    flat_bottom_radius = 1.00 #TODO Make editable?
+                    value = (equilibrium_distance, force_constant, flat_bottom_radius)
+                    restraints[key] = value
+        return restraints
 
 
     def write_restraints_file_0(self, engine="amber"):
@@ -267,70 +346,35 @@ class Meze(Network):
         output_file: str
             amber-format restraints file for model 0
         """
-        metal_ligands = self.get_metal_ligands()
-        protein = self.universe.select_atoms("protein")
-        
-    def amber_restraints(self, metal_ligands, protein):
-        atom_ids = []
-        r1, r2, r3, r4 = [], [], [], []
-        for i in range(len(self.metal_atomids)):
-            metal_id = self.metal_atomids[i]
-            for ligating_atom in metal_ligands[metal_id]:
-                if ligating_atom in protein or ligating_atom.resname == "WAT":
-
-                    # Atom ids for Amber MD:
-                    atom_ids.append(f"iat={metal_id},{ligating_atom.id}")
-        pass
-
-        atom_ids = []
-        r1, r2, r3, r4 = [], [], [], []
-        for i in range(len(self.metal_atomids)):
-            metal_id = self.metal_atomids[i]
-            for ligating_atom in metal_ligands[metal_id]:
-                if ligating_atom in protein or ligating_atom.resname == "WAT":
-
-                    # Atom ids for Amber MD:
-                    atom_ids.append(f"iat={metal_id},{ligating_atom.id}")
-
-
-                    atom_group_1 = self.universe.select_atoms(f"resid {self.metal_resids[i]}")
-                    atom_group_2 = self.universe.select_atoms(f"resid {ligating_atom.resid} and name {ligating_atom.name}")
-                    # Distance between metal ion and its coordinating residues
-                    distance = MDAnalysis.analysis.distances.dist(atom_group_1, atom_group_2)[-1][0]
-                    
-                    # SOMD flat-bottom restraints are defined by an equilibrium distance, force constant and flat bottom radius:
-                    equilibrium_distance = np.round(distance, decimals=2)
-                    force_constant = np.round(self.force_constant_0, decimals=2)
-                    flat_bottom_radius = 1.00 #TODO Make editable?
-
-                    # Amber MD flat-bottom region is defined by r1, r2, r3, r4
-                    linear_response_region_lower_bound = np.round(distance - 1.0, decimals=2)
-                    flat_region_lower_bound = np.round(distance - 0.5, decimals=2)
-                    flat_region_upper_bound = np.round(distance + 0.5, decimals=2)
-                    linear_response_region_upper_bound = np.round(distance + 1.0, decimals=2)
-                    r1.append("r1="+str(linear_response_region_lower_bound))
-                    r2.append("r2="+str(flat_region_lower_bound))
-                    r3.append("r3="+str(flat_region_upper_bound))
-                    r4.append("r4="+str(linear_response_region_upper_bound))
-
-        # Amber MD force constant(s) are defined by rk2 and rk3 in kcal/mol
-        rk2 = ["rk2="+str(self.force_constant_0)] * len(atom_ids)
-        rk3 = ["rk3="+str(self.force_constant_0)] * len(atom_ids)
-
-        # Amber MD style restraints file:
-        output_file = self.afe_input_directory + "restraints_0.RST"
-        with open(output_file, "w") as file:
-            file.write(f"# Harmonic bond restraints between {self.metal_resname} and coordinating protein residues\n")
-            for i in range(len(atom_ids)):
-                line = f"&rst {atom_ids[i]}, {r1[i]}, {r2[i]}, {r3[i]}, {r4[i]}, {rk2[i]}, {rk3[i]},/\n"
-                file.write(line)
-        
+        restraints = self.build_restraints()
+        if engine == "amber":
+            output_file = self.amber_restraints(restraints)
+        elif engine == "somd":
+            output_file = self.amber_restraints(restraints)  
         return output_file
     
-# use distance restraints = True
-# distance restraints dictionary = {(21, 4950): (2.72, 20, 0.61), (18, 961): (3.09, 20, 0.61), (17, 512): (3.25, 20, 2.06), (19, 512): (3.69, 20, 2.13)}
-# 3:15
-# Where the keys are tuples of the atom indexes. The value tuples specify flat-bottomed harmonic restraints and are (equilibrium distance (A), force constant (in kcal mol-1), and flat-bottomed radius (A)). Just set the radius to 0 if you want harmonic restraints.
+    
+    def somd_restraints(self, restraints):
+        """
+        Write somd restraints to be added to somd.cfg
+
+        Parameters:
+        -----------
+        restraints: dict
+            dictionary where keys are metal ions (differentiated by subscripts) and 
+            values are the atom groups containing coordinating ligands for that ion
+
+        Return:
+        -------
+        output_file: str
+            somd style restraints file to be added to somd.cfg
+        """
+        output_file = self.afe_input_directory + "somd.restraints"
+        with open(output_file, "w") as file:
+            file.write("use distance restraints = True\n")
+            file.write(f"distance restraints dictionary = {json.dumps(restraints)}")
+        return output_file
+
 
     # Potentially to be depracated:
 

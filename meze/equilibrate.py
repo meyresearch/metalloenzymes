@@ -317,9 +317,8 @@ def main():
                          min_tol=protocol["minimisation tolerance"],
                          temperature=protocol["temperature"],
                          pressure=protocol["pressure"])
-
+    cold_meze.heat_bound()  
     cold_meze.heat_unbound()
-    cold_meze.heat_bound()
 
 
 if __name__ == "__main__":
