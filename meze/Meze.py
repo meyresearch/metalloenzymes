@@ -253,12 +253,14 @@ class Meze(Network):
         #     self.production_0(ligand_name, equilibrated_system)
 
 
-    def write_restraints_file_0(self):
+    def write_restraints_file_0(self, engine="amber"):
         """
         Write an Amber-compatible restraint file for model 0. 
 
         Parameters:
         -----------
+        engine: str
+            name of the MD engine used; current choices include amber and somd
 
         Return:
         -------
@@ -267,16 +269,41 @@ class Meze(Network):
         """
         metal_ligands = self.get_metal_ligands()
         protein = self.universe.select_atoms("protein")
+        
+    def amber_restraints(self, metal_ligands, protein):
         atom_ids = []
         r1, r2, r3, r4 = [], [], [], []
         for i in range(len(self.metal_atomids)):
             metal_id = self.metal_atomids[i]
             for ligating_atom in metal_ligands[metal_id]:
                 if ligating_atom in protein or ligating_atom.resname == "WAT":
+
+                    # Atom ids for Amber MD:
                     atom_ids.append(f"iat={metal_id},{ligating_atom.id}")
+        pass
+
+        atom_ids = []
+        r1, r2, r3, r4 = [], [], [], []
+        for i in range(len(self.metal_atomids)):
+            metal_id = self.metal_atomids[i]
+            for ligating_atom in metal_ligands[metal_id]:
+                if ligating_atom in protein or ligating_atom.resname == "WAT":
+
+                    # Atom ids for Amber MD:
+                    atom_ids.append(f"iat={metal_id},{ligating_atom.id}")
+
+
                     atom_group_1 = self.universe.select_atoms(f"resid {self.metal_resids[i]}")
                     atom_group_2 = self.universe.select_atoms(f"resid {ligating_atom.resid} and name {ligating_atom.name}")
+                    # Distance between metal ion and its coordinating residues
                     distance = MDAnalysis.analysis.distances.dist(atom_group_1, atom_group_2)[-1][0]
+                    
+                    # SOMD flat-bottom restraints are defined by an equilibrium distance, force constant and flat bottom radius:
+                    equilibrium_distance = np.round(distance, decimals=2)
+                    force_constant = np.round(self.force_constant_0, decimals=2)
+                    flat_bottom_radius = 1.00 #TODO Make editable?
+
+                    # Amber MD flat-bottom region is defined by r1, r2, r3, r4
                     linear_response_region_lower_bound = np.round(distance - 1.0, decimals=2)
                     flat_region_lower_bound = np.round(distance - 0.5, decimals=2)
                     flat_region_upper_bound = np.round(distance + 0.5, decimals=2)
@@ -285,16 +312,25 @@ class Meze(Network):
                     r2.append("r2="+str(flat_region_lower_bound))
                     r3.append("r3="+str(flat_region_upper_bound))
                     r4.append("r4="+str(linear_response_region_upper_bound))
+
+        # Amber MD force constant(s) are defined by rk2 and rk3 in kcal/mol
         rk2 = ["rk2="+str(self.force_constant_0)] * len(atom_ids)
         rk3 = ["rk3="+str(self.force_constant_0)] * len(atom_ids)
+
+        # Amber MD style restraints file:
         output_file = self.afe_input_directory + "restraints_0.RST"
         with open(output_file, "w") as file:
             file.write(f"# Harmonic bond restraints between {self.metal_resname} and coordinating protein residues\n")
             for i in range(len(atom_ids)):
                 line = f"&rst {atom_ids[i]}, {r1[i]}, {r2[i]}, {r3[i]}, {r4[i]}, {rk2[i]}, {rk3[i]},/\n"
                 file.write(line)
+        
         return output_file
-
+    
+# use distance restraints = True
+# distance restraints dictionary = {(21, 4950): (2.72, 20, 0.61), (18, 961): (3.09, 20, 0.61), (17, 512): (3.25, 20, 2.06), (19, 512): (3.69, 20, 2.13)}
+# 3:15
+# Where the keys are tuples of the atom indexes. The value tuples specify flat-bottomed harmonic restraints and are (equilibrium distance (A), force constant (in kcal mol-1), and flat-bottomed radius (A)). Just set the radius to 0 if you want harmonic restraints.
 
     # Potentially to be depracated:
 

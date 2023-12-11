@@ -159,6 +159,13 @@ def main():
                         help="kJ mol-1 nm-1, Maximum force tolerance for energy minimisation",
                         type=float,
                         default=1000)
+    
+    parser.add_argument("-lw",
+                        "--lambda-windows",
+                        dest="lambdas",
+                        help="number of lambda windows to use for AFE transformations",
+                        type=float,
+                        default=11)    
 
     arguments = parser.parse_args()
 
@@ -189,7 +196,8 @@ def main():
                             npt=arguments.npt,
                             min_dt=arguments.emstep,
                             min_tol=arguments.emtol,
-                            repeats=arguments.repeats)
+                            repeats=arguments.repeats,
+                            n_normal=arguments.lambdas)
         
     elif not metal:
 
@@ -212,7 +220,8 @@ def main():
                                   npt=arguments.npt,
                                   min_dt=arguments.emstep,
                                   min_tol=arguments.emtol,
-                                  repeats=arguments.repeats)
+                                  repeats=arguments.repeats,
+                                  n_normal=arguments.lambdas)
         
     prepared_network = network.prepare_network()
 

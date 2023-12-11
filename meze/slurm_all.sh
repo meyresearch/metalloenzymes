@@ -4,8 +4,6 @@
 # setup $MEZEHOME
 ###
 ###TODO How to activate correct environment? 
-export BSS-D="$HOME/Software/miniconda3/bin/activate obss-d"
-source $BSS-D
 
 N_LIGANDS=NUMBER_OF_LIGANDS
 ENGINE=ENGINE

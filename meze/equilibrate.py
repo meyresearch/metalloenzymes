@@ -20,7 +20,6 @@ class coldMeze(Meze):
         self.equilibration_directory = equilibration_directory
         self.ligand_path = functions.path_exists(ligand_directory)
         self.protein_path = functions.path_exists(protein_directory)
-        # self.input_protein_file = functions.read_files(input_protein_file + ".*")
         self.short_nvt = functions.convert_to_units(short_nvt, PICOSECOND)
         self.nvt = functions.convert_to_units(nvt, PICOSECOND)
         self.npt = functions.convert_to_units(npt, PICOSECOND)

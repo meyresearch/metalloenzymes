@@ -191,20 +191,28 @@ def fix_afe_configurations(files):
     for i in range(len(files)):
         with open(files[i], "r") as f:
             old_config = f.readlines()
+        # Below only for testing with old BioSimSpace:
+        # for line in old_config:
+        #     if "ncycles =" in line:
+        #         idx = old_config.index(line)
+        #         old_config[idx] = "ncycles = 4\n"
+        #     if "nmoves" in line:
+        #         idx = old_config.index(line)
+        #         old_config[idx] = "nmoves = 500000\n"
+        #     if "buffered coordinates frequency" in line:
+        #         idx = old_config.index(line)
+        #         old_config[idx] = "buffered coordinates frequency = 1000\n"
+        #     if "minimise" in line:
+        #         idx = old_config.index(line)
+        #         old_config[idx] = "minimise = False\n"
+        #     if "cutoff distance" in line:
+        #         idx = old_config.index(line)
+        #         old_config[idx] = "cutoff distance = 8 angstrom\n"
+
         for line in old_config:
             if "gpu" in line:
                 idx = old_config.index(line)
                 del old_config[idx]
-            if "ncycles =" in line:
-                idx = old_config.index(line)
-                old_config[idx] = "ncycles = 5\n"
-            if "nmoves" in line:
-                idx = old_config.index(line)
-                old_config[idx] = "nmoves = 200000\n"
-            if "buffered coordinates frequency" in line:
-                idx = old_config.index(line)
-                old_config[idx] = "buffered coordinates frequency = 2000\n"
-
         replaced_config = old_config
         with open(files[i], "w") as f:
             f.writelines(replaced_config)
@@ -521,26 +529,34 @@ class Network(object):
         transformation_directory = first_run_directory + f"/{ligand_a_name}~{ligand_b_name}/"
         unbound_directory = transformation_directory + "/unbound/"
         bound_directory = transformation_directory + "/bound/"
+        
+        restart_interval = 200 #TODO add to config? or add function
+        report_interval = 200 #TODO add to config? or add function
 
-        free_energy_protocol = bss.Protocol.FreeEnergy(lam_vals=lambda_values, runtime=self.md_time, restart_interval=200, report_interval=200)
+        free_energy_protocol = bss.Protocol.FreeEnergy(lam_vals=lambda_values, runtime=self.md_time, restart_interval=restart_interval, report_interval=report_interval)
 
-        #n_cycles = int(5 * self.md_time._value) #TODO make editable
-        n_cycles = 5
-        n_moves = self.set_n_moves(number_of_cycles=n_cycles)
-       # n_moves = 100000 # keep n moves the same, change n cycles
-        frames = n_moves // 100
+        n_cycles = int(self.md_time._value) * 5 #TODO make editable; do 1 cycle per every 0.5 ns 
+        n_moves = self.set_n_moves(number_of_cycles=n_cycles) # n_cycles * n_moves * timestep = runtime in ps
+
+        n_frames = 250 #TODO add to config or add function
+        buffered_coordinates_frequency = max(int(n_moves / n_frames), 2000) # https://github.com/OpenBioSim/sire/issues/113#issuecomment-1834317501
+
+        cycles_per_saved_frame = max(1, restart_interval // n_moves) #Credit: Anna Herz https://github.com/michellab/BioSimSpace/blob/feature-amber-fep/python/BioSimSpace/_Config/_somd.py 
+
         config_options = {"ncycles": n_cycles, 
                           "nmoves": n_moves, 
-                          "buffered coordinates frequency": frames, 
-                          "cutoff distance": "8 angstrom", 
+                          "buffered coordinates frequency": 0, #CHANGE
+                          "ncycles_per_snap": cycles_per_saved_frame,
+                        #   "cutoff distance": "8 angstrom", # Make editable? 
                           "minimise": False}
 
-        # bss.FreeEnergy.Relative(system=unbound, protocol=free_energy_protocol, engine=self.md_engine, work_dir=unbound_directory, extra_options=config_options, setup_only=True)
-        # bss.FreeEnergy.Relative(system=bound, protocol=free_energy_protocol, engine=self.md_engine, work_dir=bound_directory, extra_options=config_options, setup_only=True)
-        
-        bss.FreeEnergy.Relative(system=unbound, protocol=free_energy_protocol, engine=self.md_engine, work_dir=unbound_directory, setup_only=True)
-        bss.FreeEnergy.Relative(system=bound, protocol=free_energy_protocol, engine=self.md_engine, work_dir=bound_directory, setup_only=True)
-        
+        bss.FreeEnergy.Relative(system=unbound, protocol=free_energy_protocol, engine=self.md_engine, work_dir=unbound_directory, extra_options=config_options, setup_only=True)
+        bss.FreeEnergy.Relative(system=bound, protocol=free_energy_protocol, engine=self.md_engine, work_dir=bound_directory, extra_options=config_options, setup_only=True)
+
+        # Old BioSimSpace:
+        # bss.FreeEnergy.Relative(system=unbound, protocol=free_energy_protocol, engine=self.md_engine, work_dir=unbound_directory, setup_only=True)
+        # bss.FreeEnergy.Relative(system=bound, protocol=free_energy_protocol, engine=self.md_engine, work_dir=bound_directory, setup_only=True)
+
         unbound_configurations = functions.read_files(unbound_directory + "/*/*.cfg")
         bound_configurations = functions.read_files(bound_directory + "/*/*.cfg")
         fix_afe_configurations(unbound_configurations)
@@ -563,7 +579,7 @@ class Network(object):
         _ = [os.system(f"cp -r {transformation_directory.rstrip('/')} {self.output_directories[i]}") for i in range(1, self.n_repeats)]
 
 
-    def set_n_moves(self, stepsize=2, number_of_cycles=5):
+    def set_n_moves(self, number_of_cycles, stepsize=2):
         """
         Set SOMD nmoves in a reasonable way for better performance.
         See reference to: https://github.com/michellab/BioSimSpace/issues/258 and
