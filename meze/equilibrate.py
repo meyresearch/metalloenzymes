@@ -11,11 +11,13 @@ from Meze import Meze
 
 
 class coldMeze(Meze):
-    def __init__(self, group_name, ligand_name, equilibration_directory, input_protein_file, protein_directory, ligand_directory, min_steps, short_nvt, nvt, npt, min_dt, min_tol, temperature, pressure, short_timestep=0.5, is_metal=True):
+    def __init__(self, group_name, ligand_name, equilibration_directory, input_protein_file, protein_directory, ligand_directory, min_steps, short_nvt, nvt, npt, min_dt, min_tol, temperature, pressure, short_timestep=0.5, is_metal=True, prepared=True, ):
         
         self.is_metal = is_metal
+        self.prepared = prepared
         if self.is_metal:
-            super().__init__(protein_file=input_protein_file, prepared=True, group_name=group_name)
+            super().__init__(protein_file=input_protein_file, prepared=prepared, group_name=group_name)
+        # what happens with init if not metal?
         self.ligand_name = ligand_name
         self.equilibration_directory = equilibration_directory
         self.ligand_path = functions.path_exists(ligand_directory)
@@ -60,6 +62,11 @@ class coldMeze(Meze):
             restraints_file = shutil.copy(restraints_file, working_directory).split("/")[-1]
             namelist = ["&wt TYPE='DUMPFREQ', istep1=1 /"]
             amber_path = os.environ["AMBERHOME"] + "/bin/pmemd.cuda"
+
+            if checkpoint:
+                configuration["irest"] = 1
+                configuration["ntx"] = 5 
+
             process = bss.Process.Amber(system=system, protocol=protocol, name=name, work_dir=working_directory, extra_options=configuration, extra_lines=namelist, exe=amber_path)
             config = working_directory + "/*.cfg"
             config_file = functions.read_files(config)[0]
@@ -246,7 +253,7 @@ class coldMeze(Meze):
                                             time=self.nvt,
                                             temperature=self.temperature,
                                             restraints="backbone",
-                                            checkpoint=r_nvt_dir + "/r_nvt.cpt", 
+                                            checkpoint=r_nvt_dir + "/r_nvt.cpt",
                                             restraints_file=restraints_file,
                                             configuration=configuration)
         nvt = self.heat(system=backbone_restrained_nvt,

@@ -83,6 +83,8 @@ class Meze(Network):
                  engine=None, sampling_time=4, box_edges=20, box_shape="cubic", min_steps=5000, short_nvt=50, nvt=1, npt=200, 
                  min_dt=None, min_tol=None, repeats=3, temperature=300, pressure=1, threshold=0.4, n_normal=11, n_difficult=17):
         
+        self.protein_file = protein_file
+
         super().__init__(prepared=prepared, workdir=workdir, ligand_path=ligand_path, group_name=group_name, protein_file=protein_file, protein_path=protein_path, 
                          water_model=water_model, ligand_ff=ligand_ff, protein_ff=protein_ff, ligand_charge=ligand_charge, 
                          afe_input_path=afe_input_path, equilibration_path=equilibration_path, outputs=outputs,
