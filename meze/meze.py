@@ -85,12 +85,12 @@ def add_somd_restraints(path_to_configs, restraints):
 
 class Meze(sofra.Network):
 
-    def __init__(self, protein_file, prepared=False, metal="ZN", cut_off=2.6, force_constant_0=100,
-                 water_file=None, workdir=os.getcwd(), afe_input_path=None, equilibration_path=None, outputs=None,
+    def __init__(self, protein_file, prepared=False, metal="ZN", cut_off=2.6, force_constant_0=100, water_file=None, 
+                 workdir=os.getcwd(), afe_input_path=os.getcwd()+"/afe/", equilibration_path=os.getcwd()+"/equilibration/", outputs=os.getcwd()+"/outputs/",
                  ligand_path=os.getcwd()+"/inputs/ligands/", ligand_charge=0, ligand_ff="gaff2",
                  group_name=None, protein_path=os.getcwd()+"/inputs/protein/", water_model="tip3p", protein_ff="ff14SB", 
                  engine="SOMD", sampling_time=4, box_edges=20, box_shape="cubic", min_steps=5000, short_nvt=50, nvt=1, npt=200, 
-                 min_dt=None, min_tol=None, repeats=3, temperature=300, pressure=1, threshold=0.4, n_normal=11, n_difficult=17):
+                 min_dt=0.01, min_tol=1000, repeats=3, temperature=300, pressure=1, threshold=0.4, n_normal=11, n_difficult=17):
         
         self.protein_file = protein_file
 
@@ -207,17 +207,19 @@ class Meze(sofra.Network):
         Return:
         -------
         """
+        
+
         filename = f"bound_{ligand_a_name}"
         self.set_universe(self.equilibration_directory + f"/bound/{ligand_a_name}/npt/" + filename)
         restraints_file = self.write_restraints_file_0(engine="somd")
+        print("prepare_afe meze")
         with open(restraints_file, "r") as file:
             restraints = file.readlines()
 
         super().prepare_afe(ligand_a_name, ligand_b_name)
-        strip = self.output_directories[0].split("/")[-2]
-        path_to_outputs = self.output_directories[0].replace(strip, "")
-        lambda_config_path = path_to_outputs + "*/*/*/*/*.cfg"
-        lambda_minimisation_config_path = path_to_outputs + "*/*/*/*/*/*.cfg"
+
+        lambda_config_path = self.outputs + f"*/{ligand_a_name}~{ligand_b_name}/*/*/*.cfg"
+        lambda_minimisation_config_path =  self.outputs + f"*/{ligand_a_name}~{ligand_b_name}/*/*/*/*.cfg"
         add_somd_restraints(lambda_config_path, restraints)
         add_somd_restraints(lambda_minimisation_config_path, restraints)
 
@@ -282,12 +284,14 @@ class Meze(sofra.Network):
         return metal_ligands
 
 
-    def amber_restraints(self, restraints):
+    def amber_restraints(self, workdir, restraints):
         """
         Write amber style restraints
 
         Parameters:
         -----------
+        workdir: str
+            output path for saving restraints file
         restraints: dict
             dictionary where keys are metal ions (differentiated by subscripts) and 
             values are the atom groups containing coordinating ligands for that ion
@@ -319,7 +323,7 @@ class Meze(sofra.Network):
         rk2 = ["rk2="+str(self.force_constant_0)] * len(atom_ids)
         rk3 = ["rk3="+str(self.force_constant_0)] * len(atom_ids)
 
-        output_file = self.afe_input_directory + "restraints_0.RST"
+        output_file = workdir + "restraints_0.RST"
         with open(output_file, "w") as file:
             file.write(f"# Harmonic bond restraints between {self.metal_resname} and coordinating protein residues\n")
             for i in range(len(atom_ids)):
@@ -359,7 +363,7 @@ class Meze(sofra.Network):
         for i in range(len(self.metal_atomids)):
             metal_id = self.metal_atomids[i]
             for ligating_atom in metal_ligands[metal_id]:
-                if ligating_atom in protein or ligating_atom.resname == "WAT":
+                if ligating_atom in protein or ligating_atom.resname == "WAT" and ligating_atom.resname != "MOL": # don't restrain ligand
                     key = (metal_id, ligating_atom.id)
                     atom_group_1 = self.universe.select_atoms(f"resid {self.metal_resids[i]}")
                     atom_group_2 = self.universe.select_atoms(f"resid {ligating_atom.resid} and name {ligating_atom.name}")
@@ -372,7 +376,7 @@ class Meze(sofra.Network):
         return restraints
 
 
-    def write_restraints_file_0(self, engine="amber"):
+    def write_restraints_file_0(self, workdir, engine="amber"):
         """
         Write an Amber-compatible restraint file for model 0. 
 
@@ -388,9 +392,9 @@ class Meze(sofra.Network):
         """
         restraints = self.build_restraints()
         if engine == "amber":
-            output_file = self.amber_restraints(restraints)
+            output_file = self.amber_restraints(workdir, restraints)
         elif engine == "somd":
-            output_file = self.somd_restraints(restraints)  
+            output_file = self.somd_restraints(workdir, restraints)  
         return output_file
     
  

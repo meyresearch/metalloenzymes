@@ -232,7 +232,7 @@ class coldMeze(meze.Meze):
         print(f"Equilibrating bound ligand {self.ligand_name}")
         if self.is_metal:
             configuration = {"nmropt": 1}
-            restraints_file = self.write_restraints_file_0()
+            restraints_file = self.write_restraints_file_0(workdir=directory)
 
         else:
             configuration = {"emstep": self.min_dt, "emtol": self.min_tol}

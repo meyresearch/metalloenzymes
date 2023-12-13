@@ -270,7 +270,8 @@ class Network(object):
     Return:
     -------
     """
-    def __init__(self, protein_file, workdir=os.getcwd(), prepared=False, afe_input_path=None, equilibration_path=None, outputs=None,
+    def __init__(self, protein_file, workdir=os.getcwd(), prepared=False, 
+                 afe_input_path=os.getcwd()+"/afe/", equilibration_path=os.getcwd()+"/equilibration/", outputs=os.getcwd()+"/outputs/",
                  ligand_path=os.getcwd()+"/inputs/ligands/", ligand_charge=0, ligand_ff="gaff2", 
                  group_name=None, protein_path=os.getcwd()+"/inputs/protein/", water_model="tip3p", protein_ff="ff14SB", 
                  engine="SOMD", sampling_time=4, box_edges=20, box_shape="cubic", min_steps=5000, short_nvt=5, nvt=50, npt=200, 
@@ -282,19 +283,22 @@ class Network(object):
         self.md_engine = engine
         self.md_time = functions.convert_to_units(sampling_time, NANOSECOND)
         self.n_repeats = repeats
-        
-        if afe_input_path:
-            self.afe_input_directory = afe_input_path
-        else: 
+
+        self.prepared = prepared 
+        if self.prepared: 
+            self.prepared_protein = functions.read_files(protein_file + ".*")
+            # with vim2 + equilibrate.py this returns None 
+            if not self.prepared_protein:
+                self.prepared_protein = self.protein_file
+            self.protein_file = self.prepared_protein
+            self.afe_input_directory = functions.path_exists(afe_input_path)
+            self.equilibration_directory = functions.path_exists(equilibration_path)  
+            self.outputs = functions.path_exists(outputs) 
+            self.output_directories = functions.read_files(self.outputs + "/*")
+        else:
+            self.protein_file = protein_file
             self.afe_input_directory = self.create_directory("/afe/")
-        
-        if equilibration_path:
-            self.equilibration_directory = equilibration_path
-        else:
             self.equilibration_directory = self.create_directory("/equilibration/")
-        if outputs:
-            self.output_directories = functions.read_files(outputs + "/*")
-        else:
             self.output_directories = self.create_output_directories()
 
         self.ligand_path = functions.path_exists(ligand_path)
@@ -308,18 +312,7 @@ class Network(object):
 
         self.protein_forcefield = protein_ff
 
-        self.prepared = prepared 
-        if self.prepared: 
-            self.prepared_protein = functions.read_files(protein_file + ".*")
-            # with vim2 + equilibrate.py this returns None 
-            # -> do a check here if None then prepared_protein = input protein?
-            if not self.prepared_protein:
-                self.prepared_protein = self.protein_file
-            self.protein_file = self.prepared_protein
-        else:
-            self.protein_file = protein_file
-        
-        self.protein_path = protein_path
+        self.protein_path = functions.path_exists(protein_path)
         self.group_name = self.get_name(group_name)
         self.protein = Protein.Protein(name=self.group_name,
                                        protein_file=self.protein_file,
@@ -520,7 +513,9 @@ class Network(object):
         unbound = combine_unbound_ligands(ligand_a, ligand_b)
 
         bound_ligand_a = self.bound_ligand_molecules[0]
+        bss.IO.saveMolecules("bound_ligand_a_test", bound_ligand_a, "pdb")
         bound_ligand_b = self.bound_ligand_molecules[1]
+        bss.IO.saveMolecules("bound_ligand_b_test", bound_ligand_b, "pdb")
         bound = combine_bound_ligands(bound_ligand_a, bound_ligand_b)
     
         # Create ligand transformation directory tree in the first repeat directory, e.g. SOMD_1/lig_a~lig_b/ for bound/unbound
