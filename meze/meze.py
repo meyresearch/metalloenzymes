@@ -207,6 +207,8 @@ class Meze(sofra.Network):
         Return:
         -------
         """
+        filename = f"bound_{ligand_a_name}"
+        self.set_universe(self.equilibration_directory + f"/bound/{ligand_a_name}/npt/" + filename)
         restraints_file = self.write_restraints_file_0(engine="somd")
         with open(restraints_file, "r") as file:
             restraints = file.readlines()
@@ -1319,7 +1321,7 @@ def main():
     
     if metal:
         meze = Meze(prepared=True,
-                    protein_file=protocol["prepared protein file"],
+                    protein_file=protocol["protein input file"],
                     cut_off=protocol["cutoff"],
                     force_constant_0=protocol["force constant"],
                     workdir=protocol["project directory"],
