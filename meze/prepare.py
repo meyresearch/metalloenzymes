@@ -1,8 +1,8 @@
 import argparse
 import functions
 import os
-import Network
-import Meze
+import sofra
+import meze
 import logging
 logger = logging.getLogger()
 logger.setLevel(logging.CRITICAL)
@@ -175,7 +175,7 @@ def main():
         metal = False
 
     if metal:
-        network = Meze.Meze(protein_file=arguments.protein,
+        network = meze.Meze(protein_file=arguments.protein,
                             cut_off=arguments.cut_off,
                             force_constant_0=arguments.force_constant_0,
                             workdir=arguments.working_directory,
@@ -201,7 +201,7 @@ def main():
         
     elif not metal:
 
-        network = Network.Network(protein_file=arguments.protein,
+        network = sofra.Network(protein_file=arguments.protein,
                                   workdir=arguments.working_directory,
                                   ligand_path=arguments.ligand_directory,
                                   ligand_charge=arguments.ligand_charge,

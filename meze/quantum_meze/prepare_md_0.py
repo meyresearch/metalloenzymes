@@ -1,4 +1,4 @@
-from meze import Meze
+from meze import meze
 import argparse
 from meze import functions
 import os
@@ -163,7 +163,7 @@ def main():
     arguments = parser.parse_args()
 
 
-    meze = Meze.Meze(metal=arguments.metal,
+    meze = meze.Meze(metal=arguments.metal,
                      cut_off=arguments.cut_off,
                      is_qm=False,
                      force_constant_0=arguments.force_constant_0,

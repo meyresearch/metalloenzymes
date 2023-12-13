@@ -545,8 +545,9 @@ class Network(object):
 
         config_options = {"ncycles": n_cycles, 
                           "nmoves": n_moves, 
-                          "buffered coordinates frequency": 0, #CHANGE
+                          "buffered coordinates frequency": buffered_coordinates_frequency, #CHANGE
                           "ncycles_per_snap": cycles_per_saved_frame,
+                          "minimal coordinate saving": True,
                         #   "cutoff distance": "8 angstrom", # Make editable? 
                           "minimise": False}
 
@@ -577,7 +578,7 @@ class Network(object):
 
         # Copy lambda transformation directories (including minimisation) from first repeat directory to the rest of the repeat directories, e.g. SOMD_2, SOMD_3
         _ = [os.system(f"cp -r {transformation_directory.rstrip('/')} {self.output_directories[i]}") for i in range(1, self.n_repeats)]
-
+        
 
     def set_n_moves(self, number_of_cycles, stepsize=2):
         """

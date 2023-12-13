@@ -1,4 +1,4 @@
-from Network import Network
+from meze.network import Network
 import os
 import BioSimSpace as bss
 import numpy as np

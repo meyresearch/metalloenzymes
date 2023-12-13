@@ -1,7 +1,7 @@
 """
 Ligands class object
 """
-from meze import functions
+import functions
 import BioSimSpace as bss
 
 
@@ -88,7 +88,6 @@ class Ligand(object):
 
 def main():
     lig = Ligand("/home/jguven/projects/alchemistry/add_caps_to_kpc2/inputs/ligands/ligand_1.sdf")
-    # ntwrk = Network.create_network(mols, names, lig.path)
     print(lig.molecule, lig.name)
 
 if __name__ == "__main__":

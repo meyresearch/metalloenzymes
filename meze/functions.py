@@ -186,6 +186,25 @@ def get_filenames(path):
     return file_name.replace("." + extension, "")
 
 
+def tuple_to_str(object):
+    """
+    Convert a tuple to a string for writing to file
+
+    Parameters:
+    -----------
+    object: any
+        any object in a dictionary
+
+    Return:
+    -------
+    str:
+        object converted to string
+    """
+    if isinstance(object, tuple):
+        return str(object)
+    return object
+    
+
 def convert_to_units(value, units):
     """
     Convert given value to given units

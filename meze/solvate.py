@@ -2,7 +2,7 @@ import argparse
 import BioSimSpace as bss
 import Ligand
 from definitions import ANGSTROM
-import Network
+import sofra 
 import functions
 import os
 
@@ -119,13 +119,15 @@ def main():
     
     protocol = functions.input_to_dict(arguments.protocol_file)
 
-    network = Network.Network(prepared=True,
+    network = sofra.Network(prepared=True,
                               workdir=protocol["project directory"],
                               ligand_path=protocol["ligand directory"],
                               group_name=protocol["group name"],
                               protein_file=protocol["prepared protein file"],
                               protein_path=protocol["protein directory"],
                               outputs=protocol["outputs"],
+                            #   afe_input_path=protocol["afe input directory"],
+                            #   equilibration_path=protocol["equilibration"],
                               water_model=protocol["water model"],
                               ligand_ff=protocol["ligand forcefield"],
                               protein_ff=protocol["protein forcefield"],

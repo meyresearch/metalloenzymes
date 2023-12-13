@@ -7,17 +7,17 @@ import functions
 import BioSimSpace as bss
 import argparse
 import os 
-from Meze import Meze
+import meze
 
 
-class coldMeze(Meze):
+class coldMeze(meze.Meze):
     def __init__(self, group_name, ligand_name, equilibration_directory, input_protein_file, protein_directory, ligand_directory, min_steps, short_nvt, nvt, npt, min_dt, min_tol, temperature, pressure, short_timestep=0.5, is_metal=True, prepared=True, ):
         
         self.is_metal = is_metal
         self.prepared = prepared
         if self.is_metal:
             super().__init__(protein_file=input_protein_file, prepared=prepared, group_name=group_name)
-        # what happens with init if not metal?
+        #TODO what happens with init if not metal?
         self.ligand_name = ligand_name
         self.equilibration_directory = equilibration_directory
         self.ligand_path = functions.path_exists(ligand_directory)
@@ -324,6 +324,7 @@ def main():
                          min_tol=protocol["minimisation tolerance"],
                          temperature=protocol["temperature"],
                          pressure=protocol["pressure"])
+    
     cold_meze.heat_bound()  
     cold_meze.heat_unbound()
 
