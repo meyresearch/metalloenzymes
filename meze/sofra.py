@@ -191,24 +191,6 @@ def fix_afe_configurations(files):
     for i in range(len(files)):
         with open(files[i], "r") as f:
             old_config = f.readlines()
-        # Below only for testing with old BioSimSpace:
-        # for line in old_config:
-        #     if "ncycles =" in line:
-        #         idx = old_config.index(line)
-        #         old_config[idx] = "ncycles = 4\n"
-        #     if "nmoves" in line:
-        #         idx = old_config.index(line)
-        #         old_config[idx] = "nmoves = 500000\n"
-        #     if "buffered coordinates frequency" in line:
-        #         idx = old_config.index(line)
-        #         old_config[idx] = "buffered coordinates frequency = 1000\n"
-        #     if "minimise" in line:
-        #         idx = old_config.index(line)
-        #         old_config[idx] = "minimise = False\n"
-        #     if "cutoff distance" in line:
-        #         idx = old_config.index(line)
-        #         old_config[idx] = "cutoff distance = 8 angstrom\n"
-
         for line in old_config:
             if "gpu" in line:
                 idx = old_config.index(line)
@@ -513,9 +495,8 @@ class Network(object):
         unbound = combine_unbound_ligands(ligand_a, ligand_b)
 
         bound_ligand_a = self.bound_ligand_molecules[0]
-        bss.IO.saveMolecules("bound_ligand_a_test", bound_ligand_a, "pdb")
         bound_ligand_b = self.bound_ligand_molecules[1]
-        bss.IO.saveMolecules("bound_ligand_b_test", bound_ligand_b, "pdb")
+
         bound = combine_bound_ligands(bound_ligand_a, bound_ligand_b)
     
         # Create ligand transformation directory tree in the first repeat directory, e.g. SOMD_1/lig_a~lig_b/ for bound/unbound

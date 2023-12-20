@@ -1,4 +1,5 @@
 import argparse
+import pathlib
 import sofra
 import os
 import BioSimSpace as bss
@@ -74,12 +75,7 @@ def residue_restraint_mask(residue_ids):
     return restraint_mask
 
 
-def add_somd_restraints(path_to_configs, restraints):
-    
-    config_files = functions.read_files(path_to_configs)
-    for config in config_files:
-        with open(config, "a") as file:
-            file.writelines(restraints)
+
     
 
 
@@ -193,6 +189,49 @@ class Meze(sofra.Network):
         return protocol_file
             
 
+    def convert_amber_restraints_to_somd(restraints_file):
+        pass        
+
+    def add_somd_restraints(self, directory):
+        
+        ligand_a = self.ligands[0].name
+        amber_restraints_file = functions.read_files(self.equilibration_directory + f"bound/{ligand_a}/*.RST")[0]
+
+        # read in amber restraints
+        # take atom ids from iat (also record the flat bottom radius and the force constant)
+        somd_restraints_dict = {}
+        with open(amber_restraints_file, "r") as f:
+            for line in f:
+                if "#" not in line:
+                    iat1 = int(line.split("iat=")[1].split(",")[0])
+                    iat2 = int(line.split("iat=")[1].split(",")[1])
+                    r2 = float(line.split("r2=")[1].split(",")[0])
+                    r3 = float(line.split("r3=")[1].split(",")[0])
+
+                    flat_bottom_radius = np.round(r3 - r2, decimals=2)
+                    equilibrium_distance = np.round(r2 + (flat_bottom_radius / 2), decimals=2)
+
+                    rk2 = np.round(line.split("rk2=")[1].split(",")[0], decimals=2)
+
+                    atom_key = (iat1, iat2)
+                    restraint_value = (equilibrium_distance, rk2, flat_bottom_radius)
+                    somd_restraints_dict[atom_key] = restraint_value
+
+        # for each atom id, get residue and atom (and coords) info from the 
+        # equilibrated files (bound_ligand_{i}.* universe)
+        # open somd.* into a universe and check each atom id against these ones to set the correct restraints
+        # this is because BSS throws the ligand to the end of the file so it affects the numbering of 
+        # residues and atoms
+
+        # with open(restraints_file, "r") as file:
+        #     restraints = file.readlines()
+
+        # config_files = functions.read_files(path_to_configs)
+        # for config in config_files:
+        #     with open(config, "a") as file:
+        #         file.writelines(restraints)
+
+
     def prepare_afe(self, ligand_a_name, ligand_b_name):
         """
         Inherited method from sofra.Network; adds restraints to somd config files
@@ -208,20 +247,17 @@ class Meze(sofra.Network):
         -------
         """
         
-
-        filename = f"bound_{ligand_a_name}"
-        self.set_universe(self.equilibration_directory + f"/bound/{ligand_a_name}/npt/" + filename)
-        restraints_file = self.write_restraints_file_0(engine="somd")
-        print("prepare_afe meze")
-        with open(restraints_file, "r") as file:
-            restraints = file.readlines()
-
         super().prepare_afe(ligand_a_name, ligand_b_name)
-
-        lambda_config_path = self.outputs + f"*/{ligand_a_name}~{ligand_b_name}/*/*/*.cfg"
-        lambda_minimisation_config_path =  self.outputs + f"*/{ligand_a_name}~{ligand_b_name}/*/*/*/*.cfg"
-        add_somd_restraints(lambda_config_path, restraints)
-        add_somd_restraints(lambda_minimisation_config_path, restraints)
+        first_run_directory = self.output_directories[0]
+        transformation_directory = first_run_directory + f"/{ligand_a_name}~{ligand_b_name}/"
+        bound_directory = transformation_directory + "/bound/" # unbound doesn't have restraints
+        lambda_directories = functions.read_files(bound_directory + "lambda_*/")
+        minimisation_directories = functions.read_files(bound_directory + "minimisation/*/")
+        # lambda_config_path = self.outputs + f"*/{ligand_a_name}~{ligand_b_name}/*/*/*.cfg"
+        # lambda_minimisation_config_path =  self.outputs + f"*/{ligand_a_name}~{ligand_b_name}/*/*/*/*.cfg"
+        for i in range(len(lambda_directories)):
+            self.add_somd_restraints(lambda_directories[i])
+            self.add_somd_restraints(minimisation_directories[i])
 
 
     def set_universe(self, file_name):
@@ -399,7 +435,7 @@ class Meze(sofra.Network):
     
  
 
-    def somd_restraints(self, restraints):
+    def somd_restraints(self, workdir, restraints):
         """
         Write somd restraints to be added to somd.cfg
 
@@ -414,7 +450,7 @@ class Meze(sofra.Network):
         output_file: str
             somd style restraints file to be added to somd.cfg
         """
-        output_file = self.afe_input_directory + "somd.restraints"
+        output_file = workdir + "somd.restraints"
 
         with open(output_file, "w") as file:
             file.write("use distance restraints = True\n")
