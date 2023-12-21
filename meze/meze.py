@@ -10,7 +10,7 @@ import csv
 import MDAnalysis as mda
 import MDAnalysis.analysis.distances 
 import shutil
-import json 
+from BioSimSpace import _Exceptions
 
 
 def residue_restraint_mask(residue_ids):
@@ -189,47 +189,92 @@ class Meze(sofra.Network):
         return protocol_file
             
 
-    def convert_amber_restraints_to_somd(restraints_file):
-        pass        
-
     def add_somd_restraints(self, directory):
         
         ligand_a = self.ligands[0].name
         amber_restraints_file = functions.read_files(self.equilibration_directory + f"bound/{ligand_a}/*.RST")[0]
-
-        # read in amber restraints
-        # take atom ids from iat (also record the flat bottom radius and the force constant)
         somd_restraints_dict = {}
+        # def convert_amber_restraints_to_somd(restraints_file):
+        #   pass        
         with open(amber_restraints_file, "r") as f:
             for line in f:
                 if "#" not in line:
-                    iat1 = int(line.split("iat=")[1].split(",")[0])
-                    iat2 = int(line.split("iat=")[1].split(",")[1])
+                    iat1 = int(line.split("iat=")[1].split(",")[0]) - 1
+                    iat2 = int(line.split("iat=")[1].split(",")[1]) - 1 
                     r2 = float(line.split("r2=")[1].split(",")[0])
                     r3 = float(line.split("r3=")[1].split(",")[0])
-
-                    flat_bottom_radius = np.round(r3 - r2, decimals=2)
-                    equilibrium_distance = np.round(r2 + (flat_bottom_radius / 2), decimals=2)
-
-                    rk2 = np.round(line.split("rk2=")[1].split(",")[0], decimals=2)
+                    rk2 = float(line.split("rk2=")[1].split(",")[0])
+                    flat_bottom_radius = np.round((r3 - r2)/2, decimals=2)
+                    equilibrium_distance = np.round(r2 + flat_bottom_radius, decimals=2)
+                    force_constant = np.round(rk2, decimals=2)
 
                     atom_key = (iat1, iat2)
-                    restraint_value = (equilibrium_distance, rk2, flat_bottom_radius)
+                    restraint_value = (equilibrium_distance, force_constant, flat_bottom_radius)
                     somd_restraints_dict[atom_key] = restraint_value
 
-        # for each atom id, get residue and atom (and coords) info from the 
-        # equilibrated files (bound_ligand_{i}.* universe)
-        # open somd.* into a universe and check each atom id against these ones to set the correct restraints
-        # this is because BSS throws the ligand to the end of the file so it affects the numbering of 
-        # residues and atoms
+        somd_restraints_file = self.somd_restraints(directory, somd_restraints_dict)
+        with open(somd_restraints_file, "r") as file:
+            restraints = file.readlines()
 
-        # with open(restraints_file, "r") as file:
-        #     restraints = file.readlines()
+        with open(directory + "somd.cfg", "a") as file:
+            file.writelines(restraints)
 
-        # config_files = functions.read_files(path_to_configs)
-        # for config in config_files:
-        #     with open(config, "a") as file:
-        #         file.writelines(restraints)
+
+    def combine_bound_ligands(self):
+        """
+        Take two bound bss.Systems and combine the ligands' systems
+
+        Parameters:
+        -----------
+        system_1: bss.System 
+        system_2: bss.System
+
+        Return:
+        -------
+        system_1: bss.System
+            system with combined ligand topologies
+        """
+        system_1 = self.bound_ligand_molecules[0]
+        system_2 = self.bound_ligand_molecules[1]
+        ligand_1 = None
+        protein = None
+        n_residues = [molecule.nResidues() for molecule in system_1]
+        n_atoms = [molecule.nAtoms() for molecule in system_1]
+        for j, (n_residues, n_atoms) in enumerate(zip(n_residues[:20], n_atoms[:20])):
+            if n_residues == 1 and n_atoms > 5:  
+                ligand_1 = system_1.getMolecule(j)
+            elif n_residues > 1:
+                protein = system_1.getMolecule(j)
+        ligand_2 = None
+        n_residues = [molecule.nResidues() for molecule in system_2]
+        n_atoms = [molecule.nAtoms() for molecule in system_2]   
+        for j, (n_residues, n_atoms) in enumerate(zip(n_residues, n_atoms)):
+            if n_residues == 1 and n_atoms > 5:
+                ligand_2 = system_2.getMolecule(j)
+        if ligand_1 and ligand_2 and protein:
+            pass
+        else:
+            raise _Exceptions.AlignmentError("Could not extract ligands or protein from input systems.")
+        merged_ligands = sofra.merge_ligands(ligand_1, ligand_2)
+
+        removal_system = system_1.copy()
+        removal_system.removeWaterMolecules()
+        protein = removal_system.getMolecules()[0]
+        removal_system.removeMolecules(ligand_1)
+        zn_and_salts = removal_system - protein
+
+        ion_molecules = []
+        for res in zn_and_salts.getResidues():
+            if res.name() != self.metal_resname:
+                removal_system.removeMolecules(res.toMolecule())
+                ion_molecules.append(res.toMolecule())
+
+        water_molecules = system_1.getWaterMolecules()
+        final_system = removal_system.copy()
+        final_system.addMolecules(merged_ligands)
+        final_system.addMolecules(water_molecules)
+        final_system.addMolecules(ion_molecules)
+        return final_system
 
 
     def prepare_afe(self, ligand_a_name, ligand_b_name):
@@ -257,8 +302,9 @@ class Meze(sofra.Network):
         # lambda_minimisation_config_path =  self.outputs + f"*/{ligand_a_name}~{ligand_b_name}/*/*/*/*.cfg"
         for i in range(len(lambda_directories)):
             self.add_somd_restraints(lambda_directories[i])
-            self.add_somd_restraints(minimisation_directories[i])
-
+            self.add_somd_restraints(minimisation_directories[i])   
+            
+        _ = [os.system(f"cp -r {transformation_directory.rstrip('/')} {self.output_directories[i]}") for i in range(1, self.n_repeats)]
 
     def set_universe(self, file_name):
         """
@@ -453,8 +499,8 @@ class Meze(sofra.Network):
         output_file = workdir + "somd.restraints"
 
         with open(output_file, "w") as file:
-            file.write("use distance restraints = True\n")
-            file.write(f"distance restraints dictionary = {str(restraints)}")
+            file.write("use permanent distance restraints = True\n")
+            file.write(f"permanent distance restraints dictionary = {str(restraints)}")
         return output_file
 
 

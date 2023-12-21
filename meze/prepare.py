@@ -164,7 +164,7 @@ def main():
                         "--lambda-windows",
                         dest="lambdas",
                         help="number of lambda windows to use for AFE transformations",
-                        type=float,
+                        type=int,
                         default=11)    
 
     arguments = parser.parse_args()

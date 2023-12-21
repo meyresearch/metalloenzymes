@@ -100,45 +100,6 @@ def combine_unbound_ligands(system_a, system_b):
     return system_a
 
 
-def combine_bound_ligands(system_1, system_2):
-    """
-    Take two bound bss.Systems and combine the ligands' systems
-
-    Parameters:
-    -----------
-    system_1: bss.System 
-    system_2: bss.System
-
-    Return:
-    -------
-    system_1: bss.System
-        system with combined ligand topologies
-    """
-    ligand_1 = None
-    protein = None
-    n_residues = [molecule.nResidues() for molecule in system_1]
-    n_atoms = [molecule.nAtoms() for molecule in system_1]
-    for j, (n_residues, n_atoms) in enumerate(zip(n_residues[:20], n_atoms[:20])):
-        if n_residues == 1 and n_atoms > 5:  
-            ligand_1 = system_1.getMolecule(j)
-        elif n_residues > 1:
-            protein = system_1.getMolecule(j)
-    ligand_2 = None
-    n_residues = [molecule.nResidues() for molecule in system_2]
-    n_atoms = [molecule.nAtoms() for molecule in system_2]   
-    for j, (n_residues, n_atoms) in enumerate(zip(n_residues, n_atoms)):
-        if n_residues == 1 and n_atoms > 5:
-            ligand_2 = system_2.getMolecule(j)
-    if ligand_1 and ligand_2 and protein:
-        pass
-    else:
-        raise _Exceptions.AlignmentError("Could not extract ligands or protein from input systems.")
-    merged_ligands = merge_ligands(ligand_1, ligand_2)
-    system_1.removeMolecules(ligand_1)
-    system_1.addMolecules(merged_ligands)
-    return system_1
-
-
 def merge_ligands(ligand_1, ligand_2):
     """
     Take two ligands and merge their topologies
@@ -466,6 +427,47 @@ class Network(object):
         return self
 
 
+    def combine_bound_ligands(self):
+        """
+        Take two bound bss.Systems and combine the ligands' systems
+
+        Parameters:
+        -----------
+        system_1: bss.System 
+        system_2: bss.System
+
+        Return:
+        -------
+        system_1: bss.System
+            system with combined ligand topologies
+        """
+        system_1 = self.bound_ligand_molecules[0]
+        system_2 = self.bound_ligand_molecules[1]
+        ligand_1 = None
+        protein = None
+        n_residues = [molecule.nResidues() for molecule in system_1]
+        n_atoms = [molecule.nAtoms() for molecule in system_1]
+        for j, (n_residues, n_atoms) in enumerate(zip(n_residues[:20], n_atoms[:20])):
+            if n_residues == 1 and n_atoms > 5:  
+                ligand_1 = system_1.getMolecule(j)
+            elif n_residues > 1:
+                protein = system_1.getMolecule(j)
+        ligand_2 = None
+        n_residues = [molecule.nResidues() for molecule in system_2]
+        n_atoms = [molecule.nAtoms() for molecule in system_2]   
+        for j, (n_residues, n_atoms) in enumerate(zip(n_residues, n_atoms)):
+            if n_residues == 1 and n_atoms > 5:
+                ligand_2 = system_2.getMolecule(j)
+        if ligand_1 and ligand_2 and protein:
+            pass
+        else:
+            raise _Exceptions.AlignmentError("Could not extract ligands or protein from input systems.")
+        merged_ligands = merge_ligands(ligand_1, ligand_2)
+        system_1.removeMolecules(ligand_1)
+        system_1.addMolecules(merged_ligands)
+        return system_1
+
+
     def prepare_afe(self, ligand_a_name, ligand_b_name):
         """
         Prepare minimisation and free energy lambda windows directory tree
@@ -493,12 +495,8 @@ class Network(object):
         ligand_a = self.ligand_molecules[0]
         ligand_b = self.ligand_molecules[1]
         unbound = combine_unbound_ligands(ligand_a, ligand_b)
+        bound = self.combine_bound_ligands()
 
-        bound_ligand_a = self.bound_ligand_molecules[0]
-        bound_ligand_b = self.bound_ligand_molecules[1]
-
-        bound = combine_bound_ligands(bound_ligand_a, bound_ligand_b)
-    
         # Create ligand transformation directory tree in the first repeat directory, e.g. SOMD_1/lig_a~lig_b/ for bound/unbound
         # Only construct the BioSimSpace Relative AFE objects in the first repeat directory, to save on computation
         first_run_directory = self.output_directories[0]
@@ -523,16 +521,12 @@ class Network(object):
                           "nmoves": n_moves, 
                           "buffered coordinates frequency": buffered_coordinates_frequency, #CHANGE
                           "ncycles_per_snap": cycles_per_saved_frame,
-                          "minimal coordinate saving": True,
+                        #   "minimal coordinate saving": True,
                         #   "cutoff distance": "8 angstrom", # Make editable? 
                           "minimise": False}
 
         bss.FreeEnergy.Relative(system=unbound, protocol=free_energy_protocol, engine=self.md_engine, work_dir=unbound_directory, extra_options=config_options, setup_only=True)
         bss.FreeEnergy.Relative(system=bound, protocol=free_energy_protocol, engine=self.md_engine, work_dir=bound_directory, extra_options=config_options, setup_only=True)
-
-        # Old BioSimSpace:
-        # bss.FreeEnergy.Relative(system=unbound, protocol=free_energy_protocol, engine=self.md_engine, work_dir=unbound_directory, setup_only=True)
-        # bss.FreeEnergy.Relative(system=bound, protocol=free_energy_protocol, engine=self.md_engine, work_dir=bound_directory, setup_only=True)
 
         unbound_configurations = functions.read_files(unbound_directory + "/*/*.cfg")
         bound_configurations = functions.read_files(bound_directory + "/*/*.cfg")
