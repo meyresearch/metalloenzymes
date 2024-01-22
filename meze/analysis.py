@@ -39,14 +39,17 @@ def read_mbar(mbar_textfile):
         if "#MBAR free energy difference in kcal/mol" in line:
             result_line = i + 1
     free_energy, error = None, None
-    if "#" in lines[result_line]:
-        split_line = lines[result_line].split("#")
-        warnings.warn(split_line[-1])
-        try:
-            free_energy = float(split_line[0].split(",")[0])
-            error = float(split_line[0].split(",")[-1])
-        except ValueError as error_message:
-            print(f"Error: {error_message}")
+    try:
+        if "#" in lines[result_line]:
+            split_line = lines[result_line].split("#")
+            warnings.warn(split_line[-1])
+            try:
+                free_energy = float(split_line[0].split(",")[0])
+                error = float(split_line[0].split(",")[-1])
+            except ValueError as error_message:
+                print(f"Error: {error_message}")
+    except IndexError as e:
+        print(f"{e}: {mbar_textfile}")
 
     else:
         try:
@@ -54,8 +57,7 @@ def read_mbar(mbar_textfile):
             error = float(lines[result_line].split(",")[-1])
         except ValueError as error_message:
             print(f"Error: {error_message}")  
-
-            
+   
     return free_energy, error 
 
 
@@ -146,7 +148,7 @@ def bootstrap_statistics(experimental: np.array, calculated: np.array, n_samples
 
         pearson, _ = scipy.stats.pearsonr(experimental_samples, calculated_samples)
         mue = sklearn.metrics.mean_absolute_error(experimental_samples, calculated_samples)
-        spearman = scipy.stats.spearmanr(experimental_samples, calculated_samples)
+        spearman, _ = scipy.stats.spearmanr(experimental_samples, calculated_samples)
         statistics_dict["r"].append(pearson)
         statistics_dict["mue"].append(mue)
         statistics_dict["rho"].append(spearman)
@@ -194,7 +196,7 @@ def write_header(simfile, correct_header):
         
         for i, line in enumerate(data):
             split_line = line.split()
-            if "#" not in line and len(split_line) < 16:
+            if "#" not in line and len(split_line) < 16: 
                 del data[i]
 
         file.seek(0, 0)
@@ -225,9 +227,10 @@ def read_protocol(file):
     return protocol
 
 
-def fix_simfile(protocol): # ONLY FOR SOMD
+def fix_simfile(protocol): 
     """
     Get the headers from minimisation simfile for each lambda file, which contain the correct headers required by MBAR.
+    Note: Only for SOMD
 
     Parameters:
     -----------
@@ -237,7 +240,6 @@ def fix_simfile(protocol): # ONLY FOR SOMD
     Return:
     -------
     """
-    #TODO: How do I set the path to this file?
     template = os.environ["MEZEHOME"] + "simfile_header.txt"
     with open(template, "r") as file:
         template_header = file.readlines()
@@ -288,6 +290,8 @@ def get_results(protocol):
     Using the protocol, get results from each repeat.
     Save relative binding free energy values and errors into two dataframes.
 
+    Adapted from BioSimSpace.
+
     Parameters:
     -----------
     protocol: dic
@@ -298,95 +302,127 @@ def get_results(protocol):
     values, errors: tuple
         tuple containing the values and errors dataframes
     """
+
     engine = protocol["engine"]
     outputs = protocol["outputs"]
-    repeat_paths = functions.read_files(outputs + engine + "_*/")
-    get_transformations = functions.read_files(repeat_paths[0] + "*/")
-    transformations = [path.split("/")[-2] for path in get_transformations if "minimisations" not in path] # the transformations are the same for each repeat
-    values_dictionary = {"transformations": transformations}
-    errors_dictionary = {"transformations": transformations}
 
-    for i in range(len(repeat_paths)):
-        transformation_paths = functions.read_files(repeat_paths[i] + "ligand_*/")
-        repeat = "repeat_"+ str(i + 1)
-        values, errors = [], []
-        for transformation in transformation_paths:
+    values_file = outputs + "/" + engine + "_values.csv"
+    errors_file = outputs + "/" + engine + "_errors.csv"
 
-            unbound = transformation + "unbound/"
-            bound = transformation + "bound/"
-            # Move minimisation directory out of transformation directory to avoid BioSimSpace error
-            try:
-                unbound_minimisation_directory = repeat_paths[i] + "unbound_minimisations"
-                bound_minimisation_directory = repeat_paths[i] + "bound_minimisations"
-                functions.mkdir(unbound_minimisation_directory)
-                functions.mkdir(bound_minimisation_directory)
-                target_path = unbound_minimisation_directory + "/" + transformation.split("/")[-2]
-                source_path = unbound + "minimisation"
-                shutil.move(source_path, target_path)
+    if os.path.isfile(values_file) and os.path.isfile(errors_file):
+        values_dataframe = pd.read_csv(values_file).dropna()
+        errors_dataframe = pd.read_csv(errors_file).dropna()
+    else:
 
-                target_path = bound_minimisation_directory + "/" + transformation.split("/")[-2]
-                source_path = bound + "minimisation"
-                shutil.move(source_path, target_path)
-            except FileNotFoundError as error_message:
-                print(f"{error_message}: Files have already been moved")
-            
-            analyser_path = os.environ["BSS_HOME"] + "analyse_freenrg"
+        repeat_paths = functions.read_files(outputs + engine + "_*/")
+        get_transformations = functions.read_files(repeat_paths[0] + "*/")
+        transformations = [path.split("/")[-2] for path in get_transformations if "minimisations" not in path] # the transformations are the same for each repeat
+        values_dictionary = {"transformations": transformations}
+        errors_dictionary = {"transformations": transformations}
 
-            if not os.path.isfile(f"{unbound}/mbar.txt"):
+        for i in range(len(repeat_paths)):
+            transformation_paths = functions.read_files(repeat_paths[i] + "ligand_*/")
+            repeat = "repeat_"+ str(i + 1)
+            values, errors = [], []
+            for transformation in transformation_paths:
+
+                unbound = transformation + "unbound/"
+                bound = transformation + "bound/"
+                # Move minimisation directory out of transformation directory to avoid BioSimSpace error
+                try:
+                    unbound_minimisation_directory = repeat_paths[i] + "unbound_minimisations"
+                    bound_minimisation_directory = repeat_paths[i] + "bound_minimisations"
+                    functions.mkdir(unbound_minimisation_directory)
+                    functions.mkdir(bound_minimisation_directory)
+                    target_path = unbound_minimisation_directory + "/" + transformation.split("/")[-2]
+                    source_path = unbound + "minimisation"
+                    shutil.move(source_path, target_path)
+
+                    target_path = bound_minimisation_directory + "/" + transformation.split("/")[-2]
+                    source_path = bound + "minimisation"
+                    shutil.move(source_path, target_path)
+                except FileNotFoundError as error_message:
+                    print(f"{error_message}: Files have already been moved")
+                
+                analyser_path = os.environ["BSS_HOME"] + "analyse_freenrg"
+
+                if not os.path.isfile(f"{unbound}/mbar.txt"):
+
+                    try:
+                        unbound_command = f"{analyser_path} mbar -i {unbound}/lambda*/simfile.dat -o {unbound}/mbar.txt --overlap --subsampling"
+                        sp.check_output(unbound_command, shell=True)
+                    except sp.CalledProcessError as error_message:
+                        print(error_message.output)
+                        print("Trying again without subsampling.")
+                        warnings.warn(f"Warning: Disabling subsampling may meen results are unreliable. Please check the unbound transformation {transformation.split('/')[-2]}")
+                        unbound_command = f"{analyser_path} mbar -i {unbound}/lambda*/simfile.dat -o {unbound}/mbar.txt --overlap"
+
+                    with open(unbound + "mbar.out", "w") as file:
+                        sp.run(unbound_command, shell=True, stdout=file)
+
+                if not os.path.isfile(f"{bound}/mbar.txt"):
+                    try:
+                        bound_command = f"{analyser_path} mbar -i {bound}/lambda*/simfile.dat -o {bound}/mbar.txt --overlap --subsampling"
+                        sp.check_output(bound_command, shell=True)
+                    except sp.CalledProcessError as error_message:
+                        print(error_message.output)
+                        print("Trying again without subsampling.")
+                        warnings.warn(f"Warning: Disabling subsampling may meen results are unreliable. Please check the bound transformation {transformation.split('/')[-2]}")
+                        bound_command = f"{analyser_path} mbar -i {bound}/lambda*/simfile.dat -o {bound}/mbar.txt --overlap"
+
+                    with open(bound + "mbar.out", "w") as file:
+                        sp.run(bound_command, shell=True, stdout=file)
+
+                unbound_free_energy, unbound_error = read_mbar(unbound + "/mbar.txt")
+                bound_free_energy, bound_error = read_mbar(bound + "/mbar.txt")
+
+                relative_binding_free_energy = None
+                error = None
 
                 try:
-                    unbound_command = f"{analyser_path} mbar -i {unbound}/lambda*/simfile.dat -o {unbound}/mbar.txt --overlap --subsampling"
-                    sp.check_output(unbound_command, shell=True)
-                except sp.CalledProcessError as error_message:
-                    print(error_message.output)
-                    print("Trying again without subsampling.")
-                    warnings.warn(f"Warning: Disabling subsampling may meen results are unreliable. Please check the unbound transformation {transformation.split('/')[-2]}")
-                    unbound_command = f"{analyser_path} mbar -i {unbound}/lambda*/simfile.dat -o {unbound}/mbar.txt --overlap"
+                    relative_binding_free_energy = bound_free_energy - unbound_free_energy
+                    error = math.sqrt(bound_error ** 2 + unbound_error ** 2)
+                except TypeError as error_message:
+                    print(f"{transformation.split('/')[-2]}: {error_message}")
 
-                with open(unbound + "mbar.out", "w") as file:
-                    sp.run(unbound_command, shell=True, stdout=file)
+                values.append(relative_binding_free_energy)
+                errors.append(error)
 
-            if not os.path.isfile(f"{bound}/mbar.txt"):
-                try:
-                    bound_command = f"{analyser_path} mbar -i {bound}/lambda*/simfile.dat -o {bound}/mbar.txt --overlap --subsampling"
-                    sp.check_output(bound_command, shell=True)
-                except sp.CalledProcessError as error_message:
-                    print(error_message.output)
-                    print("Trying again without subsampling.")
-                    warnings.warn(f"Warning: Disabling subsampling may meen results are unreliable. Please check the bound transformation {transformation.split('/')[-2]}")
-                    bound_command = f"{analyser_path} mbar -i {bound}/lambda*/simfile.dat -o {bound}/mbar.txt --overlap"
+            values_dictionary[repeat] = values
+            errors_dictionary[repeat] = errors
 
-                with open(bound + "mbar.out", "w") as file:
-                    sp.run(bound_command, shell=True, stdout=file)
+        values_dataframe = pd.DataFrame.from_dict(values_dictionary).dropna()
+        values_dataframe.to_csv(outputs + "/" + engine + "_values.csv", index=False)
+        errors_dataframe = pd.DataFrame.from_dict(errors_dictionary).dropna()
+        errors_dataframe.to_csv(outputs + "/" + engine + "_errors.csv", index=False)
 
-            unbound_free_energy, unbound_error = read_mbar(unbound + "/mbar.txt")
-            bound_free_energy, bound_error = read_mbar(bound + "/mbar.txt")
-
-            relative_binding_free_energy = None
-            error = None
-
-            try:
-                relative_binding_free_energy = bound_free_energy - unbound_free_energy
-                error = math.sqrt(bound_error ** 2 + unbound_error ** 2)
-            except TypeError as error_message:
-                print(f"{transformation.split('/')[-2]}: {error_message}")
-
-
-            # unbound_pmf, unbound_matrix = bss.FreeEnergy.Relative.analyse(unbound, method="native")
-            # bound_pmf, bound_matrix = bss.FreeEnergy.Relative.analyse(bound, method="native")
-            # relative_binding_free_energy, error = bss.FreeEnergy.Relative.difference(bound_pmf, unbound_pmf)
-
-            values.append(relative_binding_free_energy)
-            errors.append(error)
-
-        values_dictionary[repeat] = values
-        errors_dictionary[repeat] = errors
-
-    values_dataframe = pd.DataFrame.from_dict(values_dictionary)
-    values_dataframe.to_csv(outputs + "/" + engine + "_values.csv", index=False)
-    errors_dataframe = pd.DataFrame.from_dict(errors_dictionary)
-    errors_dataframe.to_csv(outputs + "/" + engine + "_errors.csv", index=False)
     return values_dataframe, errors_dataframe
+
+
+def combine_results(protocol, values_dataframe, errors_dataframe):
+    """
+    Take values and errors from individual runs and average them and propagate errors.
+
+    Parameters:
+    -----------
+    protocol: dict
+        protocol file as a dictionary
+    values_dataframe: pd.DataFrame
+        dataframe containing free energy estimates from individual runs
+    errors_dataframe: 
+        dataframe containing error estimates from individual runs
+
+    Return:
+    -------
+    results: pd.DataFrame
+        dataframe containing averaged results and propagated errors
+    """
+    calculated_means = average(values_dataframe)
+    propagated_errors = add_in_quadrature(errors_dataframe)
+    standard_deviations = standard_deviation(values_dataframe)
+    results = pd.concat([values_dataframe["transformations"], calculated_means, standard_deviations, propagated_errors], axis=1).dropna()
+    results.to_csv(protocol["outputs"] + "/" + protocol["engine"] + "_results.csv", index=False)
+    return results
 
 
 def average(values):
@@ -453,13 +489,14 @@ def standard_deviation(values):
     return df
 
 
-
 def plot_bar(outputs, afe_df, exp_free_energy, exp_error):
     """
     Plot the bar plot of experimental binding free energies vs calculated free energies
 
     Parameters:
     -----------
+    outputs: str
+        full path to outputs directory
     afe_df: pd.DataFrame
         calculated free energy values and errors 
     exp_free_energy: np.array
@@ -469,6 +506,7 @@ def plot_bar(outputs, afe_df, exp_free_energy, exp_error):
 
     Return:
     -------
+
     """
     means = afe_df["average"].to_numpy() 
     std = afe_df["std"].to_numpy()
@@ -490,12 +528,12 @@ def plot_bar(outputs, afe_df, exp_free_energy, exp_error):
            color=COLOURS["PINK"],
            linewidth=0)
     
-    (_, caps, _) = ax.errorbar(x=calculated_x,
-                               y=means,
-                               yerr=std,
-                               capsize=3,
-                               linestyle="",
-                               color="black")
+    (_, _, _) = ax.errorbar(x=calculated_x,
+                            y=means,
+                            yerr=std,
+                            capsize=3,
+                            linestyle="",
+                            color="black")
     
     ax.bar(x=experimental_x,
            height=exp_free_energy,
@@ -505,12 +543,12 @@ def plot_bar(outputs, afe_df, exp_free_energy, exp_error):
            color=COLOURS["BLUE"],
            linewidth=0)
     
-    (_, caps, _) = ax.errorbar(x=experimental_x,
-                               y=exp_free_energy,
-                               yerr=exp_error,
-                               capsize=3,
-                               linestyle="",
-                               color="black")
+    (_, _, _) = ax.errorbar(x=experimental_x,
+                            y=exp_free_energy,
+                            yerr=exp_error,
+                            capsize=3,
+                            linestyle="",
+                            color="black")
         
     ax.axhline(0, 0, 1, c="black")
     max_calculated = max(np.absolute(means)) +1
@@ -522,23 +560,40 @@ def plot_bar(outputs, afe_df, exp_free_energy, exp_error):
     ax.set_xlabel("Transformation")
     ax.set_ylabel("$\Delta \Delta$ G (kcal mol \u207B \u00B9)")
     fig.tight_layout()
-    fig.savefig(f"{outputs}/meze_AFE_barplot.png")
+    fig.savefig(f"{outputs}/meze_AFE_barplot.png", dpi=1000) 
 
 
-def plot_correlation(afe_df, exp_free_energy, exp_error):
+def plot_correlation(outputs, results, experimental_free_energy, exp_error):
+    """
+    Plot the correlation plot of experimental binding free energies vs calculated free energies
+
+    Parameters:
+    -----------
+    outputs: str
+        full path to outputs directory
+    results: pd.DataFrame
+        averaged calculated free energy values and errors 
+    experimenta_free_energy: np.array
+        experimental free energy values (converted from inhibition constants)
+    experimental_error: np.array
+        propagated error on the experimental free energy values 
+
+    Return:
+    -------
     
-    means = afe_df["average"].to_numpy() 
-    std = afe_df["std"].to_numpy()
+    """
+    means = results["average"].to_numpy() 
+    std = results["std"].to_numpy()
 
     fig, ax = plt.subplots(1, 1, figsize=(10,10))
     sns.set(context="notebook", palette="colorblind", style="ticks", font_scale=2)
 
-    ax.scatter(exp_free_energy, 
+    ax.scatter(experimental_free_energy, 
                means, 
                s=50, 
                color=COLOURS["PINK"])
 
-    ax.errorbar(exp_free_energy,
+    ax.errorbar(experimental_free_energy,
                 means,
                 color=COLOURS["PINK"],
                 yerr=std,
@@ -547,7 +602,7 @@ def plot_correlation(afe_df, exp_free_energy, exp_error):
                 linestyle="",
                 zorder=-1)
     max_calculated = max(np.absolute(means)) +1
-    max_experimental = max(np.absolute(exp_free_energy)) + 1
+    max_experimental = max(np.absolute(experimental_free_energy)) + 1
     max_y = max(max_calculated, max_experimental)
     ax.plot([-max_y, max_y], [-max_y, max_y], color=COLOURS["BLUE"], linestyle=":", zorder=-1)
     ax.vlines(0, -max_y, max_y, color="silver", linestyle="--", zorder=-1)
@@ -556,10 +611,136 @@ def plot_correlation(afe_df, exp_free_energy, exp_error):
     ax.set_ylim(-max_y, max_y)
     ax.set_xlabel("$\Delta \Delta$ G$_\mathrm{EXP}$ (kcal mol \u207B \u00B9)")
     ax.set_ylabel("$\Delta \Delta$ G$_\mathrm{AFE}$ (kcal mol \u207B \u00B9)")
-    
     fig.tight_layout()
+    fig.savefig(f"{outputs}/meze_AFE_correlation.png", dpi=1000) 
 
-    fig.savefig("test-CORR.png")
+
+def plot_individual_runs(outputs, experimental_free_energy, experimental_error, afe_values, results):
+    """
+    Plot correlation of individual AFE runs against experimental values
+
+    Parameters:
+    -----------
+    outputs: str
+        full path to outputs directory
+    experimental_free_energy: np.array
+        experimental free energy values (converted from inhibition constants)
+    experimental_error: np.array
+        propagated error on the experimental free energy values
+    afe_values: pd.DataFrame
+        calculated free energy values and errors
+    results: 
+        averaged free energy values and propagated errors
+
+    Return:
+    -------
+    """
+    fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+    sns.set(context="notebook", palette="colorblind", style="ticks", font_scale=2)
+    
+    #TODO don't assume 3 repeats
+    ax.scatter(experimental_free_energy, afe_values["repeat_1"].to_numpy(), s=50, label="SOMD 1")
+    ax.scatter(experimental_free_energy, afe_values["repeat_2"].to_numpy(), s=50, label="SOMD 2")
+    ax.scatter(experimental_free_energy, afe_values["repeat_3"].to_numpy(), s=50, label="SOMD 3")
+
+    (_, _, _) = plt.errorbar(experimental_free_energy,
+                                results["average"].to_numpy(),
+                                color="#D0006F",
+                                xerr=experimental_error,
+                                yerr=results["std"].to_numpy(),
+                                capsize=3,
+                                linestyle="",
+                                zorder=-1)
+
+    ax.plot([-4.5, 4.5], [-4.5, 4.5], color="#0099AB", linestyle=":", zorder=-1)
+    ax.set_xlabel("$\Delta \Delta$ G$_\mathrm{EXP}$ (kcal mol⁻¹)")
+    ax.set_ylabel("$\Delta \Delta$ G$_\mathrm{AFE}$ (kcal mol⁻¹)")
+    ax.vlines(0, -3.5, 3.5, color = "silver", linestyle="--", zorder=-1)
+    ax.hlines(0, -3.5, 3.5, color = "silver", linestyle="--", zorder=-1)
+    ax.set_xlim(-3.5, 3.5)
+    ax.set_ylim(-3.5, 3.5)
+ 
+    labels = [transformation.strip().replace("_", "").replace("ligand", "").replace("~", " to ") for transformation in afe_values["transformations"].tolist()]
+    for i in range(len(labels)):
+        ax.annotate(labels[i], (experimental_free_energy[i], results["average"].to_numpy()[i]))
+    ax.legend()
+    fig.tight_layout()
+    fig.savefig(f"{outputs}/individual_correlation.png", dpi=1000)
+
+
+def output_statistics(experimental_free_energy, results, bootstrap=True):
+    """
+    Output statistics in a nice way and show bootstrapped statistics.
+
+    Parameters:
+    -----------
+    experimental_free_energy: list
+        experimental free energy values (converted from inhibition constants)
+    results: pd.DataFrame
+        averaged calculated free energy values and errors
+
+    Return:
+    -------
+    """
+
+    pearson_r = scipy.stats.pearsonr(experimental_free_energy, results["average"].to_numpy())
+    spearman = scipy.stats.spearmanr(experimental_free_energy, results["average"].to_numpy())
+    mue = sklearn.metrics.mean_absolute_error(experimental_free_energy, results["average"].to_numpy())
+    
+    print("==============================================================")
+    print("|                                                            |")
+    print("|                        Statistics                          |")
+    print("|                                                            |")
+    print("==============================================================")
+    print("\n")
+    print("--------------------------------------------------------------")
+    print(f"Pearson R:                                               {pearson_r[0]:.3f}")
+    print("\n")
+    print(f"                      p value:    {pearson_r[1]:.3E}")
+    print("\n")
+    print("--------------------------------------------------------------")
+    print(f"Spearman rho:                                            {spearman[0]:.3f}")
+    print("\n")
+    print(f"                      p value:    {spearman[1]:.3E}")
+    print("\n")
+    print("--------------------------------------------------------------")
+    print("\n")
+    print(f"Mean unsigned error:                            {mue:.3f} kcal/mol")
+    print("\n")
+    print("--------------------------------------------------------------")
+    if bootstrap:
+        print("\n")
+        print("Bootstrapping statistics...\n")
+        print("==============================================================")
+        print("|                                                            |")
+        print("|                 Bootstrapped Statistics                    |")
+        print("|                                                            |")
+        print("==============================================================")
+        stats = bootstrap_statistics(experimental_free_energy, results["average"].to_numpy())
+        print("\n")
+        print("--------------------------------------------------------------")
+        print(f"Pearson R:                                               {stats['r']['real']:.3f}")
+        print("\n")
+        print(f"                      Mean:        {stats['r']['mean']:.3f}") 
+        print(f"                   Lower Bound:    {stats['r']['lower']:.3f}")
+        print(f"                   Upper bound:    {stats['r']['upper']:.3f}")
+        print("\n")
+        print("--------------------------------------------------------------")
+        print(f"Spearman rho:                                            {stats['rho']['real']:.3f}")
+        print("\n")
+        print(f"                      Mean:        {stats['rho']['mean']:.3f}") 
+        print(f"                   Lower Bound:    {stats['rho']['lower']:.3f}")
+        print(f"                   Upper bound:    {stats['r']['upper']:.3f}")
+        print("\n")
+        print("--------------------------------------------------------------")
+        print(f"Mean unsigned error:                                     {stats['mue']['real']:.3f}")
+        print("\n")
+        print(f"                      Mean:        {stats['mue']['mean']:.3f}") 
+        print(f"                   Lower Bound:    {stats['mue']['lower']:.3f}")
+        print(f"                   Upper bound:    {stats['mue']['upper']:.3f}")
+        print("\n")
+        print("--------------------------------------------------------------")
+
 
 def get_ligand_indices(transformations):
     """
@@ -619,6 +800,7 @@ def get_experimental_data(file, transformations):
 
 
 def main():
+
     parser = argparse.ArgumentParser(description="MEZE: MetalloEnZymE FF-builder for alchemistry")
 
     parser.add_argument("-pf",
@@ -636,71 +818,18 @@ def main():
     arguments = parser.parse_args()
     protocol_file = functions.file_exists(arguments.protocol)
     protocol = read_protocol(protocol_file)
-    s = time.time()
-
     fix_simfile(protocol)
-    # print(f"fix_simfile took {time.time() - s} seconds")
+
     values, errors = get_results(protocol)[0].dropna(), get_results(protocol)[1].dropna()
-
-    ### FOR DEBUGGING: ###
-    # path = "/home/jguven/projects/alchemistry/kpc2/partially_protonated_ligand/test_outputs/"
-    # values = pd.read_csv(path + "SOMD_values.csv")
-    # errors = pd.read_csv(path + "SOMD_errors.csv")
-    #######
-
-    calculated_means = average(values)
-    propagated_errors = add_in_quadrature(errors)
-    standard_deviations = standard_deviation(values)
- 
-    results = pd.concat([values["transformations"], calculated_means, standard_deviations, propagated_errors], axis=1).dropna()
-    results.to_csv(protocol["outputs"] + "/" + protocol["engine"] + "_results.csv", index=False)
+    results = combine_results(protocol, values, errors)
 
     experimental_file = arguments.experimental_file
     experimental_free_energy, experimental_error = get_experimental_data(experimental_file, results["transformations"].tolist())
 
-    plot_bar(outputs=protocol["outputs"], afe_df=results, exp_free_energy=experimental_free_energy, exp_error=experimental_error)
-
-    plot_correlation(results, experimental_free_energy, experimental_error)
-    pearson_r = scipy.stats.pearsonr(experimental_free_energy, results["average"].to_numpy())
-    spearman = scipy.stats.spearmanr(experimental_free_energy, results["average"].to_numpy())
-    mue = sklearn.metrics.mean_absolute_error(experimental_free_energy, results["average"].to_numpy())
-    print(pearson_r, spearman, mue)
-    # stats = bootstrap_statistics(experimental_free_energy, results["average"].to_numpy())
-    # print(stats)
-
-
-
-    plt.figure(figsize=(10, 10))
-    sns.set(context="notebook", palette="colorblind", style="ticks", font_scale=2)
-    plt.scatter(experimental_free_energy, values["repeat_1"].to_numpy(), s=50, label="somd 1")
-    plt.scatter(experimental_free_energy, values["repeat_2"].to_numpy(), s=50, label="somd 2")
-    plt.scatter(experimental_free_energy, values["repeat_3"].to_numpy(), s=50, label="somd 3")
-    # plt.scatter(3, 2.5, s=0)
-
-    (_, caps, _) = plt.errorbar(experimental_free_energy,
-                            results["average"].to_numpy(),
-                            color="#D0006F",
-                            yerr=results["std"].to_numpy(),
-                            capsize=3,
-                            linestyle="",
-                            zorder=-1)
-
-    plt.plot([-4.5, 4.5], [-4.5, 4.5], color="#0099AB", linestyle=":", zorder=-1)
-    plt.xlabel("$\Delta \Delta$ G$_\mathrm{EXP}$ (kcal mol⁻¹)")
-    plt.ylabel("$\Delta \Delta$ G$_\mathrm{AFE}$ (kcal mol⁻¹)")
-    plt.vlines(0, -3.5, 3.5, color = "silver", linestyle="--", zorder=-1)
-    plt.hlines(0, -3.5, 3.5, color = "silver", linestyle="--", zorder=-1)
-    plt.xlim(-3.5, 3.5)
-    plt.ylim(-3.5, 3.5)
-    plt.tight_layout()
-    labels = [transformation.strip().replace("_", "").replace("ligand", "").replace("~", " to ") for transformation in values["transformations"].tolist()]
-    for i in range(len(labels)):
-        plt.annotate(labels[i], (experimental_free_energy[i], results["average"].to_numpy()[i]))
-    #plt.savefig("corr.png", dpi=1200, transparent=True)
-
-    plt.legend()
-    plt.savefig("test-CORR-all.png")
-
+    plot_bar(protocol["outputs"], results, experimental_free_energy, experimental_error)
+    plot_correlation(protocol["outputs"], results, experimental_free_energy, experimental_error)
+    plot_individual_runs(protocol["outputs"], experimental_free_energy, experimental_error, values, results)
+    output_statistics(experimental_free_energy, results)
 
 
 if __name__ == "__main__":
