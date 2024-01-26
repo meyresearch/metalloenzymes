@@ -133,9 +133,9 @@ def bootstrap_statistics(experimental: np.array, calculated: np.array, n_samples
         bootsrapped mean and bootstrapped lower and upper bounds
     """
     n_data_samples = len(experimental)
-    statistics_dict = {"r": [],
+    statistics_dict = {"pearson_r": [],
                        "mue": [],
-                       "rho": []}
+                       "spearman_rho": []}
 
     for i in range(n_samples):
         if i==0:
@@ -149,13 +149,13 @@ def bootstrap_statistics(experimental: np.array, calculated: np.array, n_samples
         pearson, _ = scipy.stats.pearsonr(experimental_samples, calculated_samples)
         mue = sklearn.metrics.mean_absolute_error(experimental_samples, calculated_samples)
         spearman, _ = scipy.stats.spearmanr(experimental_samples, calculated_samples)
-        statistics_dict["r"].append(pearson)
+        statistics_dict["pearson_r"].append(pearson)
         statistics_dict["mue"].append(mue)
-        statistics_dict["rho"].append(spearman)
+        statistics_dict["spearman_rho"].append(spearman)
 
-    results = {"r": {},
+    results = {"pearson_r": {},
                "mue": {},
-               "rho": {}}
+               "spearman_rho": {}}
     
     lower_fraction = alpha_level/2.0
     upper_fraction = 1 - lower_fraction
@@ -163,9 +163,9 @@ def bootstrap_statistics(experimental: np.array, calculated: np.array, n_samples
     for statistic in statistics_dict.keys():
         results[statistic]["real"] = statistics_dict[statistic][0]
         statistics_dict[statistic] = sorted(statistics_dict[statistic])
-        results[statistic]["mean"] = np.mean(statistics_dict[statistic])
-        results[statistic]["lower"] = statistics_dict[statistic][int(n_samples * lower_fraction)]
-        results[statistic]["upper"] = statistics_dict[statistic][int(n_samples * upper_fraction)]
+        results[statistic]["mean_value"] = np.mean(statistics_dict[statistic])
+        results[statistic]["lower_bound"] = statistics_dict[statistic][int(n_samples * lower_fraction)]
+        results[statistic]["upper_bound"] = statistics_dict[statistic][int(n_samples * upper_fraction)]
     return results
 
 
@@ -563,7 +563,7 @@ def plot_bar(outputs, afe_df, exp_free_energy, exp_error):
     fig.savefig(f"{outputs}/meze_AFE_barplot.png", dpi=1000) 
 
 
-def plot_correlation(outputs, results, experimental_free_energy, exp_error):
+def plot_correlation(outputs, results, experimental_free_energy, exp_error, region=True):
     """
     Plot the correlation plot of experimental binding free energies vs calculated free energies
 
@@ -607,6 +607,13 @@ def plot_correlation(outputs, results, experimental_free_energy, exp_error):
     ax.plot([-max_y, max_y], [-max_y, max_y], color=COLOURS["BLUE"], linestyle=":", zorder=-1)
     ax.vlines(0, -max_y, max_y, color="silver", linestyle="--", zorder=-1)
     ax.hlines(0, -max_y, max_y, color="silver", linestyle="--", zorder=-1)
+
+    if region:
+        top = np.arange(-max_y+0.5, max_y+1.5)
+        bottom = np.arange(-max_y-0.5, max_y+0.5)
+        x = np.arange(-max_y, max_y+1)
+        ax.fill_between(x, bottom, top, alpha=0.2, zorder=-1)
+
     ax.set_xlim(-max_y, max_y)
     ax.set_ylim(-max_y, max_y)
     ax.set_xlabel("$\Delta \Delta$ G$_\mathrm{EXP}$ (kcal mol \u207B \u00B9)")
@@ -666,9 +673,9 @@ def plot_individual_runs(outputs, experimental_free_energy, experimental_error, 
     ax.legend()
     fig.tight_layout()
     fig.savefig(f"{outputs}/individual_correlation.png", dpi=1000)
+    plt.show()
 
-
-def output_statistics(experimental_free_energy, results, bootstrap=True):
+def output_statistics(experimental_free_energy, results):
     """
     Output statistics in a nice way and show bootstrapped statistics.
 
@@ -681,65 +688,56 @@ def output_statistics(experimental_free_energy, results, bootstrap=True):
 
     Return:
     -------
+    statistics_dataframe: pd.DataFrame
+        dataframe containing the real statics values and the bootstrapped mean, lower and upper bounds
     """
 
     pearson_r = scipy.stats.pearsonr(experimental_free_energy, results["average"].to_numpy())
     spearman = scipy.stats.spearmanr(experimental_free_energy, results["average"].to_numpy())
     mue = sklearn.metrics.mean_absolute_error(experimental_free_energy, results["average"].to_numpy())
-    
+    print("\n")
+    print("Bootstrapping statistics...\n")
     print("==============================================================")
     print("|                                                            |")
     print("|                        Statistics                          |")
     print("|                                                            |")
     print("==============================================================")
+    stats = bootstrap_statistics(experimental_free_energy, results["average"].to_numpy())
     print("\n")
     print("--------------------------------------------------------------")
     print(f"Pearson R:                                               {pearson_r[0]:.3f}")
+    print(f"                                          p value:   {pearson_r[1]:.3E}")
+    print(f"Bootstrapped statistics:")
     print("\n")
-    print(f"                      p value:    {pearson_r[1]:.3E}")
+    print(f"                      Mean:        {stats['pearson_r']['mean_value']:.3f}") 
+    print(f"                   Lower Bound:    {stats['pearson_r']['lower_bound']:.3f}")
+    print(f"                   Upper bound:    {stats['pearson_r']['upper_bound']:.3f}")
     print("\n")
     print("--------------------------------------------------------------")
     print(f"Spearman rho:                                            {spearman[0]:.3f}")
+    print(f"                                          p value:   {spearman[1]:.3E}")
+    print(f"Bootstrapped statistics:")
     print("\n")
-    print(f"                      p value:    {spearman[1]:.3E}")
+    print(f"                      Mean:        {stats['spearman_rho']['mean_value']:.3f}") 
+    print(f"                   Lower Bound:    {stats['spearman_rho']['lower_bound']:.3f}")
+    print(f"                   Upper bound:    {stats['spearman_rho']['upper_bound']:.3f}")
     print("\n")
     print("--------------------------------------------------------------")
+    print(f"Mean unsigned error:                                     {mue:.3f}")
     print("\n")
-    print(f"Mean unsigned error:                            {mue:.3f} kcal/mol")
+    print(f"Bootstrapped statistics:")
+    print("\n")
+    print(f"                      Mean:        {stats['mue']['mean_value']:.3f}") 
+    print(f"                   Lower Bound:    {stats['mue']['lower_bound']:.3f}")
+    print(f"                   Upper bound:    {stats['mue']['upper_bound']:.3f}")
     print("\n")
     print("--------------------------------------------------------------")
-    if bootstrap:
-        print("\n")
-        print("Bootstrapping statistics...\n")
-        print("==============================================================")
-        print("|                                                            |")
-        print("|                 Bootstrapped Statistics                    |")
-        print("|                                                            |")
-        print("==============================================================")
-        stats = bootstrap_statistics(experimental_free_energy, results["average"].to_numpy())
-        print("\n")
-        print("--------------------------------------------------------------")
-        print(f"Pearson R:                                               {stats['r']['real']:.3f}")
-        print("\n")
-        print(f"                      Mean:        {stats['r']['mean']:.3f}") 
-        print(f"                   Lower Bound:    {stats['r']['lower']:.3f}")
-        print(f"                   Upper bound:    {stats['r']['upper']:.3f}")
-        print("\n")
-        print("--------------------------------------------------------------")
-        print(f"Spearman rho:                                            {stats['rho']['real']:.3f}")
-        print("\n")
-        print(f"                      Mean:        {stats['rho']['mean']:.3f}") 
-        print(f"                   Lower Bound:    {stats['rho']['lower']:.3f}")
-        print(f"                   Upper bound:    {stats['r']['upper']:.3f}")
-        print("\n")
-        print("--------------------------------------------------------------")
-        print(f"Mean unsigned error:                                     {stats['mue']['real']:.3f}")
-        print("\n")
-        print(f"                      Mean:        {stats['mue']['mean']:.3f}") 
-        print(f"                   Lower Bound:    {stats['mue']['lower']:.3f}")
-        print(f"                   Upper bound:    {stats['mue']['upper']:.3f}")
-        print("\n")
-        print("--------------------------------------------------------------")
+    
+    statistics_dataframe = pd.DataFrame.from_dict(stats).transpose()
+    statistics_dataframe.rename(columns={0: "statistic"})
+    statistics_dataframe["p_values"] = [pearson_r[1], "", spearman[1]]
+    return statistics_dataframe
+
 
 
 def get_ligand_indices(transformations):
@@ -799,6 +797,23 @@ def get_experimental_data(file, transformations):
     return free_energies, errors
 
 
+def save_statistics_to_file(outputs, statistics):
+    """
+    Take the statistics dataframe and save it to the outputs directory as a csv 
+
+    Parameters:
+    -----------
+    outputs: str
+        full path to the outputs directory  
+    statistics: pd.DataFrame
+        statistics dataframe 
+
+    Return:
+    -------
+    """
+    statistics.to_csv(f"{outputs}/meze_statistics.csv")
+    
+
 def main():
 
     parser = argparse.ArgumentParser(description="MEZE: MetalloEnZymE FF-builder for alchemistry")
@@ -829,8 +844,10 @@ def main():
     plot_bar(protocol["outputs"], results, experimental_free_energy, experimental_error)
     plot_correlation(protocol["outputs"], results, experimental_free_energy, experimental_error)
     plot_individual_runs(protocol["outputs"], experimental_free_energy, experimental_error, values, results)
-    output_statistics(experimental_free_energy, results)
+    # statistics = output_statistics(experimental_free_energy, results)
+    # save_statistics_to_file(protocol["outputs"], statistics)
 
+    
 
 if __name__ == "__main__":
     main()
