@@ -237,12 +237,15 @@ class Network(object):
             self.afe_input_directory = functions.path_exists(afe_input_path)
             self.equilibration_directory = functions.path_exists(equilibration_path)  
             self.outputs = functions.path_exists(outputs) 
-            self.output_directories = functions.read_files(self.outputs + "/*")
+            self.output_directories = functions.read_files(self.outputs + f"/{engine}_*")
+            self.plots = functions.read_files(self.outputs + f"/plots/")
         else:
             self.protein_file = protein_file
             self.afe_input_directory = self.create_directory("/afe/")
             self.equilibration_directory = self.create_directory("/equilibration/")
+            self.outputs = self.create_directory("/outputs/")
             self.output_directories = self.create_output_directories()
+            self.plots = self.create_directory(self.outputs + "/plots/")
 
         self.ligand_path = functions.path_exists(ligand_path)
         self.ligand_forcefield = ligand_ff
@@ -342,7 +345,7 @@ class Network(object):
         """
         output_directories = []
         for i in range(1, self.n_repeats + 1, 1):
-            output_directories.append(self.create_directory(f"/outputs/{self.md_engine}_{i}/", create_parents=True))
+            output_directories.append(self.create_directory(f"{self.outputs}/{self.md_engine}_{i}/"))
         return output_directories
 
 
