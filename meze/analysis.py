@@ -9,9 +9,10 @@ import scipy
 import argparse
 import functions
 import os
-import time
 import seaborn as sns
 import subprocess as sp
+import MDAnalysis as mda
+import MDAnalysis.analysis.rms
 import warnings
 import logging
 logger = logging.getLogger()
@@ -614,8 +615,8 @@ def plot_correlation(outputs, results, experimental_free_energy, exp_error, regi
         x = np.arange(-max_y, max_y+1)
         ax.fill_between(x, bottom, top, alpha=0.2, zorder=-1)
 
-    ax.set_xlim(-max_y, max_y)
-    ax.set_ylim(-max_y, max_y)
+    ax.set_xlim(-3.5, 3.5)
+    ax.set_ylim(-3.5, 3.5)
     ax.set_xlabel("$\Delta \Delta$ G$_\mathrm{EXP}$ (kcal mol \u207B \u00B9)")
     ax.set_ylabel("$\Delta \Delta$ G$_\mathrm{AFE}$ (kcal mol \u207B \u00B9)")
     fig.tight_layout()
@@ -673,7 +674,8 @@ def plot_individual_runs(outputs, experimental_free_energy, experimental_error, 
     ax.legend()
     fig.tight_layout()
     fig.savefig(f"{outputs}/individual_correlation.png", dpi=1000)
-    plt.show()
+    fig.show()
+
 
 def output_statistics(experimental_free_energy, results):
     """
@@ -691,10 +693,19 @@ def output_statistics(experimental_free_energy, results):
     statistics_dataframe: pd.DataFrame
         dataframe containing the real statics values and the bootstrapped mean, lower and upper bounds
     """
+    x = np.array([[1,2,3,4],
+              [2,3,np.nan,5],
+              [np.nan,5,2,3]])
+    np.argwhere(np.isnan(x))
+    
+    remove_indices = np.argwhere(np.isnan(experimental_free_energy)).flatten()
+    
+    experimental_values = np.delete(experimental_free_energy, remove_indices)
+    calculated_values = np.delete(results["average"].to_numpy(), remove_indices)
 
-    pearson_r = scipy.stats.pearsonr(experimental_free_energy, results["average"].to_numpy())
-    spearman = scipy.stats.spearmanr(experimental_free_energy, results["average"].to_numpy())
-    mue = sklearn.metrics.mean_absolute_error(experimental_free_energy, results["average"].to_numpy())
+    pearson_r = scipy.stats.pearsonr(experimental_values, calculated_values)
+    spearman = scipy.stats.spearmanr(experimental_values, calculated_values)
+    mue = sklearn.metrics.mean_absolute_error(experimental_values, calculated_values)
     print("\n")
     print("Bootstrapping statistics...\n")
     print("==============================================================")
@@ -702,7 +713,7 @@ def output_statistics(experimental_free_energy, results):
     print("|                        Statistics                          |")
     print("|                                                            |")
     print("==============================================================")
-    stats = bootstrap_statistics(experimental_free_energy, results["average"].to_numpy())
+    stats = bootstrap_statistics(experimental_values, calculated_values)
     print("\n")
     print("--------------------------------------------------------------")
     print(f"Pearson R:                                               {pearson_r[0]:.3f}")
@@ -814,6 +825,82 @@ def save_statistics_to_file(outputs, statistics):
     statistics.to_csv(f"{outputs}/meze_statistics.csv")
     
 
+def compute_rmsd(directory, engine):
+    """
+    Compute root mean square deviation in a simulation
+
+    Parameters:
+    -----------
+    directory: 
+        _description_
+    engine: 
+        _description_
+
+    Return:
+    -------
+    : _type_
+        _description_
+    """
+    
+    trajectory_file = functions.read_files(directory + "*.dcd")[0]
+    
+    with mda.lib.formats.libdcd.DCDFile(trajectory_file) as trajectory:
+        frames = [frame for frame in trajectory]
+    
+    first_frame = frames[0].xyz
+    universe = mda.Universe(directory + f"{engine.lower()}.prm7", trajectory_file, topology_format="PARM7")
+    reference_universe = mda.Universe(directory + f"{engine.lower()}.prm7", first_frame, topology_format="PARM7")
+
+    ligand = universe.select_atoms("resname LIG")
+    reference = reference_universe.select_atoms("resname LIG")
+
+    rmsd = mda.analysis.rms.RMSD(ligand, reference)
+    rmsd.run()
+    rmsd_result = rmsd.results.T
+
+    time = rmsd_result[1]
+    rmsd_values = rmsd_result[2]
+
+    return time, rmsd_values
+
+
+def plot_individual_rmsd(plots_directory, savename, stage, time, rmsd):
+    """
+    Plot individual root mean square deviation against time.
+    Plots are saved in /outputs/plots/ 
+
+    Parameters:
+    -----------
+    plots_directory: str
+        full path to /outputs/plots/
+    savename: str
+        name of transformation
+    stage: str
+        unbound or bound
+    time: np.array
+        array of time
+    rmsd: np.array
+        rmsd values over time
+
+    Return:
+    -------
+    """
+
+    fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+    sns.set(context="notebook", palette="colorblind", style="ticks", font_scale=2)
+
+    ax.plot(time, rmsd, "k-")
+
+    ax.set_xlabel("Time (ps)", fontsize=14)
+    ax.set_ylabel("RMSD ($\AA$)", fontsize=14)
+
+    fig.savefig(f"{plots_directory}/{stage}_{savename}.png", dpi=1000)
+
+
+def analyse_rmsds():
+    pass
+
+
 def main():
 
     parser = argparse.ArgumentParser(description="MEZE: MetalloEnZymE FF-builder for alchemistry")
@@ -844,8 +931,8 @@ def main():
     plot_bar(protocol["outputs"], results, experimental_free_energy, experimental_error)
     plot_correlation(protocol["outputs"], results, experimental_free_energy, experimental_error)
     plot_individual_runs(protocol["outputs"], experimental_free_energy, experimental_error, values, results)
-    # statistics = output_statistics(experimental_free_energy, results)
-    # save_statistics_to_file(protocol["outputs"], statistics)
+    statistics = output_statistics(experimental_free_energy, results)
+    save_statistics_to_file(protocol["outputs"], statistics)
 
     
 
