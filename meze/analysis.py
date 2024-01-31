@@ -248,16 +248,16 @@ def fix_simfile(protocol):
     outputs = functions.path_exists(protocol["outputs"])
 
     engine = protocol["engine"]
-    repeat_paths = functions.read_files(outputs + "/" + engine + "_*/*/")
+    repeat_paths = functions.get_files(outputs + "/" + engine + "_*/*/")
 
     for path in repeat_paths: 
 
         unbound_directory = path + "unbound/"
         bound_directory = path + "bound/"
 
-        unbound_minimisation_simfiles = functions.read_files(unbound_directory + "/minimisation/lambda_*/simfile.dat")
-        unbound_simfiles = functions.read_files(unbound_directory + "lambda_*/simfile.dat")
-        bound_simfiles = functions.read_files(bound_directory + "lambda_*/simfile.dat")
+        unbound_minimisation_simfiles = functions.get_files(unbound_directory + "/minimisation/lambda_*/simfile.dat")
+        unbound_simfiles = functions.get_files(unbound_directory + "lambda_*/simfile.dat")
+        bound_simfiles = functions.get_files(bound_directory + "lambda_*/simfile.dat")
         
         old_unbound_files = [filename.replace(".dat", "_original") for filename in unbound_simfiles]
         old_bound_files = [filename.replace(".dat", "_original") for filename in bound_simfiles]
@@ -315,14 +315,14 @@ def get_results(protocol):
         errors_dataframe = pd.read_csv(errors_file).dropna()
     else:
 
-        repeat_paths = functions.read_files(outputs + engine + "_*/")
-        get_transformations = functions.read_files(repeat_paths[0] + "*/")
+        repeat_paths = functions.get_files(outputs + engine + "_*/")
+        get_transformations = functions.get_files(repeat_paths[0] + "*/")
         transformations = [path.split("/")[-2] for path in get_transformations if "minimisations" not in path] # the transformations are the same for each repeat
         values_dictionary = {"transformations": transformations}
         errors_dictionary = {"transformations": transformations}
 
         for i in range(len(repeat_paths)):
-            transformation_paths = functions.read_files(repeat_paths[i] + "ligand_*/")
+            transformation_paths = functions.get_files(repeat_paths[i] + "ligand_*/")
             repeat = "repeat_"+ str(i + 1)
             values, errors = [], []
             for transformation in transformation_paths:
@@ -825,40 +825,47 @@ def save_statistics_to_file(outputs, statistics):
     statistics.to_csv(f"{outputs}/meze_statistics.csv")
     
 
-def compute_rmsd(directory, engine):
+def compute_rmsd(directory, topology_format="PARM7"):
     """
     Compute root mean square deviation in a simulation
 
     Parameters:
     -----------
-    directory: 
-        _description_
-    engine: 
-        _description_
+    directory: str
+        full path to the directory containing lambda directories eg. project/SOMD_1/lig_A_lig_B/bound/
+    engine: str
+        name of the MD engine used
+    topology_format: str
+        file format of the topology file, currently only support PARM7 
 
     Return:
     -------
-    : _type_
-        _description_
+    time, rmsd_values: tuple
+        tuple of two lists containing the time and RMSD values 
     """
+
+
+    lambda_directories = functions.get_files(directory + "lambda_*/")
+
+    topology_file = functions.get_files(lambda_directories[0] + "/*.prm7")[0]
     
-    trajectory_file = functions.read_files(directory + "*.dcd")[0]
+    trajectories = functions.get_files(directory + "/lambda_*/*.dcd") 
     
-    with mda.lib.formats.libdcd.DCDFile(trajectory_file) as trajectory:
+    with mda.lib.formats.libdcd.DCDFile(trajectories[0]) as trajectory:
         frames = [frame for frame in trajectory]
-    
     first_frame = frames[0].xyz
-    universe = mda.Universe(directory + f"{engine.lower()}.prm7", trajectory_file, topology_format="PARM7")
-    reference_universe = mda.Universe(directory + f"{engine.lower()}.prm7", first_frame, topology_format="PARM7")
 
+    reference_universe = mda.Universe(topology_file, first_frame, topology_format=topology_format)
+    universe = mda.Universe(topology_file, trajectories, topology_format=topology_format)
+    
+    reference_coordinates = reference_universe.select_atoms("resname LIG")
     ligand = universe.select_atoms("resname LIG")
-    reference = reference_universe.select_atoms("resname LIG")
-
-    rmsd = mda.analysis.rms.RMSD(ligand, reference)
+    
+    rmsd = mda.analysis.rms.RMSD(ligand, reference_coordinates)
     rmsd.run()
-    rmsd_result = rmsd.results.T
+    rmsd_result = rmsd.results["rmsd"].T
 
-    time = rmsd_result[1]
+    time = rmsd_result[0] / 1000
     rmsd_values = rmsd_result[2]
 
     return time, rmsd_values
@@ -891,15 +898,50 @@ def plot_individual_rmsd(plots_directory, savename, stage, time, rmsd):
 
     ax.plot(time, rmsd, "k-")
 
-    ax.set_xlabel("Time (ps)", fontsize=14)
-    ax.set_ylabel("RMSD ($\AA$)", fontsize=14)
-
+    ax.set_xlabel("Time (ns)")
+    ax.set_ylabel("RMSD ($\AA$)")
     fig.savefig(f"{plots_directory}/{stage}_{savename}.png", dpi=1000)
 
 
-def analyse_rmsds():
-    pass
 
+
+
+def analyse_rmsds(repeats, engine, outputs ):
+    
+    n_repeats = functions.check_int(repeats)
+
+    rmsd_dict = {"transformation": [], 
+                 "bound_time": [], 
+                 "bound_rmsd": [], 
+                 "unbound_time": [], 
+                 "unbound_rmsd": []}
+
+    for repeat in range(1, n_repeats + 1):
+        repeat_directory = outputs + engine + f"_{repeat}/"
+        transformations = functions.get_files(repeat_directory + "ligand_*")
+        times, rmsds = [], [] 
+
+        
+        for transformation in transformations:
+            transformation_name = transformation.split("/")[-1]
+            stages = ["unbound", "bound"]    
+            rmsd_dict["transformation"].append(transformation_name)
+            
+            for stage in stages:
+                stage_directory = transformation + "/" + stage + "/"
+                time, rmsd = compute_rmsd(stage_directory)
+
+                rmsd_dict[f"{stage}_time"].append(time)
+                rmsd_dict[f"{stage}_rmsd"].append(rmsd)    
+
+                
+                # rmsd_array = np.array([time, rmsd])
+                # np.save(stage_directory  + "/rmsd.npy", rmsd_array)
+        
+        rmsd_data = pd.DataFrame.from_dict(rmsd_dict)
+
+        print(rmsd_data.head())
+        rmsd_data.to_csv(repeat_directory + "rmsds.csv", index=False)
 
 def main():
 
@@ -920,20 +962,20 @@ def main():
     arguments = parser.parse_args()
     protocol_file = functions.file_exists(arguments.protocol)
     protocol = read_protocol(protocol_file)
-    fix_simfile(protocol)
+    # fix_simfile(protocol)
 
-    values, errors = get_results(protocol)[0].dropna(), get_results(protocol)[1].dropna()
-    results = combine_results(protocol, values, errors)
+    # values, errors = get_results(protocol)[0].dropna(), get_results(protocol)[1].dropna()
+    # results = combine_results(protocol, values, errors)
 
-    experimental_file = arguments.experimental_file
-    experimental_free_energy, experimental_error = get_experimental_data(experimental_file, results["transformations"].tolist())
+    # experimental_file = arguments.experimental_file
+    # experimental_free_energy, experimental_error = get_experimental_data(experimental_file, results["transformations"].tolist())
 
-    plot_bar(protocol["outputs"], results, experimental_free_energy, experimental_error)
-    plot_correlation(protocol["outputs"], results, experimental_free_energy, experimental_error)
-    plot_individual_runs(protocol["outputs"], experimental_free_energy, experimental_error, values, results)
-    statistics = output_statistics(experimental_free_energy, results)
-    save_statistics_to_file(protocol["outputs"], statistics)
-
+    # plot_bar(protocol["outputs"], results, experimental_free_energy, experimental_error)
+    # plot_correlation(protocol["outputs"], results, experimental_free_energy, experimental_error)
+    # plot_individual_runs(protocol["outputs"], experimental_free_energy, experimental_error, values, results)
+    # statistics = output_statistics(experimental_free_energy, results)
+    # save_statistics_to_file(protocol["outputs"], statistics)
+    analyse_rmsds(repeats=protocol["repeats"], engine=protocol["engine"], outputs=protocol["outputs"])
     
 
 if __name__ == "__main__":

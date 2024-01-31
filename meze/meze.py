@@ -192,7 +192,7 @@ class Meze(sofra.Network):
     def add_somd_restraints(self, directory):
         
         ligand_a = self.ligands[0].name
-        amber_restraints_file = functions.read_files(self.equilibration_directory + f"bound/{ligand_a}/*.RST")[0]
+        amber_restraints_file = functions.get_files(self.equilibration_directory + f"bound/{ligand_a}/*.RST")[0]
         somd_restraints_dict = {}
         # def convert_amber_restraints_to_somd(restraints_file):
         #   pass        
@@ -296,8 +296,8 @@ class Meze(sofra.Network):
         first_run_directory = self.output_directories[0]
         transformation_directory = first_run_directory + f"/{ligand_a_name}~{ligand_b_name}/"
         bound_directory = transformation_directory + "/bound/" # unbound doesn't have restraints
-        lambda_directories = functions.read_files(bound_directory + "lambda_*/")
-        minimisation_directories = functions.read_files(bound_directory + "minimisation/*/")
+        lambda_directories = functions.get_files(bound_directory + "lambda_*/")
+        minimisation_directories = functions.get_files(bound_directory + "minimisation/*/")
         # lambda_config_path = self.outputs + f"*/{ligand_a_name}~{ligand_b_name}/*/*/*.cfg"
         # lambda_minimisation_config_path =  self.outputs + f"*/{ligand_a_name}~{ligand_b_name}/*/*/*/*.cfg"
         for i in range(len(lambda_directories)):
@@ -680,7 +680,7 @@ class Meze(sofra.Network):
                                     extra_options=production_options,
                                     extra_lines=namelist)
         config = production_directory + "/*.cfg"
-        config_file = functions.read_files(config)[0]
+        config_file = functions.get_files(config)[0]
 
         with open(config_file, "a") as file:
             file.write("\n")
@@ -751,7 +751,7 @@ class Meze(sofra.Network):
                                           extra_lines=namelist,
                                           exe=amber_home + "/bin/pmemd.cuda")
         heat_02_config = heat_02_dir + "/*.cfg"
-        heat_02_config_file = functions.read_files(heat_02_config)[0]        
+        heat_02_config_file = functions.get_files(heat_02_config)[0]        
 
         with open(heat_02_config_file, "a") as file:
             file.write("\n")
@@ -800,7 +800,7 @@ class Meze(sofra.Network):
         
 
         relax_03_config = relax_03_dir + "/*.cfg"
-        relax_03_config_file = functions.read_files(relax_03_config)[0]
+        relax_03_config_file = functions.get_files(relax_03_config)[0]
 
         with open(relax_03_config_file, "r") as file:
             config = file.readlines()
@@ -840,7 +840,7 @@ class Meze(sofra.Network):
                                              extra_lines=namelist,
                                              exe=amber_home + "/bin/pmemd.cuda")
         lower_04_config = lower_04_dir + "/*.cfg"
-        lower_04_config_file = functions.read_files(lower_04_config)[0]
+        lower_04_config_file = functions.get_files(lower_04_config)[0]
 
         with open(lower_04_config_file, "r") as file:
             config = file.readlines()
@@ -893,7 +893,7 @@ class Meze(sofra.Network):
                                                  exe=amber_home + "/bin/pmemd.cuda")
         
         bb_min_05_config = bb_min_05_dir + "/*.cfg"
-        bb_min_05_config_file = functions.read_files(bb_min_05_config)[0]
+        bb_min_05_config_file = functions.get_files(bb_min_05_config)[0]
 
         with open(bb_min_05_config_file, "r") as file:
             config = file.readlines()
@@ -933,7 +933,7 @@ class Meze(sofra.Network):
                                           exe=amber_home + "/bin/pmemd.cuda")        
 
         relax_06_config = relax_06_dir + "/*.cfg"
-        relax_06_config_file = functions.read_files(relax_06_config)[0]   
+        relax_06_config_file = functions.get_files(relax_06_config)[0]   
 
         with open(relax_06_config_file, "r") as file:
             config = file.readlines()
@@ -976,7 +976,7 @@ class Meze(sofra.Network):
                                           exe=amber_home + "/bin/pmemd.cuda")
 
         reduce_07_config = reduce_07_dir + "/*.cfg"
-        reduce_07_config_file = functions.read_files(reduce_07_config)[0]          
+        reduce_07_config_file = functions.get_files(reduce_07_config)[0]          
 
         with open(reduce_07_config_file, "r") as file:
             config = file.readlines()
@@ -1017,7 +1017,7 @@ class Meze(sofra.Network):
                                                 exe=amber_home + "/bin/pmemd.cuda")
         
         continue_08_config = continue_08_dir + "/*.cfg"
-        continue_08_config_file = functions.read_files(continue_08_config)
+        continue_08_config_file = functions.get_files(continue_08_config)
 
         with open(continue_08_config_file, "r") as file:
             config = file.readlines()
@@ -1070,7 +1070,7 @@ class Meze(sofra.Network):
                                              exe=amber_home + "/bin/pmemd.cuda")
 
         relax_09_config = relax_09_dir + "/*.cfg"
-        relax_09_config_file = functions.read_files(relax_09_config)[0]        
+        relax_09_config_file = functions.get_files(relax_09_config)[0]        
 
         with open(relax_09_config_file, "a") as file:
             file.write("\n")
@@ -1092,7 +1092,7 @@ class Meze(sofra.Network):
     def minimisation_0(self, ligand_name, nonbonded_cut_off=10.0):
 
         directory = functions.mkdir(self.equilibration_directory+f"{ligand_name}/")
-        files = functions.read_files(f"{self.protein_path}/bound_{ligand_name}_solvated.*")
+        files = functions.get_files(f"{self.protein_path}/bound_{ligand_name}_solvated.*")
         solvated_system = bss.IO.readMolecules(files)
         directories = lambda step: functions.mkdir(directory + step)
         min_dir = directories("01_min")
@@ -1133,7 +1133,7 @@ class Meze(sofra.Network):
                                                  exe=amber_home + "/bin/pmemd.cuda")
         
         min_config = min_dir + "/*.cfg"
-        config_file = functions.read_files(min_config)[0]
+        config_file = functions.get_files(min_config)[0]
 
         with open(config_file, "r") as file:
             config = file.readlines()
@@ -1158,7 +1158,7 @@ class Meze(sofra.Network):
     def qmmm_minimisation(self, ligand_name, nonbonded_cut_off=12.0):
 
         directory = functions.mkdir(self.equilibration_directory+f"{ligand_name}/")
-        files = functions.read_files(f"{self.protein_path}/bound_{ligand_name}_solvated.*")
+        files = functions.get_files(f"{self.protein_path}/bound_{ligand_name}_solvated.*")
         solvated_system = bss.IO.readMolecules(files)
         directories = lambda step: functions.mkdir(directory + step)
         min_dir = directories("min")
@@ -1191,7 +1191,7 @@ class Meze(sofra.Network):
                                                  extra_lines=qm_namelist)
         
         min_config = min_dir + "/*.cfg"
-        config_file = functions.read_files(min_config)[0]
+        config_file = functions.get_files(min_config)[0]
 
         with open(config_file, "r") as file:
             config = file.readlines()
@@ -1246,7 +1246,7 @@ class Meze(sofra.Network):
                                                   extra_lines=qm_namelist)
         
         heat_config = heat_dir + "/*.cfg"
-        config_file = functions.read_files(heat_config)[0]
+        config_file = functions.get_files(heat_config)[0]
 
         with open(config_file, "r") as file:
             config = file.readlines()
@@ -1300,7 +1300,7 @@ class Meze(sofra.Network):
                                                extra_lines=qm_namelist)
         
         production_config = directory + "/*.cfg"
-        config_file = functions.read_files(production_config)[0]
+        config_file = functions.get_files(production_config)[0]
 
         with open(config_file, "r") as file:
             config = file.readlines()

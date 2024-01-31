@@ -69,7 +69,7 @@ class coldMeze(meze.Meze):
 
             process = bss.Process.Amber(system=system, protocol=protocol, name=name, work_dir=working_directory, extra_options=configuration, extra_lines=namelist, exe=amber_path)
             config = working_directory + "/*.cfg"
-            config_file = functions.read_files(config)[0]
+            config_file = functions.get_files(config)[0]
             with open(config_file, "a") as file:
                 file.write("\n")
                 file.write(f"DISANG={restraints_file}\n")
@@ -158,7 +158,7 @@ class coldMeze(meze.Meze):
         """
 
         directory = functions.mkdir(self.equilibration_directory + f"/unbound/{self.ligand_name}/")
-        files = functions.read_files(f"{self.ligand_path}/{self.ligand_name}_solvated.*")
+        files = functions.get_files(f"{self.ligand_path}/{self.ligand_name}_solvated.*")
         solvated_ligand = bss.IO.readMolecules(files)
         print(f"Equilibrating unbound ligand {self.ligand_name}")
         directories = lambda step: functions.mkdir(directory+step)
@@ -216,7 +216,7 @@ class coldMeze(meze.Meze):
             
         directory = functions.mkdir(self.equilibration_directory+f"/bound/{self.ligand_name}/")
         filename = f"bound_{self.ligand_name}_solvated"
-        files = functions.read_files(f"{self.protein_path}/{filename}" + ".*")
+        files = functions.get_files(f"{self.protein_path}/{filename}" + ".*")
         solvated_system = bss.IO.readMolecules(files)
         
         self.set_universe(self.protein_path + "/" + filename)

@@ -229,7 +229,7 @@ class Network(object):
 
         self.prepared = prepared 
         if self.prepared: 
-            self.prepared_protein = functions.read_files(protein_file + ".*")
+            self.prepared_protein = functions.get_files(protein_file + ".*")
             # with vim2 + equilibrate.py this returns None 
             if not self.prepared_protein:
                 self.prepared_protein = self.protein_file
@@ -237,8 +237,8 @@ class Network(object):
             self.afe_input_directory = functions.path_exists(afe_input_path)
             self.equilibration_directory = functions.path_exists(equilibration_path)  
             self.outputs = functions.path_exists(outputs) 
-            self.output_directories = functions.read_files(self.outputs + f"/{engine}_*")
-            self.plots = functions.read_files(self.outputs + f"/plots/")
+            self.output_directories = functions.get_files(self.outputs + f"/{engine}_*")
+            self.plots = functions.get_files(self.outputs + f"/plots/")
         else:
             self.protein_file = protein_file
             self.afe_input_directory = self.create_directory("/afe/")
@@ -420,11 +420,11 @@ class Network(object):
         """
         print("\n")
         print(f"Getting equilibrated ligands {ligand_a} and {ligand_b}")
-        unbound_files = [functions.read_files(self.equilibration_directory+f"/unbound/{ligand}/npt/{ligand}.*") for ligand in [ligand_a, ligand_b]]
+        unbound_files = [functions.get_files(self.equilibration_directory+f"/unbound/{ligand}/npt/{ligand}.*") for ligand in [ligand_a, ligand_b]]
         self.ligands = [Ligand.Ligand(files, parameterised=True) for files in unbound_files]
         self.names = [ligand.get_name() for ligand in self.ligands]
         self.ligand_molecules = [bss.IO.readMolecules(files) for files in unbound_files]
-        bound_files = [functions.read_files(self.equilibration_directory+f"/bound/{ligand}/npt/bound_{ligand}.*") for ligand in [ligand_a, ligand_b]]
+        bound_files = [functions.get_files(self.equilibration_directory+f"/bound/{ligand}/npt/bound_{ligand}.*") for ligand in [ligand_a, ligand_b]]
         self.bound_ligands = [Ligand.Ligand(files, parameterised=True) for files in bound_files]
         self.bound_ligand_molecules = [bss.IO.readMolecules(files) for files in bound_files]
         return self
@@ -531,8 +531,8 @@ class Network(object):
         bss.FreeEnergy.Relative(system=unbound, protocol=free_energy_protocol, engine=self.md_engine, work_dir=unbound_directory, extra_options=config_options, setup_only=True)
         bss.FreeEnergy.Relative(system=bound, protocol=free_energy_protocol, engine=self.md_engine, work_dir=bound_directory, extra_options=config_options, setup_only=True)
 
-        unbound_configurations = functions.read_files(unbound_directory + "/*/*.cfg")
-        bound_configurations = functions.read_files(bound_directory + "/*/*.cfg")
+        unbound_configurations = functions.get_files(unbound_directory + "/*/*.cfg")
+        bound_configurations = functions.get_files(bound_directory + "/*/*.cfg")
         fix_afe_configurations(unbound_configurations)
         fix_afe_configurations(bound_configurations)
 
@@ -543,8 +543,8 @@ class Network(object):
         os.system(f"cp -r {bound_directory}/lambda_* {bound_lambda_minimisation_directory}")
 
         # For SOMD only: Open the AFE MD configuration files and convert to minimisation configurations for the first repeat
-        unbound_configurations = functions.read_files(unbound_lambda_minimisation_directory + "/*/*.cfg")
-        bound_configurations = functions.read_files(bound_lambda_minimisation_directory + "/*/*.cfg")
+        unbound_configurations = functions.get_files(unbound_lambda_minimisation_directory + "/*/*.cfg")
+        bound_configurations = functions.get_files(bound_lambda_minimisation_directory + "/*/*.cfg")
         create_minimisation_configurations(unbound_configurations)
         create_minimisation_configurations(bound_configurations)
         print("\n")
@@ -673,8 +673,8 @@ class Network(object):
             list of ligand filenames
         """
         # Adapted from dbmol.py:
-        ligand_files = functions.read_files(f"{self.ligand_path}/*.sdf")
-        ligand_files += functions.read_files(f"{self.ligand_path}/*.mol2")        
+        ligand_files = functions.get_files(f"{self.ligand_path}/*.sdf")
+        ligand_files += functions.get_files(f"{self.ligand_path}/*.mol2")        
         if len(ligand_files) < 2:
             raise IOError(f"Path {self.ligand_path} must contain at least two sdf or mol2 files.")
         return ligand_files

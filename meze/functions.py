@@ -47,6 +47,7 @@ def path_exists(path):
     checked_path = path + "/"
     return re.sub(r"/+", "/", checked_path)
 
+
 def check_int(input):
     """
     Check if given input is an integer
@@ -150,7 +151,7 @@ def mkdir(directory):
     return directory
 
 
-def read_files(path):
+def get_files(path):
     """
     Read and sort files in a given path
 
