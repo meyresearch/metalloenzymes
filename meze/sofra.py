@@ -588,7 +588,7 @@ class Network(object):
         output: str
             full path to AFE run script
         """
-        output = self.afe_input_directory + f"run_{self.md_engine}.sh"
+        output = self.afe_input_directory + f"05_run_{self.md_engine}.sh"
         meze = os.environ["MEZEHOME"]
         
         template = meze + "/run_afe.sh"

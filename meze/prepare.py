@@ -242,6 +242,11 @@ def main():
      
     prepared_network.write_afe_run_script()
 
+    functions.write_slurm_script(template_file="06_analyse.sh",
+                                 path=prepared_network.afe_input_directory,
+                                 log_dir=prepared_network.log_directory,
+                                 protocol_file=prepared_network.protein_file)
+
     functions.write_slurm_script(template_file="slurm_all.sh",
                                  path=prepared_network.afe_input_directory,
                                  log_dir=prepared_network.log_directory,
