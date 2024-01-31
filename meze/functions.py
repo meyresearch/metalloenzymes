@@ -324,3 +324,25 @@ def separate(string, sep="~"):
         separated string as a list
     """
     return string.split(sep)
+
+
+def read_protocol(file):
+    """
+    Read the protocol.dat file in to a dictionary 
+
+    Parameters:
+    -----------
+    file: str
+        full path to the protocol.dat file written by meze.py
+
+    Return:
+    -------
+    protocol: dict
+        protocol file as a dictionary
+    """
+    protocol = {}
+    with open(file, "r") as f:
+        for line in f: 
+            key, value = line.rstrip().split(" = ")
+            protocol[key] = value
+    return protocol
