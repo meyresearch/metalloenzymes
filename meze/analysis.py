@@ -14,7 +14,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.CRITICAL)
 
 
-def read_mbar(mbar_textfile):
+def read_free_energy(mbar_textfile):
     """
     Read in mbar.txt and return binding free energy and an error estimate from MBART
 
@@ -226,8 +226,8 @@ def save_results(protocol, transformation):
             with open(bound + "mbar.out", "w") as file:
                 sp.run(bound_command, shell=True, stdout=file)
 
-        unbound_free_energy, unbound_error = read_mbar(unbound + "/mbar.txt")
-        bound_free_energy, bound_error = read_mbar(bound + "/mbar.txt")
+        unbound_free_energy, unbound_error = read_free_energy(unbound + "/mbar.txt")
+        bound_free_energy, bound_error = read_free_energy(bound + "/mbar.txt")
         relative_binding_free_energy = None
         error = None
 
@@ -249,9 +249,6 @@ def save_results(protocol, transformation):
                 header = "transformation,free-energy,error\n"
                 output_file.write(header)
 
-        # with open(data_file, "r") as input_file:
-        #     input_lines = input_file.readlines()
-        
         if data_line in input_lines:
             warnings.warn(f"Result for {transformation} already in {data_file}")
         
@@ -332,6 +329,81 @@ def save_rmsds(protocol, transformation):
             np.save(bound_file, bound_rmsd_array)
 
 
+def save_overlap_matrix(protocol, transformation):
+    """
+    Read in overlap matrix and save as a numpy array to transformation directory.
+
+    Parameters:
+    -----------
+    protocol: dict
+        protocol file as a dictionary
+    transformation: str
+        name of the transformation
+
+    Return:
+    -------
+    """
+    engine = protocol["engine"]
+    outputs = protocol["outputs"]
+    n_repeats = functions.check_int(protocol["repeats"])
+
+    for i in range(1, n_repeats + 1):
+        path = f"{outputs}/{engine}_{i}/{transformation}/" 
+        unbound = path + "unbound/"
+        bound = path + "bound/"   
+
+        unbound_mbar_file = unbound + "/mbar.txt"
+        bound_mbar_file = bound + "/mbar.txt"
+
+        unbound_output_file = path + "unbound_overlap_matrix.npy"
+        bound_output_file = path + "bound_overlap_matrix.npy"
+
+        if not os.path.isfile(unbound_output_file):
+            unbound_overlap_matrix = read_overlap_matrix(unbound_mbar_file)
+            np.save(unbound_output_file, unbound_overlap_matrix)
+        
+        if not os.path.isfile(bound_output_file):
+            bound_overlap_matrix = read_overlap_matrix(bound_mbar_file)
+            np.save(bound_output_file, bound_overlap_matrix)
+
+
+def read_overlap_matrix(mbar_file):
+    """
+    Open mbar.txt and read lines containgin the overlap matrix.
+    Return the matrix as a numpy array.
+
+    Parameters:
+    -----------
+    mbar_file: str
+        mbar.txt results file
+
+    Return:
+    -------
+    matrix: np.array
+        overlap matrix as an array
+    """
+    with open(mbar_file, "r") as file:
+        mbar_lines = file.readlines()
+    
+    start_index = 1
+    end_index = -1
+    for i in range(len(mbar_lines)):
+        if "#Overlap matrix" in mbar_lines[i]:
+            start_index = i + 1
+        elif "#DG from neighbouring lambda in kcal/mol" in mbar_lines[i]:
+            end_index = i
+    matrix_lines = mbar_lines[start_index:end_index]        
+
+    matrix_list = []
+    for line in matrix_lines:
+        split_line = line.replace("\n", "").split()
+        new_line = [float(value) for value in split_line]
+        matrix_list.append(new_line)
+    
+    matrix = np.array(matrix_list)
+    return matrix
+
+
 def main():
     
     parser = argparse.ArgumentParser(description="MEZE: MetalloEnZymE FF-builder for alchemistry")
@@ -363,8 +435,10 @@ def main():
     fix_simfile(protocol, transformation)
     save_results(protocol, transformation)
     save_rmsds(protocol, transformation)
-    #TODO analyse overlap matrices and save to file similar to RMSDs
+    save_overlap_matrix(protocol, transformation)
+
 
 if __name__ == "__main__":
     main()
+
 
