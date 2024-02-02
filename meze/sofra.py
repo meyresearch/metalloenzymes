@@ -201,7 +201,7 @@ def create_minimisation_configurations(files, min_cycles=1, min_moves=50000):
             f.writelines(replaced_config)
 
 
-class Network(object):
+class Sofra(object):
     """
     Network class object
 

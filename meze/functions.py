@@ -22,6 +22,7 @@ def file_exists(file):
         existing filepath
     """
     if not os.path.isfile(file):
+
         raise argparse.ArgumentTypeError(f"{file} does not exist")
     return os.path.abspath(file)
 

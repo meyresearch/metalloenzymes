@@ -119,7 +119,7 @@ def main():
     
     protocol = functions.input_to_dict(arguments.protocol_file)
 
-    network = sofra.Network(prepared=True,
+    network = sofra.Sofra(prepared=True,
                               workdir=protocol["project directory"],
                               ligand_path=protocol["ligand directory"],
                               group_name=protocol["group name"],

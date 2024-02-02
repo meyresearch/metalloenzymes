@@ -241,22 +241,23 @@ def save_results(protocol, transformation):
         data_line = ",".join(str(item) for item in data) + "\n"
 
         data_file = outputs + "/" + engine + f"_{i}_raw.csv"
-        with open(data_file, "w+") as output_file:
-            lines = output_file.readlines()
+        with open(data_file, "r") as output_file:
+            input_lines = output_file.readlines()
 
- 
-            if len(lines) == 0:
+        with open(data_file, "a") as output_file:
+            if len(input_lines) == 0:
                 header = "transformation,free-energy,error\n"
                 output_file.write(header)
 
-        with open(data_file, "r") as input_file:
-            input_lines = input_file.readlines()
+        # with open(data_file, "r") as input_file:
+        #     input_lines = input_file.readlines()
         
-        if data in input_lines:
+        if data_line in input_lines:
             warnings.warn(f"Result for {transformation} already in {data_file}")
         
         else:
             with open(data_file, "a") as output_file:
+                print(f"Writing {data_line} to file {output_file}")
                 output_file.write(data_line)
 
 
@@ -278,30 +279,33 @@ def compute_rmsd(directory, topology_format="PARM7"):
     time, rmsd_values: tuple
         tuple of two lists containing the time and RMSD values 
     """
-    lambda_directories = functions.get_files(directory + "lambda_*/")
 
-    topology_file = functions.get_files(lambda_directories[0] + "/*.prm7")[0]
-    
+
+    topology_files = functions.get_files(directory + "lambda_*/*.prm7") 
     trajectories = functions.get_files(directory + "/lambda_*/*.dcd") 
-    
-    with mda.lib.formats.libdcd.DCDFile(trajectories[0]) as trajectory:
-        frames = [frame for frame in trajectory]
-    first_frame = frames[0].xyz
+    results = []
+    for i in range(len(topology_files)):
+        with mda.lib.formats.libdcd.DCDFile(trajectories[i]) as trajectory:
+            frames = [frame for frame in trajectory]
+        first_frame = frames[0].xyz
 
-    reference_universe = mda.Universe(topology_file, first_frame, topology_format=topology_format)
-    universe = mda.Universe(topology_file, trajectories, topology_format=topology_format)
-    
-    reference_coordinates = reference_universe.select_atoms("resname LIG")
-    ligand = universe.select_atoms("resname LIG")
-    
-    rmsd = mda.analysis.rms.RMSD(ligand, reference_coordinates)
-    rmsd.run()
-    rmsd_result = rmsd.results["rmsd"].T
+        reference_universe = mda.Universe(topology_files[i], first_frame, topology_format=topology_format)
+        universe = mda.Universe(topology_files[i], trajectories[i], topology_format=topology_format)
+        
+        reference_coordinates = reference_universe.select_atoms("resname LIG")
+        ligand = universe.select_atoms("resname LIG")
+        
+        rmsd = mda.analysis.rms.RMSD(ligand, reference_coordinates)
+        rmsd.run()
+        rmsd_result = rmsd.results["rmsd"].T
 
-    time = rmsd_result[0] / 1000
-    rmsd_values = rmsd_result[2]
+        time = rmsd_result[0] / 1000
+        rmsd_values = rmsd_result[2]
+        results.append([time, rmsd_values])
+    
+    save_array = np.array(results)
 
-    return time, rmsd_values
+    return save_array
 
 
 def save_rmsds(protocol, transformation):
@@ -315,14 +319,17 @@ def save_rmsds(protocol, transformation):
         path = f"{outputs}/{engine}_{repeat}/{transformation}/"
         unbound = path + "unbound/"
         bound = path + "bound/"    
-
-        unbound_time, unbound_rmsd = compute_rmsd(unbound)
-        bound_time, bound_rmsd = compute_rmsd(bound)
         
-        unbound_rmsd_array = np.array([unbound_time, unbound_rmsd])
-        np.save(path  + "unbound_rmsd.npy", unbound_rmsd_array)
-        bound_rmsd_array = np.array([bound_time, bound_rmsd])
-        np.save(path  + "bound_rmsd.npy", bound_rmsd_array)
+        unbound_file = path  + "unbound_rmsd.npy"
+        bound_file = path  + "bound_rmsd.npy"
+
+        if not os.path.isfile(unbound_file):
+            unbound_rmsd_array = compute_rmsd(unbound)
+            np.save(unbound_file, unbound_rmsd_array)
+        
+        if not os.path.isfile(bound_file):
+            bound_rmsd_array = compute_rmsd(bound)
+            np.save(bound_file, bound_rmsd_array)
 
 
 def main():
@@ -356,7 +363,7 @@ def main():
     fix_simfile(protocol, transformation)
     save_results(protocol, transformation)
     save_rmsds(protocol, transformation)
-    
+    #TODO analyse overlap matrices and save to file similar to RMSDs
 
 if __name__ == "__main__":
     main()

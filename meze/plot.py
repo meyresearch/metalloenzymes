@@ -574,6 +574,9 @@ def plot_individual_rmsd(plots_directory, savename, stage, time, rmsd):
     ax.set_ylabel("RMSD ($\AA$)")
     fig.savefig(f"{plots_directory}/{stage}_{savename}.png", dpi=1000)
     
+#TODO rmsd_box plots: need to read in RMSD data
+    
+#TODO overlap matrix plots
 
 def main():
 
@@ -583,10 +586,7 @@ def main():
                         help="protocol file containing equilibration options",
                         type=str,
                         default=os.getcwd() + "/afe/protocol.dat")
-    
-    parser.add_argument("transformation",
-                        help="the pair of ligands undergoing AFE transformation, e.g. ligand_1~ligand_2",
-                        type=str)
+
     
     parser.add_argument("experimental_file",
                         default=os.getcwd() + "/afe/experimental_K_i.csv",
@@ -601,8 +601,6 @@ def main():
     arguments = parser.parse_args()
     protocol_file = functions.file_exists(arguments.protocol_file)
     protocol = functions.read_protocol(protocol_file)
-    transformation = arguments.transformation
-
 
     results = combine_results(protocol, values, errors)
 
@@ -614,6 +612,21 @@ def main():
     plot_individual_runs(protocol["outputs"], experimental_free_energy, experimental_error, values, results)
     statistics = output_statistics(experimental_free_energy, results)
     save_statistics_to_file(protocol["outputs"], statistics)
+
+
+def read_results(protocol):
+
+    outputs = functions.path_exists(protocol["outputs"])
+    engine = protocol["engine"]
+    n_repeats = functions.check_int(protocol["repeats"])
+
+    for i in range(1, n_repeats + 1):
+
+        results_file = f"{outputs}/{engine}_{i}_raw.csv"
+        dataframe = pd.read_csv(results_file, index_col=False)  
+
+    pass
+
 
 
 if __name__ == "__main__":

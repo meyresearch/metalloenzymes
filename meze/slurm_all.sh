@@ -29,5 +29,5 @@ do
     echo "Submitted AFE slurm job $afe_job_id"
 done
 
-analysis_job_id=$(sbatch --dependency=afterol:${afe_job_id} --parsable --job-name=${transformations_array[i]} --array=0-$((${#transformations_array[@]}-1)) $AFE_INPUT_DIR/06_analyse.sh)
+analysis_job_id=$(sbatch --dependency=afterok:${afe_job_id} --parsable --job-name=${transformations_array[i]} --array=0-$((${#transformations_array[@]}-1)) $AFE_INPUT_DIR/06_analyse.sh)
 echo "Submitted analysis slurm job $analysis_job_id"

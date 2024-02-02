@@ -201,7 +201,7 @@ def main():
         
     elif not metal:
 
-        network = sofra.Network(protein_file=arguments.protein,
+        network = sofra.Sofra(protein_file=arguments.protein,
                                 workdir=arguments.working_directory,
                                 ligand_path=arguments.ligand_directory,
                                 ligand_charge=arguments.ligand_charge,

@@ -79,7 +79,7 @@ def residue_restraint_mask(residue_ids):
     
 
 
-class Meze(sofra.Network):
+class Meze(sofra.Sofra):
 
     def __init__(self, protein_file, prepared=False, metal="ZN", cut_off=2.6, force_constant_0=100, water_file=None, 
                  workdir=os.getcwd(), afe_input_path=os.getcwd()+"/afe/", equilibration_path=os.getcwd()+"/equilibration/", outputs=os.getcwd()+"/outputs/",
@@ -1434,7 +1434,7 @@ def main():
         
     elif not metal:
 
-        meze = sofra.Network(prepared=True,
+        meze = sofra.Sofra(prepared=True,
                                equilibration_path=protocol["equilibration directory"],
                                outputs=protocol["outputs"],
                                workdir=protocol["project directory"],

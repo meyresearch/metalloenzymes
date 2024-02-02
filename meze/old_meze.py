@@ -101,7 +101,7 @@ def main():
 
     elif not metal:
 
-        meze = sofra.Network(prepared=True,
+        meze = sofra.Sofra(prepared=True,
                                equilibration_path=protocol["equilibration directory"],
                                outputs=protocol["outputs"],
                                workdir=protocol["project directory"],
