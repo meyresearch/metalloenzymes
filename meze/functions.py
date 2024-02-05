@@ -4,6 +4,7 @@ import argparse
 import os
 import glob
 import re
+import numpy as np
 from definitions import ROOT_DIRECTORY
 
 
@@ -347,3 +348,99 @@ def read_protocol(file):
             key, value = line.rstrip().split(" = ")
             protocol[key] = value
     return protocol
+
+
+def check_nan(array):
+    """
+    Take an array(-like) and check if any of its values are NaN.
+    Return an array of indices where values are NaN.
+
+    Parameters:
+    -----------
+    array: array-like
+        input array 
+
+    Return:
+    -------
+    nan_indices: np.array([np.array, np.array])
+        indices of NaN values in input array
+    """
+    if not isinstance(array, np.ndarray):
+        array = np.array(array)
+
+    nan_indices = []
+    if np.isnan(array).any():
+        nan_indices = np.argwhere(np.isnan(array))
+
+    return nan_indices
+
+
+def average(values):
+    """
+    Compute the mean of values along columns.
+    Ignores NaN values.
+
+    Parameters:
+    -----------
+    values: np.array
+        array of values 
+
+    Return:
+    -------
+    np.array
+        mean of values along columns
+    """
+    if not isinstance(values, np.ndarray):
+        values = np.array(values)
+    return np.nanmean(values, axis=1)
+
+
+def add_in_quadrature(array):
+    """
+    Take the array of errors and add them in quadrature accross columns.
+
+    Parameters:
+    -----------
+    array: array-like
+        array of values
+
+    Return:
+    -------
+    np.array
+        array of errors added in quadrature
+    """
+    squared_errors = []
+    dividers = []
+    for row in array:
+        squares = np.array([value ** 2 for value in row])
+        squares_dropna = squares[~np.isnan(squares)]
+        squared_errors.append(squares_dropna)
+        divider = len(squares_dropna) # if some of the values are NaN, they are ignored
+        dividers.append(divider)
+    
+    propagated_errors = []
+    for i in range(len(squared_errors)):
+        sum_of_values = np.sum(squared_errors[i])
+        propagated_error = (1/dividers[i]) * np.sqrt(sum_of_values)
+        propagated_errors.append(propagated_error)
+
+    return np.array(propagated_errors)
+
+
+def standard_deviation(array):
+    """
+    Take the standard deviation of values accross columns
+
+    Parameters:
+    -----------
+    array: array-like 
+        array of values
+
+    Return:
+    -------
+    np.array:
+        array of standard deviation accross columns, NaNs are ignored
+    """
+    if not isinstance(array, np.ndarray):
+        array = np.array(array)
+    return np.nanstd(array, axis=1)

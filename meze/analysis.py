@@ -529,7 +529,7 @@ def main():
 
     fix_simfile(protocol, transformation)
     save_results(protocol, transformation)
-    save_rmsds(protocol, transformation) # Add pairwise calculation   
+    save_rmsds(protocol, transformation)    
     save_overlap_matrix(protocol, transformation)
 
 

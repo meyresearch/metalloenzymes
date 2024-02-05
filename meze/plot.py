@@ -1,3 +1,4 @@
+import warnings
 import numpy as np
 import scipy.stats 
 import sklearn.metrics
@@ -158,7 +159,7 @@ def save_statistics_to_file(outputs, statistics):
     statistics.to_csv(f"{outputs}/meze_statistics.csv")
 
 
-def combine_results(protocol, values_dataframe, errors_dataframe):
+def combine_results(protocol):
     """
     Take values and errors from individual runs and average them and propagate errors.
 
@@ -166,86 +167,66 @@ def combine_results(protocol, values_dataframe, errors_dataframe):
     -----------
     protocol: dict
         protocol file as a dictionary
-    values_dataframe: pd.DataFrame
-        dataframe containing free energy estimates from individual runs
-    errors_dataframe: 
-        dataframe containing error estimates from individual runs
 
     Return:
     -------
     results: pd.DataFrame
         dataframe containing averaged results and propagated errors
     """
-    calculated_means = average(values_dataframe)
-    propagated_errors = add_in_quadrature(errors_dataframe)
-    standard_deviations = standard_deviation(values_dataframe)
-    results = pd.concat([values_dataframe["transformations"], calculated_means, standard_deviations, propagated_errors], axis=1).dropna()
-    results.to_csv(protocol["outputs"] + "/" + protocol["engine"] + "_results.csv", index=False)
+
+    transformations, free_energies, errors = read_results(protocol)
+    
+    nan_indices = functions.check_nan(free_energies)
+    calculated_means = functions.average(free_energies)
+    propagated_errors = functions.add_in_quadrature(errors)
+
+    standard_deviations = functions.standard_deviation(free_energies)
+    results_dictionary = {"transformation": transformations, 
+                          "average_ddg": calculated_means,
+                          "standard_deviation": standard_deviations,
+                          "propagated_error": propagated_errors}
+    results = pd.DataFrame.from_dict(results_dictionary)
+    results_file = protocol["outputs"] + "/" + protocol["engine"] + "_results.csv"
+    results.to_csv(results_file, index=False)
+
+    if len(nan_indices) > 0: # OUTPUT IS WEIRD
+        write_results_warning(nan_indices, results_file, transformations)
+        warnings.warn(f"Some transformations contained NaNs. Please check {results_file} for details.")
+
     return results
 
 
-def average(values):
+def write_results_warning(nan_indices, results_file, transformations):
     """
-    Average the binding free energy values accross repeats
+    Write a warning message to the results dataframe csv file about transformations containgin NaNs.
 
     Parameters:
     -----------
-    values: pd.DataFrame
-        original dataframe of free energy differences
+    nan_indices: array
+        array of indices of values that are NaNs
+    results_file: str
+        name and full path to the results.csv file
+    transformations: list
+        list of transformation names
 
     Return:
     -------
-    df: pd.DataFrame
-        averaged binding free energies
     """
-    df = pd.DataFrame()
-    df["average"] = values.mean(axis=1, numeric_only=True)
-    return df
 
+    with open(results_file, "r+") as file:
+        file.seek(0, 0)
+        file.write("##############################################################\n")
+        file.write("#                          Warning                           #\n")
+        file.write("#                                                            #\n")
+        file.write("#            The following lines contained NaNs:             #\n")
+        file.write("#                                                            #\n")
+        for line in nan_indices:
+            transformation_index = line[0]
+            repeat_index = line[1]
+            file.write(f"#           {transformations[transformation_index]}        repeat: {repeat_index}             #\n")
+        file.write("#                                                            #\n")
+        file.write("##############################################################\n")    
 
-def add_in_quadrature(errors):
-    """
-    Take the errors in each repeat and propagate by adding them in quadrature 
-
-    Parameters:
-    -----------
-    errors: pd.DataFrame
-        original errors dataframe
-
-    Return:
-    -------
-    df: pd.DataFrame
-        propagated errors 
-    """
-    df = pd.DataFrame()
-    squares = pd.DataFrame()
-    repeats = list(errors.drop(columns=["transformations"]).columns)
-    square_names = []
-    for repeat in repeats:
-        column = repeat.split("_")[-1]
-        squares[f"square_{column}"] = errors[repeat] ** 2
-        square_names.append(f"square_{column}")
-    squares["sum"] = squares[square_names].sum(axis=1)
-    df["error_in_quadrature"] = (1/len(repeats)) * np.sqrt(squares["sum"])
-    return df
-
-
-def standard_deviation(values):
-    """
-    Take the standard deviation of the binding free energies accross repeats
-
-    Parameters:
-    -----------
-    values: pd.DataFrame 
-        original dataframe of free energy differences 
-
-    Return:
-    -------
-
-    """
-    df = pd.DataFrame()
-    df["std"] = values.std(axis=1, numeric_only=True)
-    return df
 
 
 def inhibition_to_ddg(ki_a, ki_b, temperature=300.0) -> float:
@@ -353,9 +334,6 @@ def bootstrap_statistics(experimental: np.array, calculated: np.array, n_samples
         results[statistic]["lower_bound"] = statistics_dict[statistic][int(n_samples * lower_fraction)]
         results[statistic]["upper_bound"] = statistics_dict[statistic][int(n_samples * upper_fraction)]
     return results
-
-
-
 
 
 def plot_individual_runs(outputs, experimental_free_energy, experimental_error, afe_values, results):
@@ -574,7 +552,44 @@ def plot_individual_rmsd(plots_directory, savename, stage, time, rmsd):
     ax.set_ylabel("RMSD ($\AA$)")
     fig.savefig(f"{plots_directory}/{stage}_{savename}.png", dpi=1000)
     
+
+def read_results(protocol):
+    """
+    Read in dataframes of the raw results from each repeat.
+
+    Parameters:
+    -----------
+    protocol: dict
+        protocol file as a dictionary
+
+    Return:
+    -------
+    free_energies, errors: tuple(np.array, np.array)
+        free energies and errors from all repeats: [[repeat_1, repeat_2, repeat_3]...]
+    """
+    outputs = functions.path_exists(protocol["outputs"])
+    engine = protocol["engine"]
+    n_repeats = functions.check_int(protocol["repeats"])
+
+    free_energies = []
+    errors = []
+
+    for i in range(1, n_repeats + 1):
+        results_file = f"{outputs}/{engine}_{i}_raw.csv"
+        dataframe = pd.read_csv(results_file, index_col=False).sort_values(by=["transformation"])
+        transformations = dataframe["transformation"]
+        free_energy = dataframe["free-energy"].to_numpy()
+        error = dataframe["error"].to_numpy()
+        free_energies.append(free_energy)
+        errors.append(error)
+    
+    return transformations, np.array(free_energies).T, np.array(errors).T
+
+
 #TODO rmsd_box plots: need to read in RMSD data
+    
+#TODO RMSD pairwise matrix plots
+    # remember to get max range of rmsds 
     
 #TODO overlap matrix plots
 
@@ -602,30 +617,20 @@ def main():
     protocol_file = functions.file_exists(arguments.protocol_file)
     protocol = functions.read_protocol(protocol_file)
 
-    results = combine_results(protocol, values, errors)
+    transformations, free_energies, errors = read_results(protocol) 
+    results = combine_results(protocol)
 
     experimental_file = arguments.experimental_file
-    experimental_free_energy, experimental_error = get_experimental_data(experimental_file, results["transformations"].tolist())
+    experimental_free_energy, experimental_error = get_experimental_data(experimental_file, transformations)
 
     plot_bar(protocol["outputs"], results, experimental_free_energy, experimental_error)
     plot_correlation(protocol["outputs"], results, experimental_free_energy, experimental_error)
-    plot_individual_runs(protocol["outputs"], experimental_free_energy, experimental_error, values, results)
+    plot_individual_runs(protocol["outputs"], experimental_free_energy, experimental_error, free_energies, results)
     statistics = output_statistics(experimental_free_energy, results)
     save_statistics_to_file(protocol["outputs"], statistics)
 
 
-def read_results(protocol):
 
-    outputs = functions.path_exists(protocol["outputs"])
-    engine = protocol["engine"]
-    n_repeats = functions.check_int(protocol["repeats"])
-
-    for i in range(1, n_repeats + 1):
-
-        results_file = f"{outputs}/{engine}_{i}_raw.csv"
-        dataframe = pd.read_csv(results_file, index_col=False)  
-
-    pass
 
 
 
