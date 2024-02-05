@@ -265,7 +265,7 @@ def compute_rmsd(directory, topology_format="PARM7"):
     Parameters:
     -----------
     directory: str
-        full path to the directory containing lambda directories eg. project/SOMD_1/lig_A_lig_B/bound/
+        full path to the directory containing lambda directories e.g. project/SOMD_1/lig_A_lig_B/bound/
     engine: str
         name of the MD engine used
     topology_format: str
@@ -306,6 +306,20 @@ def compute_rmsd(directory, topology_format="PARM7"):
 
 
 def save_rmsds(protocol, transformation):
+    """
+    Compute RMSD of each trajectory + pairwise lambda RMSDs and save as npy files
+
+    Parameters:
+    -----------
+    protocol: dict
+        protocol file as a dictionary
+
+    transformation: str 
+        name of the transformation
+
+    Return:
+    -------
+    """
     
     outputs = functions.path_exists(protocol["outputs"])
     engine = protocol["engine"]
@@ -327,6 +341,87 @@ def save_rmsds(protocol, transformation):
         if not os.path.isfile(bound_file):
             bound_rmsd_array = compute_rmsd(bound)
             np.save(bound_file, bound_rmsd_array)
+
+        pairwise_unbound_file_first_frame = path + "pairwise_unbound_rmsd_first_frame.npy"
+        pairwise_bound_file_first_frame = path + "pairwise_bound_rmsd_first_frame.npy"
+
+        if not os.path.isfile(pairwise_unbound_file_first_frame):
+            pairwise_unbound_rmsd_first_frame = compute_pairwise_lambda_rmsd(unbound, frame=0)
+            np.save(pairwise_unbound_file_first_frame, pairwise_unbound_rmsd_first_frame)
+        
+        if not os.path.isfile(pairwise_bound_file_first_frame):
+            pairwise_bound_rmsd_first_frame = compute_pairwise_lambda_rmsd(bound, frame=0)
+            np.save(pairwise_bound_file_first_frame, pairwise_bound_rmsd_first_frame)
+
+        pairwise_unbound_file_last_frame = path + "pairwise_unbound_rmsd_last_frame.npy"
+        pairwise_bound_file_last_frame = path + "pairwise_bound_rmsd_last_frame.npy"
+
+        if not os.path.isfile(pairwise_unbound_file_last_frame):
+            pairwise_unbound_rmsd_last_frame = compute_pairwise_lambda_rmsd(unbound, frame=-1)
+            np.save(pairwise_unbound_file_last_frame, pairwise_unbound_rmsd_last_frame)
+        
+        if not os.path.isfile(pairwise_bound_file_last_frame):
+            pairwise_bound_rmsd_last_frame = compute_pairwise_lambda_rmsd(bound, frame=-1)
+            np.save(pairwise_bound_file_last_frame, pairwise_bound_rmsd_last_frame)
+
+
+
+def compute_pairwise_lambda_rmsd(directory, frame):
+    """
+    Compute the pairwise RMSD between lambda windows at given frame
+
+    Parameters:
+    -----------
+    directory: str
+        full path to the directory containing lambda directories e.g. project/SOMD_1/lig_A_lig_B/bound/
+
+    frame: int
+        frame at which pairwise RMSD is calculated
+
+    Return:
+    -------
+    pairwise_rmsd_matrix: np.array
+        symmetric matrix whose dimensions are n_lambdas x n_lambdas; 
+        each cell is the pairwise RMSD between two lambda windows calculated at given frame
+
+    """
+    frame_index = functions.check_int(frame)
+
+    lambda_directories = functions.get_files(directory + "lambda_*/")
+
+    pairwise_rmsd_matrix = np.zeros(shape=(len(lambda_directories),
+                                           len(lambda_directories)))
+    
+    for i in range(len(lambda_directories)):
+        for j in range(len(lambda_directories)):
+
+            lambda_1 = lambda_directories[i]
+            lambda_2 = lambda_directories[j]
+            topology_1 = functions.get_files(lambda_1 + "*.prm7")[0]
+            topology_2 = functions.get_files(lambda_2 + "*.prm7")[0]
+            trajectory_1 = functions.get_files(lambda_1 + "*.dcd")[0]
+            trajectory_2 = functions.get_files(lambda_2 + "*.dcd")[0]
+
+            universe_1 = mda.Universe(topology_1, trajectory_1, topology_format="PARM7")
+            universe_2 = mda.Universe(topology_2, trajectory_2, topology_format="PARM7")
+
+            ligand_1 = universe_1.select_atoms("resname LIG")
+            ligand_2 = universe_2.select_atoms("resname LIG")
+
+            universe_1.trajectory[frame_index]
+            universe_2.trajectory[frame_index]
+
+            lambda_1 = ligand_1.positions.copy()
+            lambda_2 = ligand_2.positions.copy()
+
+            rmsd = MDAnalysis.analysis.rms.rmsd(lambda_1, lambda_2)   
+
+            pairwise_rmsd_matrix[i][j] = rmsd     
+
+    lower_triangle_indices = np.tril_indices(len(pairwise_rmsd_matrix), -1)
+    pairwise_rmsd_matrix[lower_triangle_indices] = pairwise_rmsd_matrix.T[lower_triangle_indices]
+    
+    return pairwise_rmsd_matrix
 
 
 def save_overlap_matrix(protocol, transformation):
@@ -434,7 +529,7 @@ def main():
 
     fix_simfile(protocol, transformation)
     save_results(protocol, transformation)
-    save_rmsds(protocol, transformation)
+    save_rmsds(protocol, transformation) # Add pairwise calculation   
     save_overlap_matrix(protocol, transformation)
 
 
