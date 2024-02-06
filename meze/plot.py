@@ -217,14 +217,18 @@ def write_results_warning(nan_indices, results_file, transformations):
         results = file.readlines()
         file.seek(0, 0)
         file.write("##############################################################\n")
-        file.write("#                          Warning                           #\n")
+        file.write("#                           Warning                          #\n")
         file.write("#                                                            #\n")
-        file.write("#            The following lines contained NaNs:             #\n")
+        file.write("#             The following lines contained NaNs:            #\n")
         file.write("#                                                            #\n")
         for line in nan_indices:
             transformation_index = line[0]
             repeat_index = line[1]
-            file.write(f"#           {transformations[transformation_index]}        repeat: {repeat_index}             #\n")
+            line_width = len("############################################################")
+            pad = "".rjust(12)
+            middle_pad_length = line_width - 2 * len(pad) - len(transformations[transformation_index]) - len(f"repeat: {repeat_index}")
+            middle_pad = "".ljust(middle_pad_length)
+            file.write(f"#{pad}{transformations[transformation_index]}{middle_pad}repeat: {repeat_index}{pad}#\n")
         file.write("#                                                            #\n")
         file.write("##############################################################\n")    
         file.writelines(results)
