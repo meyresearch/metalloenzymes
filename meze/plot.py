@@ -214,6 +214,7 @@ def write_results_warning(nan_indices, results_file, transformations):
     """
 
     with open(results_file, "r+") as file:
+        results = file.readlines()
         file.seek(0, 0)
         file.write("##############################################################\n")
         file.write("#                          Warning                           #\n")
@@ -226,6 +227,7 @@ def write_results_warning(nan_indices, results_file, transformations):
             file.write(f"#           {transformations[transformation_index]}        repeat: {repeat_index}             #\n")
         file.write("#                                                            #\n")
         file.write("##############################################################\n")    
+        file.writelines(results)
 
 
 
@@ -577,7 +579,7 @@ def read_results(protocol):
     for i in range(1, n_repeats + 1):
         results_file = f"{outputs}/{engine}_{i}_raw.csv"
         dataframe = pd.read_csv(results_file, index_col=False).sort_values(by=["transformation"])
-        transformations = dataframe["transformation"]
+        transformations = dataframe["transformation"].tolist()
         free_energy = dataframe["free-energy"].to_numpy()
         error = dataframe["error"].to_numpy()
         free_energies.append(free_energy)
