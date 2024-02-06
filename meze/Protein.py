@@ -130,17 +130,18 @@ class Protein(object):
         #TODO Check if this works:
         # save_file = self.path + "/" + self.name
         save_file = complex_file.split(".")[0] # strips the file extension
-        with open(tleap_input_file, "w") as tleap_in:
-            tleap_in.write(f"source leaprc.protein.{self.forcefield}\n")
-            # tleap_in.write(f"source leaprc.gaff2\n")
-            tleap_in.write(f"source leaprc.water.{self.water_model}\n")
-            tleap_in.write(f"complex = loadpdb {complex_file}\n")
-            tleap_in.write(f"saveamberparm complex {save_file}_tleap.prm7 {save_file}_tleap.rst7\n")
-            tleap_in.write("quit")
-        work_dir = os.getcwd()
-        os.chdir(self.path)
-        os.system(f"tleap -s -f {tleap_input_file} > {tleap_output_file}")
-        os.chdir(work_dir)
+        if not os.path.isfile(f"{save_file}_tleap.prm7") or not os.path.isfile(f"{save_file}_tleap.rst7"):
+            with open(tleap_input_file, "w") as tleap_in:
+                tleap_in.write(f"source leaprc.protein.{self.forcefield}\n")
+                # tleap_in.write(f"source leaprc.gaff2\n")
+                tleap_in.write(f"source leaprc.water.{self.water_model}\n")
+                tleap_in.write(f"complex = loadpdb {complex_file}\n")
+                tleap_in.write(f"saveamberparm complex {save_file}_tleap.prm7 {save_file}_tleap.rst7\n")
+                tleap_in.write("quit")
+            work_dir = os.getcwd()
+            os.chdir(self.path)
+            os.system(f"tleap -s -f {tleap_input_file} > {tleap_output_file}")
+            os.chdir(work_dir)
         return save_file + "_tleap"
 
 

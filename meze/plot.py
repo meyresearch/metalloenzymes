@@ -36,7 +36,7 @@ def output_statistics(experimental_free_energy, results):
     remove_indices = np.argwhere(np.isnan(experimental_free_energy)).flatten()
     
     experimental_values = np.delete(experimental_free_energy, remove_indices)
-    calculated_values = np.delete(results["average"].to_numpy(), remove_indices)
+    calculated_values = np.delete(results["average_ddg"].to_numpy(), remove_indices)
 
     pearson_r = scipy.stats.pearsonr(experimental_values, calculated_values)
     spearman = scipy.stats.spearmanr(experimental_values, calculated_values)
@@ -189,7 +189,7 @@ def combine_results(protocol):
     results_file = protocol["outputs"] + "/" + protocol["engine"] + "_results.csv"
     results.to_csv(results_file, index=False)
 
-    if len(nan_indices) > 0: # OUTPUT IS WEIRD
+    if len(nan_indices) > 0: 
         write_results_warning(nan_indices, results_file, transformations)
         warnings.warn(f"Some transformations contained NaNs. Please check {results_file} for details.")
 
@@ -342,20 +342,19 @@ def bootstrap_statistics(experimental: np.array, calculated: np.array, n_samples
     return results
 
 
-def plot_individual_runs(outputs, experimental_free_energy, experimental_error, afe_values, results):
+def plot_individual_runs(protocol, experimental_free_energy, experimental_error, afe_values, results):
     """
     Plot correlation of individual AFE runs against experimental values
 
     Parameters:
     -----------
-    outputs: str
-        full path to outputs directory
+    protocol: dict
+        protocol file as a dictionary
     experimental_free_energy: np.array
         experimental free energy values (converted from inhibition constants)
     experimental_error: np.array
         propagated error on the experimental free energy values
-    afe_values: pd.DataFrame
-        calculated free energy values and errors
+
     results: 
         averaged free energy values and propagated errors
 
@@ -363,33 +362,37 @@ def plot_individual_runs(outputs, experimental_free_energy, experimental_error, 
     -------
     """
     fig, ax = plt.subplots(1, 1, figsize=(10, 10))
-    sns.set(context="notebook", palette="colorblind", style="ticks", font_scale=2)
-    
-    #TODO don't assume 3 repeats
-    ax.scatter(experimental_free_energy, afe_values["repeat_1"].to_numpy(), s=50, label="SOMD 1")
-    ax.scatter(experimental_free_energy, afe_values["repeat_2"].to_numpy(), s=50, label="SOMD 2")
-    ax.scatter(experimental_free_energy, afe_values["repeat_3"].to_numpy(), s=50, label="SOMD 3")
+    sns.set(context="notebook", palette="colorblind", style="ticks")
+    outputs = protocol["outputs"]
+    repeats = functions.check_int(protocol["repeats"])
+    engine = protocol["engine"]
+
+    for i in range(1, repeats + 1):
+        raw_datafile = outputs + "/" + engine + f"_{i}_raw.csv"
+        dataframe = pd.read_csv(raw_datafile, index_col=False)
+        ax.scatter(experimental_free_energy, dataframe["free-energy"].to_numpy(), s=50, label=f"{engine} {i}")
+
 
     (_, _, _) = plt.errorbar(experimental_free_energy,
-                                results["average"].to_numpy(),
+                                results["average_ddg"].to_numpy(),
                                 color="#D0006F",
                                 xerr=experimental_error,
-                                yerr=results["std"].to_numpy(),
+                                yerr=results["standard_deviation"].to_numpy(),
                                 capsize=3,
                                 linestyle="",
                                 zorder=-1)
 
     ax.plot([-4.5, 4.5], [-4.5, 4.5], color="#0099AB", linestyle=":", zorder=-1)
-    ax.set_xlabel("$\Delta \Delta$ G$_\mathrm{EXP}$ (kcal mol⁻¹)")
-    ax.set_ylabel("$\Delta \Delta$ G$_\mathrm{AFE}$ (kcal mol⁻¹)")
+    ax.set_xlabel("$\Delta \Delta$ G$_\mathrm{EXP}$ (kcal mol⁻¹)", fontsize=14)
+    ax.set_ylabel("$\Delta \Delta$ G$_\mathrm{AFE}$ (kcal mol⁻¹)", fontsize=14)
     ax.vlines(0, -3.5, 3.5, color = "silver", linestyle="--", zorder=-1)
     ax.hlines(0, -3.5, 3.5, color = "silver", linestyle="--", zorder=-1)
     ax.set_xlim(-3.5, 3.5)
     ax.set_ylim(-3.5, 3.5)
  
-    labels = [transformation.strip().replace("_", "").replace("ligand", "").replace("~", " to ") for transformation in afe_values["transformations"].tolist()]
+    labels = [transformation.strip().replace("_", "").replace("ligand", "").replace("~", " to ") for transformation in results["transformation"].tolist()]
     for i in range(len(labels)):
-        ax.annotate(labels[i], (experimental_free_energy[i], results["average"].to_numpy()[i]))
+        ax.annotate(labels[i], (experimental_free_energy[i], dataframe["free-energy"].to_numpy()[i]), fontsize=9)
     ax.legend()
     fig.tight_layout()
     fig.savefig(f"{outputs}/individual_correlation.png", dpi=1000)
@@ -415,8 +418,8 @@ def plot_correlation(outputs, results, experimental_free_energy, exp_error, regi
     -------
     
     """
-    means = results["average"].to_numpy() 
-    std = results["std"].to_numpy()
+    means = results["average_ddg"].to_numpy() 
+    std = results["standard_deviation"].to_numpy()
 
     fig, ax = plt.subplots(1, 1, figsize=(10,10))
     sns.set(context="notebook", palette="colorblind", style="ticks", font_scale=2)
@@ -474,9 +477,9 @@ def plot_bar(outputs, afe_df, exp_free_energy, exp_error):
     -------
 
     """
-    means = afe_df["average"].to_numpy() 
-    std = afe_df["std"].to_numpy()
-    transformations = afe_df["transformations"].to_list()
+    means = afe_df["average_ddg"].to_numpy() 
+    std = afe_df["standard_deviation"].to_numpy()
+    transformations = afe_df["transformation"].to_list()
     labels = [transformation.strip().replace("_", "").replace("ligand", "").replace("~", " to ") for transformation in transformations]
     n_x_labels = np.arange(len(means))
     bar_width = 0.35
@@ -631,7 +634,7 @@ def main():
 
     plot_bar(protocol["outputs"], results, experimental_free_energy, experimental_error)
     plot_correlation(protocol["outputs"], results, experimental_free_energy, experimental_error)
-    plot_individual_runs(protocol["outputs"], experimental_free_energy, experimental_error, free_energies, results)
+    plot_individual_runs(protocol, experimental_free_energy, experimental_error, free_energies, results)
     statistics = output_statistics(experimental_free_energy, results)
     save_statistics_to_file(protocol["outputs"], statistics)
 

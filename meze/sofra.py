@@ -238,14 +238,14 @@ class Sofra(object):
             self.equilibration_directory = functions.path_exists(equilibration_path)  
             self.outputs = functions.path_exists(outputs) 
             self.output_directories = functions.get_files(self.outputs + f"/{engine}_*")
-            self.plots = functions.get_files(self.outputs + f"/plots/")
+            self.plots = functions.get_files("/outputs/plots/")
         else:
             self.protein_file = protein_file
             self.afe_input_directory = self.create_directory("/afe/")
             self.equilibration_directory = self.create_directory("/equilibration/")
             self.outputs = self.create_directory("/outputs/")
             self.output_directories = self.create_output_directories()
-            self.plots = self.create_directory(self.outputs + "/plots/")
+            self.plots = self.create_directory("/outputs/plots/")
 
         self.ligand_path = functions.path_exists(ligand_path)
         self.ligand_forcefield = ligand_ff
@@ -591,7 +591,7 @@ class Sofra(object):
         output = self.afe_input_directory + f"05_run_{self.md_engine}.sh"
         meze = os.environ["MEZEHOME"]
         
-        template = meze + "/run_afe.sh"
+        template = meze + "/05_run_afe.sh"
         with open(template, "r") as file:
             lines = file.readlines()
         
@@ -624,27 +624,30 @@ class Sofra(object):
         transformations: pd.DataFrame
             forward and backward transformations with their associated lomap scores, number of windows and lambda list
         """
-        lomap_work_directory = self.check_lomap_directory()
-        transformations, lomap_scores = bss.Align.generateNetwork(self.ligand_molecules, plot_network=True, names=self.names, work_dir=lomap_work_directory)        
-        start_ligand = [self.names[transformation[0]] for transformation in transformations]
-        end_ligand = [self.names[transformation[1]] for transformation in transformations] 
-        start_indices = [transformation[0] for transformation in transformations]
-        end_indices = [transformation[1] for transformation in transformations]
-        dataframe = pd.DataFrame()
-        dataframe["ligand_a"] = start_ligand
-        dataframe["index_a"] = start_indices
-        dataframe["ligand_b"] = end_ligand
-        dataframe["index_b"] = end_indices
-        dataframe["score"] = lomap_scores
-        for score in lomap_scores:
-            n_windows = self.set_n_windows(score)
-            self.n_windows.append(n_windows)
-            lambda_windows = create_lambda_windows(n_windows)
-            self.lambdas.append(lambda_windows)
-        dataframe["n_windows"] = self.n_windows
-        dataframe["lambdas"] = self.lambdas
         save_name = self.afe_input_directory+f"/meze_network.csv"
-        dataframe.to_csv(save_name)
+        if not os.path.isfile(save_name):
+            lomap_work_directory = self.check_lomap_directory()
+            transformations, lomap_scores = bss.Align.generateNetwork(self.ligand_molecules, plot_network=True, names=self.names, work_dir=lomap_work_directory)        
+            start_ligand = [self.names[transformation[0]] for transformation in transformations]
+            end_ligand = [self.names[transformation[1]] for transformation in transformations] 
+            start_indices = [transformation[0] for transformation in transformations]
+            end_indices = [transformation[1] for transformation in transformations]
+            dataframe = pd.DataFrame()
+            dataframe["ligand_a"] = start_ligand
+            dataframe["index_a"] = start_indices
+            dataframe["ligand_b"] = end_ligand
+            dataframe["index_b"] = end_indices
+            dataframe["score"] = lomap_scores
+            for score in lomap_scores:
+                n_windows = self.set_n_windows(score)
+                self.n_windows.append(n_windows)
+                lambda_windows = create_lambda_windows(n_windows)
+                self.lambdas.append(lambda_windows)
+            dataframe["n_windows"] = self.n_windows
+            dataframe["lambdas"] = self.lambdas
+            dataframe.to_csv(save_name)
+        else:
+            dataframe = pd.read_csv(save_name)
         return dataframe, save_name
     
 
@@ -800,7 +803,8 @@ class Sofra(object):
                     f"ligand directory = {self.ligand_path}",
                     f"protein directory = {self.protein_path}",
                     f"log directory = {self.log_directory}",
-                    f"afe input directory = {self.afe_input_directory}"]
+                    f"afe input directory = {self.afe_input_directory}",
+                    f"plots directory = {self.plots}"]
 
         protocol_file = self.afe_input_directory + "/protocol.dat"
 
