@@ -10,6 +10,8 @@ import MDAnalysis.analysis.rms
 import warnings
 import logging
 import meze
+import matplotlib.pyplot as plt
+import seaborn as sns
 logger = logging.getLogger()
 logger.setLevel(logging.CRITICAL)
 
@@ -258,7 +260,7 @@ def save_results(protocol, transformation):
                 output_file.write(data_line)
 
 
-def compute_rmsd(directory, topology_format="PARM7"):
+def plot_and_compute_rmsd(directory, topology_format="PARM7"):
     """
     Compute root mean square deviation in a simulation
 
@@ -282,25 +284,37 @@ def compute_rmsd(directory, topology_format="PARM7"):
     trajectories = functions.get_files(directory + "/lambda_*/*.dcd") 
     results = []
     for i in range(len(topology_files)):
-        with mda.lib.formats.libdcd.DCDFile(trajectories[i]) as trajectory:
-            frames = [frame for frame in trajectory]
-        first_frame = frames[0].xyz
+        save_path, _ = os.path.split(topology_files[i])
+        savename = save_path + "rmsd"
+        if not os.path.isfile(savename):
+            with mda.lib.formats.libdcd.DCDFile(trajectories[i]) as trajectory:
+                frames = [frame for frame in trajectory]
+            first_frame = frames[0].xyz
 
-        reference_universe = mda.Universe(topology_files[i], first_frame, topology_format=topology_format)
-        universe = mda.Universe(topology_files[i], trajectories[i], topology_format=topology_format)
-        
-        reference_coordinates = reference_universe.select_atoms("resname LIG")
-        ligand = universe.select_atoms("resname LIG")
-        
-        rmsd = mda.analysis.rms.RMSD(ligand, reference_coordinates)
-        rmsd.run()
-        rmsd_result = rmsd.results["rmsd"].T
+            reference_universe = mda.Universe(topology_files[i], first_frame, topology_format=topology_format)
+            universe = mda.Universe(topology_files[i], trajectories[i], topology_format=topology_format)
+            
+            reference_coordinates = reference_universe.select_atoms("resname LIG")
+            ligand = universe.select_atoms("resname LIG")
+            
+            rmsd = mda.analysis.rms.RMSD(ligand, reference_coordinates)
+            rmsd.run()
+            rmsd_result = rmsd.results["rmsd"].T
 
-        time = rmsd_result[0] / 1000
-        rmsd_values = rmsd_result[2]
-        results.append([time, rmsd_values])
+            time = rmsd_result[0] / 1000
+            rmsd_values = rmsd_result[2]
+            results.append([time, rmsd_values])
     
-    save_array = np.array(results)
+            save_array = np.array(results)
+            np.save(savename, save_array)           
+            
+            fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+            sns.set(context="notebook", palette="colorblind", style="ticks", font_scale=2)
+            ax.plot(time, rmsd, "k-")
+            ax.set_xlabel("Time (ns)")
+            ax.set_ylabel("RMSD ($\AA$)")
+            fig.savefig(savename + ".png", dpi=1000)
+        
 
     return save_array
 
@@ -331,16 +345,8 @@ def save_rmsds(protocol, transformation):
         unbound = path + "unbound/"
         bound = path + "bound/"    
         
-        unbound_file = path  + "unbound_rmsd.npy"
-        bound_file = path  + "bound_rmsd.npy"
-
-        if not os.path.isfile(unbound_file):
-            unbound_rmsd_array = compute_rmsd(unbound)
-            np.save(unbound_file, unbound_rmsd_array)
-        
-        if not os.path.isfile(bound_file):
-            bound_rmsd_array = compute_rmsd(bound)
-            np.save(bound_file, bound_rmsd_array)
+        plot_and_compute_rmsd(unbound)
+        plot_and_compute_rmsd(bound)
 
         pairwise_unbound_file_first_frame = path + "pairwise_unbound_rmsd_first_frame.npy"
         pairwise_bound_file_first_frame = path + "pairwise_bound_rmsd_first_frame.npy"
@@ -499,6 +505,49 @@ def read_overlap_matrix(mbar_file):
     return matrix
 
 
+def plot_individual_rmsd(protocol, transformation, stage):
+    """
+    Plot individual root mean square deviation against time.
+    Plots are saved in /outputs/plots/ 
+
+    Parameters:
+    -----------
+    protocol: dict
+        protocol file as a dictionary
+    transformation: str
+        name of transformation
+    stage: str
+        unbound or bound
+    time: np.array
+        array of time
+    rmsd: np.array
+        rmsd values over time
+
+    Return:
+    -------
+    """
+    outputs = protocol["outputs"]
+    engine = protocol["engine"]
+    repeats = functions.check_int(protocol["repeats"])
+    plots_directory = protocol["plots directory"]
+    savename = f"{plots_directory}/{stage}_{transformation}.png"
+
+    for i in range(1, repeats + 1):
+        path = outputs + "/" + engine + f"_{i}/" + transformation + "/" 
+
+        rmsd_file = np.load(path + stage + "_rmsd.npy")
+        time = rmsd_file[0]
+        rmsd = rmsd_file[1]
+
+        if not os.path.isfile(savename):
+            fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+            sns.set(context="notebook", palette="colorblind", style="ticks", font_scale=2)
+            ax.plot(time, rmsd, "k-")
+            ax.set_xlabel("Time (ns)")
+            ax.set_ylabel("RMSD ($\AA$)")
+            fig.savefig(savename, dpi=1000)
+    
+
 def main():
     
     parser = argparse.ArgumentParser(description="MEZE: MetalloEnZymE FF-builder for alchemistry")
@@ -530,6 +579,8 @@ def main():
     fix_simfile(protocol, transformation)
     save_results(protocol, transformation)
     save_rmsds(protocol, transformation)    
+    plot_individual_rmsd(protocol, transformation=transformation, stage="unbound")
+    plot_individual_rmsd(protocol, transformation=transformation, stage="bound")
     save_overlap_matrix(protocol, transformation)
 
 
