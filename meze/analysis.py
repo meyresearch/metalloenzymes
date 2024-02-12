@@ -278,14 +278,12 @@ def plot_and_compute_rmsd(directory, topology_format="PARM7"):
     time, rmsd_values: tuple
         tuple of two lists containing the time and RMSD values 
     """
-
-
     topology_files = functions.get_files(directory + "lambda_*/*.prm7") 
     trajectories = functions.get_files(directory + "/lambda_*/*.dcd") 
-    results = []
+
     for i in range(len(topology_files)):
         save_path, _ = os.path.split(topology_files[i])
-        savename = save_path + "rmsd"
+        savename = save_path + "/rmsd"
         if not os.path.isfile(savename):
             with mda.lib.formats.libdcd.DCDFile(trajectories[i]) as trajectory:
                 frames = [frame for frame in trajectory]
@@ -303,19 +301,17 @@ def plot_and_compute_rmsd(directory, topology_format="PARM7"):
 
             time = rmsd_result[0] / 1000
             rmsd_values = rmsd_result[2]
-            results.append([time, rmsd_values])
-    
-            save_array = np.array(results)
+                
+            save_array = np.array([time, rmsd_values])
             np.save(savename, save_array)           
             
             fig, ax = plt.subplots(1, 1, figsize=(10, 10))
             sns.set(context="notebook", palette="colorblind", style="ticks", font_scale=2)
-            ax.plot(time, rmsd, "k-")
+            ax.plot(time, rmsd_values, "k-")
             ax.set_xlabel("Time (ns)")
             ax.set_ylabel("RMSD ($\AA$)")
             fig.savefig(savename + ".png", dpi=1000)
         
-
     return save_array
 
 
@@ -505,49 +501,6 @@ def read_overlap_matrix(mbar_file):
     return matrix
 
 
-def plot_individual_rmsd(protocol, transformation, stage):
-    """
-    Plot individual root mean square deviation against time.
-    Plots are saved in /outputs/plots/ 
-
-    Parameters:
-    -----------
-    protocol: dict
-        protocol file as a dictionary
-    transformation: str
-        name of transformation
-    stage: str
-        unbound or bound
-    time: np.array
-        array of time
-    rmsd: np.array
-        rmsd values over time
-
-    Return:
-    -------
-    """
-    outputs = protocol["outputs"]
-    engine = protocol["engine"]
-    repeats = functions.check_int(protocol["repeats"])
-    plots_directory = protocol["plots directory"]
-    savename = f"{plots_directory}/{stage}_{transformation}.png"
-
-    for i in range(1, repeats + 1):
-        path = outputs + "/" + engine + f"_{i}/" + transformation + "/" 
-
-        rmsd_file = np.load(path + stage + "_rmsd.npy")
-        time = rmsd_file[0]
-        rmsd = rmsd_file[1]
-
-        if not os.path.isfile(savename):
-            fig, ax = plt.subplots(1, 1, figsize=(10, 10))
-            sns.set(context="notebook", palette="colorblind", style="ticks", font_scale=2)
-            ax.plot(time, rmsd, "k-")
-            ax.set_xlabel("Time (ns)")
-            ax.set_ylabel("RMSD ($\AA$)")
-            fig.savefig(savename, dpi=1000)
-    
-
 def main():
     
     parser = argparse.ArgumentParser(description="MEZE: MetalloEnZymE FF-builder for alchemistry")
@@ -579,8 +532,6 @@ def main():
     fix_simfile(protocol, transformation)
     save_results(protocol, transformation)
     save_rmsds(protocol, transformation)    
-    plot_individual_rmsd(protocol, transformation=transformation, stage="unbound")
-    plot_individual_rmsd(protocol, transformation=transformation, stage="bound")
     save_overlap_matrix(protocol, transformation)
 
 

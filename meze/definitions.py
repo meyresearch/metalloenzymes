@@ -22,4 +22,6 @@ BOLTZMANN_CONSTANT = scipy.constants.Boltzmann
 AVOGADROS_NUMBER = scipy.constants.Avogadro
 
 COLOURS = {"PINK": "#D0006F",
-           "BLUE": "#0099AB"}
+           "BLUE": "#0099AB",
+           "RGBA_WHITE": (1, 1, 1),
+           "RGBA_PINK": (208/255, 0/255, 111/255)}

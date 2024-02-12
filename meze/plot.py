@@ -12,6 +12,39 @@ import meze
 import functions
 
 
+def read_results(protocol):
+    """
+    Read in dataframes of the raw results from each repeat.
+
+    Parameters:
+    -----------
+    protocol: dict
+        protocol file as a dictionary
+
+    Return:
+    -------
+    free_energies, errors: tuple(np.array, np.array)
+        free energies and errors from all repeats: [[repeat_1, repeat_2, repeat_3]...]
+    """
+    outputs = functions.path_exists(protocol["outputs"])
+    engine = protocol["engine"]
+    n_repeats = functions.check_int(protocol["repeats"])
+
+    free_energies = []
+    errors = []
+
+    for i in range(1, n_repeats + 1):
+        results_file = f"{outputs}/{engine}_{i}_raw.csv"
+        dataframe = pd.read_csv(results_file, index_col=False).sort_values(by=["transformation"])
+        transformations = dataframe["transformation"].tolist()
+        free_energy = dataframe["free-energy"].to_numpy()
+        error = dataframe["error"].to_numpy()
+        free_energies.append(free_energy)
+        errors.append(error)
+    
+    return transformations, np.array(free_energies).T, np.array(errors).T
+
+
 def output_statistics(experimental_free_energy, results):
     """
     Output statistics in a nice way and show bootstrapped statistics.
@@ -361,9 +394,10 @@ def plot_individual_runs(protocol, experimental_free_energy, experimental_error,
     Return:
     -------
     """
-    fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+    fig, ax = plt.subplots(1, 1, figsize=(16, 20))
     sns.set(context="notebook", palette="colorblind", style="ticks")
     outputs = protocol["outputs"]
+    plots = protocol["outputs"]
     repeats = functions.check_int(protocol["repeats"])
     engine = protocol["engine"]
 
@@ -395,17 +429,16 @@ def plot_individual_runs(protocol, experimental_free_energy, experimental_error,
         ax.annotate(labels[i], (experimental_free_energy[i], dataframe["free-energy"].to_numpy()[i]), fontsize=9)
     ax.legend()
     fig.tight_layout()
-    fig.savefig(f"{outputs}/individual_correlation.png", dpi=1000)
-    fig.show()
+    fig.savefig(f"{plots}/individual_correlation.png", dpi=1000)
 
 
-def plot_correlation(outputs, results, experimental_free_energy, exp_error, region=True):
+def plot_correlation(plots_directory, results, experimental_free_energy, exp_error, region=True):
     """
     Plot the correlation plot of experimental binding free energies vs calculated free energies
 
     Parameters:
     -----------
-    outputs: str
+    plots_directory: str
         full path to outputs directory
     results: pd.DataFrame
         averaged calculated free energy values and errors 
@@ -437,7 +470,7 @@ def plot_correlation(outputs, results, experimental_free_energy, exp_error, regi
                 capsize=3,
                 linestyle="",
                 zorder=-1)
-    max_calculated = max(np.absolute(means)) +1
+    max_calculated = max(np.absolute(means)) + 1
     max_experimental = max(np.absolute(experimental_free_energy)) + 1
     max_y = max(max_calculated, max_experimental)
     ax.plot([-max_y, max_y], [-max_y, max_y], color=COLOURS["BLUE"], linestyle=":", zorder=-1)
@@ -450,22 +483,22 @@ def plot_correlation(outputs, results, experimental_free_energy, exp_error, regi
         x = np.arange(-max_y, max_y+1)
         ax.fill_between(x, bottom, top, alpha=0.2, zorder=-1)
 
-    ax.set_xlim(-3.5, 3.5)
-    ax.set_ylim(-3.5, 3.5)
+    ax.set_xlim(-max_y, max_y)
+    ax.set_ylim(-max_y, max_y)
     ax.set_xlabel("$\Delta \Delta$ G$_\mathrm{EXP}$ (kcal mol \u207B \u00B9)")
     ax.set_ylabel("$\Delta \Delta$ G$_\mathrm{AFE}$ (kcal mol \u207B \u00B9)")
     fig.tight_layout()
-    fig.savefig(f"{outputs}/meze_AFE_correlation.png", dpi=1000)
+    fig.savefig(f"{plots_directory}/meze_AFE_correlation.png", dpi=1000)
+    
 
-
-def plot_bar(outputs, afe_df, exp_free_energy, exp_error):
+def plot_bar(plots_directory, afe_df, exp_free_energy, exp_error):
     """
     Plot the bar plot of experimental binding free energies vs calculated free energies
 
     Parameters:
     -----------
-    outputs: str
-        full path to outputs directory
+    plots_directory: str
+        full path to plots directory
     afe_df: pd.DataFrame
         calculated free energy values and errors 
     exp_free_energy: np.array
@@ -529,42 +562,12 @@ def plot_bar(outputs, afe_df, exp_free_energy, exp_error):
     ax.set_xlabel("Transformation")
     ax.set_ylabel("$\Delta \Delta$ G (kcal mol \u207B \u00B9)")
     fig.tight_layout()
-    fig.savefig(f"{outputs}/meze_AFE_barplot.png", dpi=1000) 
+    fig.savefig(f"{plots_directory}/meze_AFE_barplot.png", dpi=1000) 
 
 
-def plot_individual_rmsd(plots_directory, savename, stage, time, rmsd):
+def plot_rmsd_box_plot(protocol):
     """
-    Plot individual root mean square deviation against time.
-    Plots are saved in /outputs/plots/ 
-
-    Parameters:
-    -----------
-    plots_directory: str
-        full path to /outputs/plots/
-    savename: str
-        name of transformation
-    stage: str
-        unbound or bound
-    time: np.array
-        array of time
-    rmsd: np.array
-        rmsd values over time
-
-    Return:
-    -------
-    """
-
-    fig, ax = plt.subplots(1, 1, figsize=(10, 10))
-    sns.set(context="notebook", palette="colorblind", style="ticks", font_scale=2)
-    ax.plot(time, rmsd, "k-")
-    ax.set_xlabel("Time (ns)")
-    ax.set_ylabel("RMSD ($\AA$)")
-    fig.savefig(f"{plots_directory}/{stage}_{savename}.png", dpi=1000)
-    
-
-def read_results(protocol):
-    """
-    Read in dataframes of the raw results from each repeat.
+    Read in RMSD from each lambda window in unbound & bound stages and plot in a single box plot for each transfor
 
     Parameters:
     -----------
@@ -573,34 +576,97 @@ def read_results(protocol):
 
     Return:
     -------
-    free_energies, errors: tuple(np.array, np.array)
-        free energies and errors from all repeats: [[repeat_1, repeat_2, repeat_3]...]
     """
-    outputs = functions.path_exists(protocol["outputs"])
+    outputs = protocol["outputs"]
     engine = protocol["engine"]
-    n_repeats = functions.check_int(protocol["repeats"])
+    repeats = functions.check_int(protocol["repeats"])
+    plots = protocol["plots directory"]
 
-    free_energies = []
-    errors = []
+    for i in range(1, repeats + 1):
 
-    for i in range(1, n_repeats + 1):
-        results_file = f"{outputs}/{engine}_{i}_raw.csv"
-        dataframe = pd.read_csv(results_file, index_col=False).sort_values(by=["transformation"])
-        transformations = dataframe["transformation"].tolist()
-        free_energy = dataframe["free-energy"].to_numpy()
-        error = dataframe["error"].to_numpy()
-        free_energies.append(free_energy)
-        errors.append(error)
-    
-    return transformations, np.array(free_energies).T, np.array(errors).T
+        path = outputs + "/" + engine + f"_{i}/"
+        transformation_directories = functions.get_files(path + "ligand_*/")
+
+        for j in range(len(transformation_directories)):
+            unbound_rmsd_files = functions.get_files(transformation_directories[j] + "unbound/lambda_*/*.npy")
+            unbound_rmsds = [np.load(file)[1] for file in unbound_rmsd_files]
+
+            bound_lambda_directories = functions.get_files(transformation_directories[j] + "/bound/lambda_*")
+            lambda_windows = np.round(np.arange(0, len(bound_lambda_directories)/10, 0.1), 1)
+            bound_rmsd_files = functions.get_files(transformation_directories[j] + "bound/lambda_*/*.npy")
+            bound_rmsds = [np.load(file)[1] for file in bound_rmsd_files]
+
+            fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+            sns.set(context="notebook", palette="colorblind", style="ticks", font_scale=2)
+            median_line_properties = dict(linestyle="-", linewidth=2.4, color="k")
+            xtick_positions = np.arange(1, len(lambda_windows)+1, 1)
+
+            unbound_boxes = ax.boxplot(unbound_rmsds, positions=xtick_positions - 0.25/2, widths=0.25, patch_artist=True, medianprops=median_line_properties, manage_ticks=False)
+            bound_boxes = ax.boxplot(bound_rmsds, positions=xtick_positions + 0.25/2, widths=0.25, patch_artist=True, medianprops=median_line_properties, manage_ticks=False)
+            
+            for patch in unbound_boxes["boxes"]:
+                patch.set_facecolor(COLOURS["RGBA_WHITE"])
+            for patch in bound_boxes["boxes"]:
+                patch.set_facecolor(COLOURS["RGBA_PINK"])
+            
+            ax.set_xticks(ticks=xtick_positions, labels=lambda_windows)
+            ax.legend(handles=[unbound_boxes["boxes"][0], bound_boxes["boxes"][1]], labels=["Unbound", "Bound"], frameon=False)
+            ax.set_xlabel("$\lambda$ window")
+            ax.set_ylabel("RMSD ($\AA$)")
+            fig.tight_layout()
+            fig.subplots_adjust(wspace=0.05)
+            transformation = transformation_directories[j].split("/")[-2]
+            fig.savefig(plots + f"rmsd_{transformation}")
 
 
-#TODO rmsd_box plots: need to read in RMSD data
-    
 #TODO RMSD pairwise matrix plots
-    # remember to get max range of rmsds 
+def plot_pairwise_lambda_rmsd(protocol):
     
+    outputs = protocol["outputs"]
+    engine = protocol["engine"]
+    repeats = functions.check_int(protocol["repeats"])
+    
+    for i in range(1, repeats + 1):
+        path = outputs + "/" + engine + f"_{i}/"
+
+        transformation_directories = functions.get_files(path + "ligand_*/")
+
+        for j in range(len(transformation_directories)):
+
+            transformation_directory = transformation_directories[j]
+            unbound_matrix_first_frame = np.load(transformation_directory + "pairwise_unbound_rmsd_first_frame.npy")
+            unbound_matrix_last_frame = np.load(transformation_directory + "pairwise_unbound_rmsd_last_frame.npy")
+            bound_matrix_first_frame = np.load(transformation_directory + "pairwise_bound_rmsd_first_frame.npy")
+            bound_matrix_last_frame = np.load(transformation_directory + "pairwise_bound_rmsd_last_frame.npy")
+
+            pairwise_rmsds = [unbound_matrix_first_frame, unbound_matrix_last_frame, bound_matrix_first_frame, bound_matrix_last_frame]
+            filenames = []
+
+            unbound_max = max(unbound_matrix_first_frame, unbound_matrix_last_frame)
+            bound_max = max(bound_matrix_first_frame, bound_matrix_last_frame)
+            transformation_max = max(unbound_max, bound_max)
+
+            # Repeat for all pairwise RMSDs
+            fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+            sns.set(context="notebook", style="ticks", font_scale=2)
+            sns.heatmap(ax=ax, 
+                        data=unbound_matrix_first_frame, 
+                        cmap="viridis", 
+                        vmin=0, 
+                        vmax=transformation_max, 
+                        square=True, 
+                        cbar_kws={"fraction": 0.460, "pad": 0.04})
+            ax.xaxis.tick_top()
+            ax.tick_params(axis="y", rotation=360)
+            ax.set_title(r"$\lambda$ index")
+            ax.set_ylabel(r"$\lambda$ index")
+            fig.savefig(transformation_directory + "pairwise_unbound_first_frame.png", dpi=1000)
+    
+
 #TODO overlap matrix plots
+def plot_overlap_matrix():
+    pass
+
 
 def main():
 
@@ -625,22 +691,21 @@ def main():
     arguments = parser.parse_args()
     protocol_file = functions.file_exists(arguments.protocol_file)
     protocol = functions.read_protocol(protocol_file)
+    
 
-    transformations, free_energies, errors = read_results(protocol) 
+    transformations, free_energies, _ = read_results(protocol) 
     results = combine_results(protocol)
 
     experimental_file = arguments.experimental_file
     experimental_free_energy, experimental_error = get_experimental_data(experimental_file, transformations)
 
-    plot_bar(protocol["outputs"], results, experimental_free_energy, experimental_error)
+    plot_bar(protocol["plots directory"], results, experimental_free_energy, experimental_error)
     plot_correlation(protocol["outputs"], results, experimental_free_energy, experimental_error)
     plot_individual_runs(protocol, experimental_free_energy, experimental_error, free_energies, results)
+
     statistics = output_statistics(experimental_free_energy, results)
     save_statistics_to_file(protocol["outputs"], statistics)
-
-
-
-
+    plot_rmsd_box_plot(protocol)
 
 
 if __name__ == "__main__":
