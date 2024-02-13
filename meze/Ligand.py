@@ -55,9 +55,9 @@ class Ligand(object):
         names: list
         """
         if self.parameterised:
-            names = functions.get_filenames(self.file[0])
+            names = functions.get_filename(self.file[0])
         else:
-            names = functions.get_filenames(self.file)
+            names = functions.get_filename(self.file)
         return names
     
 

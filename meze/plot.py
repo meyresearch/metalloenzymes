@@ -1,4 +1,5 @@
 import warnings
+import matplotlib
 import numpy as np
 import scipy.stats 
 import sklearn.metrics
@@ -619,53 +620,110 @@ def plot_rmsd_box_plot(protocol):
             fig.savefig(plots + f"rmsd_{transformation}")
 
 
-#TODO RMSD pairwise matrix plots
 def plot_pairwise_lambda_rmsd(protocol):
-    
+    """
+    Read in the pairwise lambda RMSD for bound and unbound and plot as heatmap.
+
+    Parameters:
+    -----------
+    protocol: dict
+        protocol file as a dictionary
+
+    Return:
+    -------
+    """
     outputs = protocol["outputs"]
     engine = protocol["engine"]
     repeats = functions.check_int(protocol["repeats"])
     
     for i in range(1, repeats + 1):
         path = outputs + "/" + engine + f"_{i}/"
-
         transformation_directories = functions.get_files(path + "ligand_*/")
 
         for j in range(len(transformation_directories)):
-
             transformation_directory = transformation_directories[j]
-            unbound_matrix_first_frame = np.load(transformation_directory + "pairwise_unbound_rmsd_first_frame.npy")
-            unbound_matrix_last_frame = np.load(transformation_directory + "pairwise_unbound_rmsd_last_frame.npy")
-            bound_matrix_first_frame = np.load(transformation_directory + "pairwise_bound_rmsd_first_frame.npy")
-            bound_matrix_last_frame = np.load(transformation_directory + "pairwise_bound_rmsd_last_frame.npy")
+            
+            rmsd_files = functions.get_files(transformation_directory + "pairwise_*.npy")
+            filenames = [functions.get_filename(file) for file in rmsd_files]
+            pairwise_rmsds = [np.load(file) for file in rmsd_files]
 
-            pairwise_rmsds = [unbound_matrix_first_frame, unbound_matrix_last_frame, bound_matrix_first_frame, bound_matrix_last_frame]
-            filenames = []
+            maximum_values = [array[np.unravel_index(array.argmax(), array.shape)[0], np.unravel_index(array.argmax(), array.shape)[1]] for array in pairwise_rmsds]
+            transformation_max = max(maximum_values)
 
-            unbound_max = max(unbound_matrix_first_frame, unbound_matrix_last_frame)
-            bound_max = max(bound_matrix_first_frame, bound_matrix_last_frame)
-            transformation_max = max(unbound_max, bound_max)
-
-            # Repeat for all pairwise RMSDs
-            fig, ax = plt.subplots(1, 1, figsize=(10, 10))
-            sns.set(context="notebook", style="ticks", font_scale=2)
-            sns.heatmap(ax=ax, 
-                        data=unbound_matrix_first_frame, 
-                        cmap="viridis", 
-                        vmin=0, 
-                        vmax=transformation_max, 
-                        square=True, 
-                        cbar_kws={"fraction": 0.460, "pad": 0.04})
-            ax.xaxis.tick_top()
-            ax.tick_params(axis="y", rotation=360)
-            ax.set_title(r"$\lambda$ index")
-            ax.set_ylabel(r"$\lambda$ index")
-            fig.savefig(transformation_directory + "pairwise_unbound_first_frame.png", dpi=1000)
+            for k in range(len(pairwise_rmsds)):
+                fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+                sns.set(context="notebook", style="ticks", font_scale=2)
+                sns.heatmap(ax=ax, 
+                            data=pairwise_rmsds[k], 
+                            cmap="viridis", 
+                            vmin=0, 
+                            vmax=transformation_max, 
+                            square=True, 
+                            cbar_kws={"fraction": 0.460, "pad": 0.04, "label": r"Pairwise RMSD $\AA$"})
+                ax.xaxis.tick_top()
+                ax.tick_params(axis="y", rotation=360)
+                ax.set_title(r"$\lambda$ index")
+                ax.set_ylabel(r"$\lambda$ index")
+                fig.savefig(transformation_directory + filenames[k] + ".png", dpi=1000)
     
 
 #TODO overlap matrix plots
-def plot_overlap_matrix():
-    pass
+def plot_overlap_matrix(protocol):
+    """
+    Open overlap matrix arrays and plot overlap for each transformation in bound and unbound stages
+
+    Parameters:
+    -----------
+    protocol: dict
+        protocol file as a dictionary
+
+    Return:
+    -------
+    """
+    outputs = protocol["outputs"]
+    engine = protocol["engine"]
+    repeats = functions.check_int(protocol["repeats"])
+
+    for i in range(1, repeats + 1):    
+        path = outputs + "/" + engine + f"_{i}/"
+        transformation_directories = functions.get_files(path + "ligand_*/")
+
+        for j in range(len(transformation_directories)):
+            transformation_directory = transformation_directories[j]
+
+            overlap_matrix_files = functions.get_files(transformation_directory + "*_overlap_matrix.npy")
+            filenames = [functions.get_filename(file) for file in overlap_matrix_files]
+            overlap_matrices = [np.load(file) for file in overlap_matrix_files]
+
+            colour_map = matplotlib.colors.ListedColormap(["#FBE8EB","#68246D","#61BF1A", "#154734"])
+            n_colours = colour_map.N
+            boundary_values = [0.0, 0.025, 0.1, 0.3, 0.8]
+            norm_colours = matplotlib.colors.BoundaryNorm(boundary_values, n_colours, clip=False)
+            colour_bar_args = dict(ticks=[0.025, 0.1, 0.3, 0.8],
+                                   shrink=0.815)
+            
+            for k in range(len(overlap_matrix_files)):
+
+                fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+                sns.set(context="notebook", style="ticks", font_scale=2)  
+                sns.heatmap(ax=ax,
+                            data=overlap_matrices[i], 
+                            annot=True, 
+                            fmt=".1f", 
+                            linewidths=0.3, 
+                            annot_kws={"size": 14}, 
+                            square=True, 
+                            robust=True, 
+                            cmap=colour_map,
+                            norm=norm_colours, 
+                            cbar_kws=colour_bar_args,
+                            vmax=1)
+                ax.xaxis.tick_top()
+                ax.tick_params(axis="y", rotation=360)
+                ax.set_title(r"$\lambda$ index")
+                ax.set_ylabel(r"$\lambda$ index")
+                fig.savefig(transformation_directory + filenames[k] + ".png", dpi=1000)
+
 
 
 def main():
@@ -691,21 +749,23 @@ def main():
     arguments = parser.parse_args()
     protocol_file = functions.file_exists(arguments.protocol_file)
     protocol = functions.read_protocol(protocol_file)
-    
+
+    plot_rmsd_box_plot(protocol)
+    plot_pairwise_lambda_rmsd(protocol)
+    plot_overlap_matrix(protocol)
 
     transformations, free_energies, _ = read_results(protocol) 
     results = combine_results(protocol)
-
     experimental_file = arguments.experimental_file
     experimental_free_energy, experimental_error = get_experimental_data(experimental_file, transformations)
-
+    
     plot_bar(protocol["plots directory"], results, experimental_free_energy, experimental_error)
     plot_correlation(protocol["outputs"], results, experimental_free_energy, experimental_error)
     plot_individual_runs(protocol, experimental_free_energy, experimental_error, free_energies, results)
 
     statistics = output_statistics(experimental_free_energy, results)
     save_statistics_to_file(protocol["outputs"], statistics)
-    plot_rmsd_box_plot(protocol)
+    
 
 
 if __name__ == "__main__":

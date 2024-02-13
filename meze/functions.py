@@ -170,7 +170,7 @@ def get_files(path):
     return sorted(glob.glob(path))
 
 
-def get_filenames(path):
+def get_filename(path):
     """
     Read path to file and remove extension.
 
