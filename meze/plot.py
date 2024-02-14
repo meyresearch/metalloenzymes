@@ -398,7 +398,7 @@ def plot_individual_runs(protocol, experimental_free_energy, experimental_error,
     fig, ax = plt.subplots(1, 1, figsize=(16, 20))
     sns.set(context="notebook", palette="colorblind", style="ticks")
     outputs = protocol["outputs"]
-    plots = protocol["outputs"]
+    plots = protocol["plots directory"]
     repeats = functions.check_int(protocol["repeats"])
     engine = protocol["engine"]
 
@@ -409,13 +409,13 @@ def plot_individual_runs(protocol, experimental_free_energy, experimental_error,
 
 
     (_, _, _) = plt.errorbar(experimental_free_energy,
-                                results["average_ddg"].to_numpy(),
-                                color="#D0006F",
-                                xerr=experimental_error,
-                                yerr=results["standard_deviation"].to_numpy(),
-                                capsize=3,
-                                linestyle="",
-                                zorder=-1)
+                             results["average_ddg"].to_numpy(),
+                             color="#D0006F",
+                             xerr=experimental_error,
+                             yerr=results["standard_deviation"].to_numpy(),
+                             capsize=3,
+                             linestyle="",
+                             zorder=-1)
 
     ax.plot([-4.5, 4.5], [-4.5, 4.5], color="#0099AB", linestyle=":", zorder=-1)
     ax.set_xlabel("$\Delta \Delta$ G$_\mathrm{EXP}$ (kcal mol⁻¹)", fontsize=14)
@@ -589,35 +589,39 @@ def plot_rmsd_box_plot(protocol):
         transformation_directories = functions.get_files(path + "ligand_*/")
 
         for j in range(len(transformation_directories)):
-            unbound_rmsd_files = functions.get_files(transformation_directories[j] + "unbound/lambda_*/*.npy")
-            unbound_rmsds = [np.load(file)[1] for file in unbound_rmsd_files]
-
-            bound_lambda_directories = functions.get_files(transformation_directories[j] + "/bound/lambda_*")
-            lambda_windows = np.round(np.arange(0, len(bound_lambda_directories)/10, 0.1), 1)
-            bound_rmsd_files = functions.get_files(transformation_directories[j] + "bound/lambda_*/*.npy")
-            bound_rmsds = [np.load(file)[1] for file in bound_rmsd_files]
-
-            fig, ax = plt.subplots(1, 1, figsize=(10, 10))
-            sns.set(context="notebook", palette="colorblind", style="ticks", font_scale=2)
-            median_line_properties = dict(linestyle="-", linewidth=2.4, color="k")
-            xtick_positions = np.arange(1, len(lambda_windows)+1, 1)
-
-            unbound_boxes = ax.boxplot(unbound_rmsds, positions=xtick_positions - 0.25/2, widths=0.25, patch_artist=True, medianprops=median_line_properties, manage_ticks=False)
-            bound_boxes = ax.boxplot(bound_rmsds, positions=xtick_positions + 0.25/2, widths=0.25, patch_artist=True, medianprops=median_line_properties, manage_ticks=False)
-            
-            for patch in unbound_boxes["boxes"]:
-                patch.set_facecolor(COLOURS["RGBA_WHITE"])
-            for patch in bound_boxes["boxes"]:
-                patch.set_facecolor(COLOURS["RGBA_PINK"])
-            
-            ax.set_xticks(ticks=xtick_positions, labels=lambda_windows)
-            ax.legend(handles=[unbound_boxes["boxes"][0], bound_boxes["boxes"][1]], labels=["Unbound", "Bound"], frameon=False)
-            ax.set_xlabel("$\lambda$ window")
-            ax.set_ylabel("RMSD ($\AA$)")
-            fig.tight_layout()
-            fig.subplots_adjust(wspace=0.05)
             transformation = transformation_directories[j].split("/")[-2]
-            fig.savefig(plots + f"rmsd_{transformation}")
+            plot = plots + f"rmsd_repeat_{i}_{transformation}.png"
+            if not os.path.isfile(plot):
+                unbound_rmsd_files = functions.get_files(transformation_directories[j] + "unbound/lambda_*/*.npy")
+                unbound_rmsds = [np.load(file)[1] for file in unbound_rmsd_files]
+
+                bound_lambda_directories = functions.get_files(transformation_directories[j] + "/bound/lambda_*")
+                lambda_windows = np.round(np.arange(0, len(bound_lambda_directories)/10, 0.1), 1)
+                bound_rmsd_files = functions.get_files(transformation_directories[j] + "bound/lambda_*/*.npy")
+                bound_rmsds = [np.load(file)[1] for file in bound_rmsd_files]
+
+                fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+                sns.set(context="notebook", palette="colorblind", style="ticks", font_scale=2)
+                median_line_properties = dict(linestyle="-", linewidth=2.4, color="k")
+                xtick_positions = np.arange(1, len(lambda_windows)+1, 1)
+
+                unbound_boxes = ax.boxplot(unbound_rmsds, positions=xtick_positions - 0.25/2, widths=0.25, patch_artist=True, medianprops=median_line_properties, manage_ticks=False)
+                bound_boxes = ax.boxplot(bound_rmsds, positions=xtick_positions + 0.25/2, widths=0.25, patch_artist=True, medianprops=median_line_properties, manage_ticks=False)
+                
+                for patch in unbound_boxes["boxes"]:
+                    patch.set_facecolor(COLOURS["RGBA_WHITE"])
+                for patch in bound_boxes["boxes"]:
+                    patch.set_facecolor(COLOURS["RGBA_PINK"])
+                
+                ax.set_xticks(ticks=xtick_positions, labels=lambda_windows)
+                ax.legend(handles=[unbound_boxes["boxes"][0], bound_boxes["boxes"][1]], labels=["Unbound", "Bound"], frameon=False)
+                ax.set_xlabel("$\lambda$ window")
+                ax.set_ylabel("RMSD ($\AA$)")
+                fig.tight_layout()
+                fig.subplots_adjust(wspace=0.05)
+                
+                fig.savefig(plot, dpi=1000)
+                plt.close(fig)
 
 
 def plot_pairwise_lambda_rmsd(protocol):
@@ -651,20 +655,23 @@ def plot_pairwise_lambda_rmsd(protocol):
             transformation_max = max(maximum_values)
 
             for k in range(len(pairwise_rmsds)):
-                fig, ax = plt.subplots(1, 1, figsize=(10, 10))
-                sns.set(context="notebook", style="ticks", font_scale=2)
-                sns.heatmap(ax=ax, 
-                            data=pairwise_rmsds[k], 
-                            cmap="viridis", 
-                            vmin=0, 
-                            vmax=transformation_max, 
-                            square=True, 
-                            cbar_kws={"fraction": 0.460, "pad": 0.04, "label": r"Pairwise RMSD $\AA$"})
-                ax.xaxis.tick_top()
-                ax.tick_params(axis="y", rotation=360)
-                ax.set_title(r"$\lambda$ index")
-                ax.set_ylabel(r"$\lambda$ index")
-                fig.savefig(transformation_directory + filenames[k] + ".png", dpi=1000)
+                plot_file = transformation_directory + filenames[k] + f"_repeat_{i}.png"
+                if not os.path.isfile(plot_file):
+                    fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+                    sns.set(context="notebook", style="ticks", font_scale=2)
+                    sns.heatmap(ax=ax, 
+                                data=pairwise_rmsds[k], 
+                                cmap="viridis", 
+                                vmin=0, 
+                                vmax=transformation_max, 
+                                square=True, 
+                                cbar_kws={"fraction": 0.460, "pad": 0.04, "label": r"Pairwise RMSD $\AA$"})
+                    ax.xaxis.tick_top()
+                    ax.tick_params(axis="y", rotation=360)
+                    ax.set_title(r"$\lambda$ index")
+                    ax.set_ylabel(r"$\lambda$ index")
+                    fig.savefig(transformation_directory + filenames[k] + f"_repeat_{i}.png", dpi=1000)
+                    plt.close(fig)
     
 
 #TODO overlap matrix plots
@@ -703,26 +710,29 @@ def plot_overlap_matrix(protocol):
                                    shrink=0.815)
             
             for k in range(len(overlap_matrix_files)):
-
-                fig, ax = plt.subplots(1, 1, figsize=(10, 10))
-                sns.set(context="notebook", style="ticks", font_scale=2)  
-                sns.heatmap(ax=ax,
-                            data=overlap_matrices[i], 
-                            annot=True, 
-                            fmt=".1f", 
-                            linewidths=0.3, 
-                            annot_kws={"size": 14}, 
-                            square=True, 
-                            robust=True, 
-                            cmap=colour_map,
-                            norm=norm_colours, 
-                            cbar_kws=colour_bar_args,
-                            vmax=1)
-                ax.xaxis.tick_top()
-                ax.tick_params(axis="y", rotation=360)
-                ax.set_title(r"$\lambda$ index")
-                ax.set_ylabel(r"$\lambda$ index")
-                fig.savefig(transformation_directory + filenames[k] + ".png", dpi=1000)
+                try:
+                    fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+                    sns.set(context="notebook", style="ticks", font_scale=2)  
+                    sns.heatmap(ax=ax,
+                                data=overlap_matrices[k], 
+                                annot=True, 
+                                fmt=".1f", 
+                                linewidths=0.3, 
+                                annot_kws={"size": 14}, 
+                                square=True, 
+                                robust=True, 
+                                cmap=colour_map,
+                                norm=norm_colours, 
+                                cbar_kws=colour_bar_args,
+                                vmax=1)
+                    ax.xaxis.tick_top()
+                    ax.tick_params(axis="y", rotation=360)
+                    ax.set_title(r"$\lambda$ index")
+                    ax.set_ylabel(r"$\lambda$ index")
+                    fig.savefig(transformation_directory + filenames[k] + ".png", dpi=1000)
+                    plt.close(fig)
+                except IndexError as e:
+                    print(f"transformation {transformation_directory.split('/')[-2]} at repeat {i} raised error: {e}")
 
 
 
@@ -760,7 +770,7 @@ def main():
     experimental_free_energy, experimental_error = get_experimental_data(experimental_file, transformations)
     
     plot_bar(protocol["plots directory"], results, experimental_free_energy, experimental_error)
-    plot_correlation(protocol["outputs"], results, experimental_free_energy, experimental_error)
+    plot_correlation(protocol["plots directory"], results, experimental_free_energy, experimental_error)
     plot_individual_runs(protocol, experimental_free_energy, experimental_error, free_energies, results)
 
     statistics = output_statistics(experimental_free_energy, results)

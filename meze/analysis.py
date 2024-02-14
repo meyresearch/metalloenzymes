@@ -243,8 +243,10 @@ def save_results(protocol, transformation):
         data_line = ",".join(str(item) for item in data) + "\n"
 
         data_file = outputs + "/" + engine + f"_{i}_raw.csv"
-        with open(data_file, "r") as output_file:
-            input_lines = output_file.readlines()
+        input_lines = []
+        if os.path.isfile(data_file): 
+            with open(data_file, "r") as output_file:
+                input_lines = output_file.readlines()
 
         with open(data_file, "a") as output_file:
             if len(input_lines) == 0:
@@ -284,7 +286,7 @@ def plot_and_compute_rmsd(directory, topology_format="PARM7"):
     for i in range(len(topology_files)):
         save_path, _ = os.path.split(topology_files[i])
         savename = save_path + "/rmsd"
-        if not os.path.isfile(savename):
+        if not os.path.isfile(savename + ".npy"):
             with mda.lib.formats.libdcd.DCDFile(trajectories[i]) as trajectory:
                 frames = [frame for frame in trajectory]
             first_frame = frames[0].xyz
@@ -311,8 +313,8 @@ def plot_and_compute_rmsd(directory, topology_format="PARM7"):
             ax.set_xlabel("Time (ns)")
             ax.set_ylabel("RMSD ($\AA$)")
             fig.savefig(savename + ".png", dpi=1000)
-        
-    return save_array
+            plt.close(fig)
+
 
 
 def save_rmsds(protocol, transformation):
