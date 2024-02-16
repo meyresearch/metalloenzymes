@@ -379,7 +379,7 @@ def check_nan(array):
 def average(values):
     """
     Compute the mean of values along columns.
-    Ignores NaN values.
+    Ignores NaN values, unless whole row is NaN.
 
     Parameters:
     -----------
@@ -416,9 +416,12 @@ def add_in_quadrature(array):
         squares = np.array([value ** 2 for value in row])
         squares_dropna = squares[~np.isnan(squares)]
         squared_errors.append(squares_dropna)
+
         divider = len(squares_dropna) # if some of the values are NaN, they are ignored
-        dividers.append(divider)
-    
+        if divider > 0: 
+            dividers.append(divider)
+        else:
+            dividers.append(np.nan) 
     propagated_errors = []
     for i in range(len(squared_errors)):
         sum_of_values = np.sum(squared_errors[i])

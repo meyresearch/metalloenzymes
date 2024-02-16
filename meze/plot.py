@@ -211,10 +211,10 @@ def combine_results(protocol):
     transformations, free_energies, errors = read_results(protocol)
     
     nan_indices = functions.check_nan(free_energies)
-    calculated_means = functions.average(free_energies)
-    propagated_errors = functions.add_in_quadrature(errors)
-
+    calculated_means = functions.average(free_energies) 
+    propagated_errors = functions.add_in_quadrature(errors) 
     standard_deviations = functions.standard_deviation(free_energies)
+
     results_dictionary = {"transformation": transformations, 
                           "average_ddg": calculated_means,
                           "standard_deviation": standard_deviations,
@@ -376,7 +376,7 @@ def bootstrap_statistics(experimental: np.array, calculated: np.array, n_samples
     return results
 
 
-def plot_individual_runs(protocol, experimental_free_energy, experimental_error, afe_values, results):
+def plot_individual_runs(protocol, experimental_free_energies_with_nans, experimental_errors_with_nans, results):
     """
     Plot correlation of individual AFE runs against experimental values
 
@@ -388,13 +388,45 @@ def plot_individual_runs(protocol, experimental_free_energy, experimental_error,
         experimental free energy values (converted from inhibition constants)
     experimental_error: np.array
         propagated error on the experimental free energy values
-
     results: 
         averaged free energy values and propagated errors
 
     Return:
     -------
     """
+    means_from_file = results["average_ddg"].to_numpy() 
+    calculated_nan_indices = functions.check_nan(means_from_file).flatten()
+
+    errors_from_file = results["standard_deviation"].to_numpy()
+    calculated_std_nan_indices = functions.check_nan(errors_from_file).flatten()
+
+    experimental_nan_indices = functions.check_nan(experimental_free_energies_with_nans).flatten()
+    experimental_error_nan_indices = functions.check_nan(experimental_errors_with_nans).flatten()
+
+    calculated_free_energies_with_nans = means_from_file.copy()
+    for i in experimental_nan_indices:
+        calculated_free_energies_with_nans[i] = np.nan
+    
+    experimental_free_energy_array_with_nans = experimental_free_energies_with_nans.copy()
+    for i in calculated_nan_indices:
+        experimental_free_energy_array_with_nans[i] = np.nan
+    
+    calculated_std = errors_from_file.copy()
+    for i in experimental_error_nan_indices:
+        calculated_std[i] = np.nan
+    
+    experimental_errors_array = experimental_errors_with_nans.copy()
+    for i in calculated_std_nan_indices:
+        experimental_errors_array[i] = np.nan
+    
+    calculated_free_energies = calculated_free_energies_with_nans[~np.isnan(calculated_free_energies_with_nans)]
+    calculated_errors = calculated_std[~np.isnan(calculated_std)]
+    experimental_free_energy_array_with_nans = np.array(experimental_free_energy_array_with_nans)
+    experimental_free_energies = experimental_free_energy_array_with_nans[~np.isnan(experimental_free_energy_array_with_nans)]
+    experimental_errors_array = np.array(experimental_errors_array)
+    experimental_errors = experimental_errors_array[~np.isnan(experimental_errors_array)]
+
+
     fig, ax = plt.subplots(1, 1, figsize=(16, 20))
     sns.set(context="notebook", palette="colorblind", style="ticks")
     outputs = protocol["outputs"]
@@ -404,36 +436,64 @@ def plot_individual_runs(protocol, experimental_free_energy, experimental_error,
 
     for i in range(1, repeats + 1):
         raw_datafile = outputs + "/" + engine + f"_{i}_raw.csv"
-        dataframe = pd.read_csv(raw_datafile, index_col=False)
-        ax.scatter(experimental_free_energy, dataframe["free-energy"].to_numpy(), s=50, label=f"{engine} {i}")
+        dataframe = pd.read_csv(raw_datafile, index_col=False).sort_values(by=["transformation"])
+
+        free_energies = dataframe["free-energy"].to_numpy()
+        individual_run_ddg = free_energies.copy()
+
+        individual_run_nan_indices = functions.check_nan(individual_run_ddg).flatten()
+
+        for j in experimental_nan_indices:
+            individual_run_ddg[j] = np.nan
+        
+        experimental_free_energies_for_individual_run = experimental_free_energies_with_nans.copy()
+        for j in individual_run_nan_indices:
+            experimental_free_energies_for_individual_run[j] = np.nan
+
+        ddg = individual_run_ddg[~np.isnan(individual_run_ddg)]
+        experimental_array = np.array(experimental_free_energies_for_individual_run)
+        experimental_free_energies_for_individual_run = experimental_array[~np.isnan(experimental_array)]
+
+        ax.scatter(experimental_free_energies_for_individual_run, ddg, s=50, label=f"{engine} {i}")
 
 
-    (_, _, _) = plt.errorbar(experimental_free_energy,
-                             results["average_ddg"].to_numpy(),
+    (_, _, _) = plt.errorbar(experimental_free_energies,
+                             calculated_free_energies,
                              color="#D0006F",
-                             xerr=experimental_error,
-                             yerr=results["standard_deviation"].to_numpy(),
+                             xerr=experimental_errors,
+                             yerr=calculated_errors,
                              capsize=3,
                              linestyle="",
                              zorder=-1)
+    
 
-    ax.plot([-4.5, 4.5], [-4.5, 4.5], color="#0099AB", linestyle=":", zorder=-1)
+    max_calculated = max(np.absolute(calculated_free_energies)) + 1 
+    max_experimental = max(np.absolute(experimental_free_energies)) + 1
+    max_y = max(max_calculated, max_experimental)
+
+    ax.plot([-max_y, max_y], [-max_y, max_y], color="#0099AB", linestyle=":", zorder=-1)
     ax.set_xlabel("$\Delta \Delta$ G$_\mathrm{EXP}$ (kcal mol⁻¹)", fontsize=14)
     ax.set_ylabel("$\Delta \Delta$ G$_\mathrm{AFE}$ (kcal mol⁻¹)", fontsize=14)
-    ax.vlines(0, -3.5, 3.5, color = "silver", linestyle="--", zorder=-1)
-    ax.hlines(0, -3.5, 3.5, color = "silver", linestyle="--", zorder=-1)
-    ax.set_xlim(-3.5, 3.5)
-    ax.set_ylim(-3.5, 3.5)
- 
+    ax.vlines(0, -max_y, max_y, color = "silver", linestyle="--", zorder=-1)
+    ax.hlines(0, -max_y, max_y, color = "silver", linestyle="--", zorder=-1)
+    ax.set_xlim(-max_y, max_y)
+    ax.set_ylim(-max_y, max_y)
+
     labels = [transformation.strip().replace("_", "").replace("ligand", "").replace("~", " to ") for transformation in results["transformation"].tolist()]
+    for i in experimental_nan_indices:
+        labels[i] = np.nan
+    for i in calculated_nan_indices:
+        labels[i] = np.nan
+
+    labels = [value for value in labels if str(value).lower() != "nan"]
     for i in range(len(labels)):
-        ax.annotate(labels[i], (experimental_free_energy[i], dataframe["free-energy"].to_numpy()[i]), fontsize=9)
+        ax.annotate(labels[i], (experimental_free_energies[i], calculated_free_energies[i]), fontsize=9)
     ax.legend()
     fig.tight_layout()
     fig.savefig(f"{plots}/individual_correlation.png", dpi=1000)
 
 
-def plot_correlation(plots_directory, results, experimental_free_energy, exp_error, region=True):
+def plot_correlation(plots_directory, results, experimental_free_energies_with_nans, experimental_errors_with_nans, region=True):
     """
     Plot the correlation plot of experimental binding free energies vs calculated free energies
 
@@ -452,28 +512,60 @@ def plot_correlation(plots_directory, results, experimental_free_energy, exp_err
     -------
     
     """
-    means = results["average_ddg"].to_numpy() 
-    std = results["standard_deviation"].to_numpy()
+    means_from_file = results["average_ddg"].to_numpy() 
+    calculated_nan_indices = functions.check_nan(means_from_file).flatten()
+
+    errors_from_file = results["standard_deviation"].to_numpy()
+    calculated_std_nan_indices = functions.check_nan(errors_from_file).flatten()
+
+    experimental_nan_indices = functions.check_nan(experimental_free_energies_with_nans).flatten()
+    experimental_error_nan_indices = functions.check_nan(experimental_errors_with_nans).flatten()
+
+    calculated_free_energies_with_nans = means_from_file.copy()
+    for i in experimental_nan_indices:
+        calculated_free_energies_with_nans[i] = np.nan
+    
+    experimental_free_energy_array_with_nans = experimental_free_energies_with_nans.copy()
+    for i in calculated_nan_indices:
+        experimental_free_energy_array_with_nans[i] = np.nan
+    
+    calculated_std = errors_from_file.copy()
+    for i in experimental_error_nan_indices:
+        calculated_std[i] = np.nan
+    
+    experimental_errors_array = experimental_errors_with_nans.copy()
+    for i in calculated_std_nan_indices:
+        experimental_errors_array[i] = np.nan
+    
+    calculated_free_energies = calculated_free_energies_with_nans[~np.isnan(calculated_free_energies_with_nans)]
+    calculated_errors = calculated_std[~np.isnan(calculated_std)]
+    experimental_free_energy_array_with_nans = np.array(experimental_free_energy_array_with_nans)
+    experimental_free_energies = experimental_free_energy_array_with_nans[~np.isnan(experimental_free_energy_array_with_nans)]
+    experimental_errors_array = np.array(experimental_errors_array)
+    experimental_errors = experimental_errors_array[~np.isnan(experimental_errors_array)]
+
 
     fig, ax = plt.subplots(1, 1, figsize=(10,10))
     sns.set(context="notebook", palette="colorblind", style="ticks", font_scale=2)
 
-    ax.scatter(experimental_free_energy, 
-               means, 
+    ax.scatter(experimental_free_energies, 
+               calculated_free_energies, 
                s=50, 
                color=COLOURS["PINK"])
 
-    ax.errorbar(experimental_free_energy,
-                means,
+    ax.errorbar(experimental_free_energies,
+                calculated_free_energies,
                 color=COLOURS["PINK"],
-                yerr=std,
-                xerr=exp_error,
+                yerr=calculated_errors,
+                xerr=experimental_errors,
                 capsize=3,
                 linestyle="",
                 zorder=-1)
-    max_calculated = max(np.absolute(means)) + 1
-    max_experimental = max(np.absolute(experimental_free_energy)) + 1
+
+    max_calculated = max(np.absolute(calculated_free_energies)) + 1 
+    max_experimental = max(np.absolute(experimental_free_energies)) + 1
     max_y = max(max_calculated, max_experimental)
+
     ax.plot([-max_y, max_y], [-max_y, max_y], color=COLOURS["BLUE"], linestyle=":", zorder=-1)
     ax.vlines(0, -max_y, max_y, color="silver", linestyle="--", zorder=-1)
     ax.hlines(0, -max_y, max_y, color="silver", linestyle="--", zorder=-1)
@@ -670,11 +762,10 @@ def plot_pairwise_lambda_rmsd(protocol):
                     ax.tick_params(axis="y", rotation=360)
                     ax.set_title(r"$\lambda$ index")
                     ax.set_ylabel(r"$\lambda$ index")
-                    fig.savefig(transformation_directory + filenames[k] + f"_repeat_{i}.png", dpi=1000)
+                    fig.savefig(plot_file, dpi=1000)
                     plt.close(fig)
     
 
-#TODO overlap matrix plots
 def plot_overlap_matrix(protocol):
     """
     Open overlap matrix arrays and plot overlap for each transformation in bound and unbound stages
@@ -710,30 +801,33 @@ def plot_overlap_matrix(protocol):
                                    shrink=0.815)
             
             for k in range(len(overlap_matrix_files)):
-                try:
-                    fig, ax = plt.subplots(1, 1, figsize=(10, 10))
-                    sns.set(context="notebook", style="ticks", font_scale=2)  
-                    sns.heatmap(ax=ax,
-                                data=overlap_matrices[k], 
-                                annot=True, 
-                                fmt=".1f", 
-                                linewidths=0.3, 
-                                annot_kws={"size": 14}, 
-                                square=True, 
-                                robust=True, 
-                                cmap=colour_map,
-                                norm=norm_colours, 
-                                cbar_kws=colour_bar_args,
-                                vmax=1)
-                    ax.xaxis.tick_top()
-                    ax.tick_params(axis="y", rotation=360)
-                    ax.set_title(r"$\lambda$ index")
-                    ax.set_ylabel(r"$\lambda$ index")
-                    fig.savefig(transformation_directory + filenames[k] + ".png", dpi=1000)
-                    plt.close(fig)
-                except IndexError as e:
-                    print(f"transformation {transformation_directory.split('/')[-2]} at repeat {i} raised error: {e}")
+            
+                plot_file = transformation_directory + filenames[k] + ".png"
+                if not os.path.isfile(plot_file):
+                    try:    
+                        fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+                        sns.set(context="notebook", style="ticks", font_scale=2)  
+                        sns.heatmap(ax=ax,
+                                    data=overlap_matrices[k], 
+                                    annot=True, 
+                                    fmt=".1f", 
+                                    linewidths=0.3, 
+                                    annot_kws={"size": 14}, 
+                                    square=True, 
+                                    robust=True, 
+                                    cmap=colour_map,
+                                    norm=norm_colours, 
+                                    cbar_kws=colour_bar_args,
+                                    vmax=1)
+                        ax.xaxis.tick_top()
+                        ax.tick_params(axis="y", rotation=360)
+                        ax.set_title(r"$\lambda$ index")
+                        ax.set_ylabel(r"$\lambda$ index")
+                        fig.savefig(plot_file, dpi=1000)
+                        plt.close(fig)
 
+                    except IndexError as e:
+                        print(f"transformation {transformation_directory.split('/')[-2]} at repeat {i} raised error: {e}")
 
 
 def main():
@@ -764,19 +858,18 @@ def main():
     plot_pairwise_lambda_rmsd(protocol)
     plot_overlap_matrix(protocol)
 
-    transformations, free_energies, _ = read_results(protocol) 
+    transformations, _, _ = read_results(protocol) 
     results = combine_results(protocol)
     experimental_file = arguments.experimental_file
     experimental_free_energy, experimental_error = get_experimental_data(experimental_file, transformations)
     
     plot_bar(protocol["plots directory"], results, experimental_free_energy, experimental_error)
     plot_correlation(protocol["plots directory"], results, experimental_free_energy, experimental_error)
-    plot_individual_runs(protocol, experimental_free_energy, experimental_error, free_energies, results)
+    plot_individual_runs(protocol, experimental_free_energy, experimental_error, results)
 
     statistics = output_statistics(experimental_free_energy, results)
     save_statistics_to_file(protocol["outputs"], statistics)
     
-
 
 if __name__ == "__main__":
     main()
