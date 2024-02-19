@@ -11,6 +11,7 @@ import argparse
 import os
 import meze
 import functions
+import analysis
 
 
 def read_results(protocol):
@@ -425,7 +426,6 @@ def plot_individual_runs(protocol, experimental_free_energies_with_nans, experim
     experimental_free_energies = experimental_free_energy_array_with_nans[~np.isnan(experimental_free_energy_array_with_nans)]
     experimental_errors_array = np.array(experimental_errors_array)
     experimental_errors = experimental_errors_array[~np.isnan(experimental_errors_array)]
-
 
     fig, ax = plt.subplots(1, 1, figsize=(16, 20))
     sns.set(context="notebook", palette="colorblind", style="ticks")
