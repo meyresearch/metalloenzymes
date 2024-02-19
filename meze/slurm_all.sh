@@ -3,6 +3,7 @@
 ###TODO IN SETUP.PY:
 # setup $MEZEHOME
 ###
+###TODO How to activate correct environment? 
 
 N_LIGANDS=NUMBER_OF_LIGANDS
 ENGINE=ENGINE
@@ -24,6 +25,9 @@ echo "Preparing AFE with slurm job $prepafe_job_id"
 
 for i in "${!transformations_array[@]}"
 do
-    afe_job_id=$(sbatch --dependency=afterok:${meze_job_id} --parsable --job-name=${transformations_array[i]} --array=0-$((${n_windows_array[i]}-1)) $AFE_INPUT_DIR/run_$ENGINE.sh ${transformations_array[i]} "${lambdas_array[i]}")
+    afe_job_id=$(sbatch --dependency=afterok:${meze_job_id} --parsable --job-name=${transformations_array[i]} --array=0-$((${n_windows_array[i]}-1)) $AFE_INPUT_DIR/05_run_$ENGINE.sh ${transformations_array[i]} "${lambdas_array[i]}")
     echo "Submitted AFE slurm job $afe_job_id"
 done
+
+analysis_job_id=$(sbatch --dependency=afterok:${afe_job_id} --parsable --job-name=${transformations_array[i]} --array=0-$((${#transformations_array[@]}-1)) $AFE_INPUT_DIR/06_analyse.sh)
+echo "Submitted analysis slurm job $analysis_job_id"

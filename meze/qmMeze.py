@@ -1,4 +1,4 @@
-from Network import Network
+from meze.network import Network
 import os
 import BioSimSpace as bss
 import numpy as np
@@ -75,14 +75,14 @@ def residue_restraint_mask(residue_ids):
 
 class Meze(Network):
 
-    def __init__(self, protein_file, metal="ZN", cut_off=2.6, force_constant_0=100,
-                 water_file=None, workdir=os.getcwd(), is_qm=True, qmmm_inputs=None, equilibration_path=None, output=None,
+    def __init__(self, protein_file, prepared=False, metal="ZN", cut_off=2.6, force_constant_0=100,
+                 water_file=None, workdir=os.getcwd(), is_qm=False, qmmm_inputs=None, equilibration_path=None, output=None,
                  ligand_path=os.getcwd()+"/inputs/ligands/", ligand_charge=0, ligand_ff="gaff2",
                  group_name=None, protein_path=os.getcwd()+"/inputs/protein/", water_model="tip3p", protein_ff="ff14SB", 
                  engine=None, sampling_time=10, box_edges=20, box_shape="cubic", min_steps=1000, short_nvt=0, nvt=1, npt=1, 
-                 min_dt=None, min_tol=None, repeats=0, temperature=300, pressure=1, threshold=None, n_normal=None, n_difficult=None):
+                 min_dt=None, min_tol=None, repeats=0, temperature=300, pressure=1, threshold=0.4, n_normal=11, n_difficult=17):
         
-        super().__init__(workdir=workdir, ligand_path=ligand_path, group_name=group_name, protein_file=protein_file, protein_path=protein_path, 
+        super().__init__(prepared=prepared, workdir=workdir, ligand_path=ligand_path, group_name=group_name, protein_file=protein_file, protein_path=protein_path, 
                          water_model=water_model, ligand_ff=ligand_ff, protein_ff=protein_ff, ligand_charge=ligand_charge, equilibration_path=equilibration_path, outputs=output,
                          engine=engine, sampling_time=sampling_time, box_edges=box_edges, box_shape=box_shape, min_steps=min_steps, short_nvt=short_nvt, nvt=nvt, npt=npt, 
                          min_dt=min_dt, min_tol=min_tol, repeats=repeats, temperature=temperature, pressure=pressure, threshold=threshold, n_normal=n_normal, n_difficult=n_difficult)
@@ -96,9 +96,10 @@ class Meze(Network):
         elif not qmmm_inputs and self.is_qm:
             os.rmdir(self.afe_input_directory)
             self.input_directory = self.create_directory(f"/qmmm_input_files/")
-        elif not self.is_qm:
-            os.rmdir(self.afe_input_directory)
-            self.input_directory = self.create_directory(f"/md_input_files/")
+        # To be depracated
+        # elif not self.is_qm:
+        #     os.rmdir(self.afe_input_directory)
+        #     self.input_directory = self.create_directory(f"/md_input_files/")
 
         if output:
             self.output_directory = functions.path_exists(output)
@@ -134,63 +135,67 @@ class Meze(Network):
         self.protein_water_complex = self.protein.create_complex()
         self.prepared_protein = self.protein.tleap(self.protein_water_complex)
         self.log_directory = self.create_directory("/logs/")
-        self.protocol_file = self.create_protocol_file()
+        self.protocol_file = self.create_qm_protocol_file()
         self.prepared = True
         return self
 
 
     def create_protocol_file(self):
-            """
-            Create protocol.dat file for QM/MM runs
+        """
+        Create protocol.dat file for AFE runs
 
-            Parameters:
-            -----------
-            Network: Network
-                Network class object
+        Parameters:
+        -----------
+        Network: Network
+            Network class object
 
-            Return:
-            -------
-            protocol_file: str
-                protocol datafile
-            """
-            protocol = [f"metal = {self.metal_resname}",
-                        f"cut-off = {self.cut_off}",
-                        f"force constant 0 = {self.force_constant_0}",
-                        f"group name = {self.group_name}",
-                        f"ligand forcefield = {self.ligand_forcefield}", 
-                        f"ligand charge = {self.ligand_charge}",
-                        f"prepared protein file = {self.prepared_protein}",
-                        f"protein input file = {self.protein_file}",
-                        f"protein forcefield = {self.protein_forcefield}", 
-                        f"water model = {self.water_model}", 
-                        f"box edges = {self.box_edges}", # in angstrom 
-                        f"box shape = {self.box_shape}", 
-                        f"minimisation steps = {self.min_steps}",
-                        f"minimisation stepsize = {self.min_dt}",
-                        f"minimisation tolerance = {self.min_tol}",
-                        f"short nvt = {self.short_nvt._value}",
-                        f"nvt = {self.nvt._value}",
-                        f"npt = {self.npt._value}",
-                        f"temperature = {self.temperature._value}",
-                        f"pressure = {self.pressure._value}",
-                        f"sampling time = {self.md_time._value}",
-                        f"engine = {self.md_engine}",
-                        f"outputs = {self.output_directory}",
-                        f"repeats = {self.n_repeats}",
-                        f"project directory = {self.workding_directory}",
-                        f"equilibration directory = {self.equilibration_directory}",
-                        f"ligand directory = {self.ligand_path}",
-                        f"protein directory = {self.protein_path}",
-                        f"log directory = {self.log_directory}",
-                        f"input directory = {self.input_directory}"]
+        Return:
+        -------
+        protocol_file: str
+            protocol datafile
+        """
+        strip = self.output_directories[0].split("/")[-2]
+        path_to_outputs = self.output_directories[0].replace(strip, "")
+        protocol = [f"group name = {self.group_name}",
+                    f"metal = {self.metal_resname}",
+                    f"cutoff = {self.cut_off}",
+                    f"force constant = {self.force_constant_0}",
+                    f"ligand forcefield = {self.ligand_forcefield}", 
+                    f"ligand charge = {self.ligand_charge}",
+                    f"prepared protein file = {self.prepared_protein}",
+                    f"protein input file = {self.protein_file}",
+                    f"protein forcefield = {self.protein_forcefield}", 
+                    f"water model = {self.water_model}", 
+                    f"box edges = {self.box_edges}", # in angstrom 
+                    f"box shape = {self.box_shape}", 
+                    f"minimisation steps = {self.min_steps}",
+                    f"minimisation stepsize = {self.min_dt}",
+                    f"minimisation tolerance = {self.min_tol}",
+                    f"short nvt = {self.short_nvt._value}",
+                    f"nvt = {self.nvt._value}",
+                    f"npt = {self.npt._value}",
+                    f"temperature = {self.temperature._value}",
+                    f"pressure = {self.pressure._value}",
+                    f"sampling time = {self.md_time._value}",
+                    f"engine = {self.md_engine}",
+                    f"outputs = {path_to_outputs}",
+                    f"repeats = {self.n_repeats}",
+                    f"network file = {self.network_file}",
+                    f"project directory = {self.workding_directory}",
+                    f"equilibration directory = {self.equilibration_directory}",
+                    f"ligand directory = {self.ligand_path}",
+                    f"protein directory = {self.protein_path}",
+                    f"log directory = {self.log_directory}",
+                    f"afe input directory = {self.afe_input_directory}"]
 
-            protocol_file = self.input_directory + "/protocol.dat"
-            with open(protocol_file, "w") as file:
-                writer = csv.writer(file)
-                for protocol_line in protocol:
-                    writer.writerow([protocol_line])
-            return protocol_file
-    
+        protocol_file = self.afe_input_directory + "/protocol.dat"
+
+        with open(protocol_file, "w") as file:
+            writer = csv.writer(file)
+            for protocol_line in protocol:
+                writer.writerow([protocol_line])
+        return protocol_file
+            
 
     def set_universe(self, file_name):
         """
@@ -344,13 +349,108 @@ class Meze(Network):
             self.qmmm_minimisation(ligand_name)
             self.qmmm_equilibration(ligand_name)
             self.qmmm_production(ligand_name)
-        else:
-            minimised_system = self.minimisation_0(ligand_name)
-    
-            equilibrated_system = self.equilibration_0(ligand_name, minimised_system)
+        # To be depracated
+        # elif not self.is_qm:
+        #     minimised_system = self.minimisation_0(ligand_name)
+        #     equilibrated_system = self.equilibration_0(ligand_name, minimised_system)
+        #     self.production_0(ligand_name, equilibrated_system)
 
-            self.production_0(ligand_name, equilibrated_system)
 
+    def write_restraints_file_0(self):
+        """
+        Write an Amber-compatible restraint file for model 0. 
+
+        Parameters:
+        -----------
+
+        Return:
+        -------
+        output_file: str
+            amber-format restraints file for model 0
+        """
+        metal_ligands = self.get_metal_ligands()
+        protein = self.universe.select_atoms("protein")
+        atom_ids = []
+        r1, r2, r3, r4 = [], [], [], []
+        for i in range(len(self.metal_atomids)):
+            metal_id = self.metal_atomids[i]
+            for ligating_atom in metal_ligands[metal_id]:
+                if ligating_atom in protein or ligating_atom.resname == "WAT":
+                    atom_ids.append(f"iat={metal_id},{ligating_atom.id}")
+                    atom_group_1 = self.universe.select_atoms(f"resid {self.metal_resids[i]}")
+                    atom_group_2 = self.universe.select_atoms(f"resid {ligating_atom.resid} and name {ligating_atom.name}")
+                    distance = MDAnalysis.analysis.distances.dist(atom_group_1, atom_group_2)[-1][0]
+                    linear_response_region_lower_bound = np.round(distance - 1.0, decimals=2)
+                    flat_region_lower_bound = np.round(distance - 0.5, decimals=2)
+                    flat_region_upper_bound = np.round(distance + 0.5, decimals=2)
+                    linear_response_region_upper_bound = np.round(distance + 1.0, decimals=2)
+                    r1.append("r1="+str(linear_response_region_lower_bound))
+                    r2.append("r2="+str(flat_region_lower_bound))
+                    r3.append("r3="+str(flat_region_upper_bound))
+                    r4.append("r4="+str(linear_response_region_upper_bound))
+        rk2 = ["rk2="+str(self.force_constant_0)] * len(atom_ids)
+        rk3 = ["rk3="+str(self.force_constant_0)] * len(atom_ids)
+        output_file = self.input_directory + "restraints_0.RST"
+        with open(output_file, "w") as file:
+            file.write(f"# Harmonic bond restraints between {self.metal_resname} and coordinating protein residues\n")
+            for i in range(len(atom_ids)):
+                line = f"&rst {atom_ids[i]}, {r1[i]}, {r2[i]}, {r3[i]}, {r4[i]}, {rk2[i]}, {rk3[i]},/\n"
+                file.write(line)
+        return output_file
+
+
+    # Potentially to be depracated:
+    def create_qm_protocol_file(self):
+            """
+            Create protocol.dat file for QM/MM runs
+
+            Parameters:
+            -----------
+            Network: Network
+                Network class object
+
+            Return:
+            -------
+            protocol_file: str
+                protocol datafile
+            """
+            protocol = [f"metal = {self.metal_resname}",
+                        f"cut-off = {self.cut_off}",
+                        f"force constant 0 = {self.force_constant_0}",
+                        f"group name = {self.group_name}",
+                        f"ligand forcefield = {self.ligand_forcefield}", 
+                        f"ligand charge = {self.ligand_charge}",
+                        f"prepared protein file = {self.prepared_protein}",
+                        f"protein input file = {self.protein_file}",
+                        f"protein forcefield = {self.protein_forcefield}", 
+                        f"water model = {self.water_model}", 
+                        f"box edges = {self.box_edges}", # in angstrom 
+                        f"box shape = {self.box_shape}", 
+                        f"minimisation steps = {self.min_steps}",
+                        f"minimisation stepsize = {self.min_dt}",
+                        f"minimisation tolerance = {self.min_tol}",
+                        f"short nvt = {self.short_nvt._value}",
+                        f"nvt = {self.nvt._value}",
+                        f"npt = {self.npt._value}",
+                        f"temperature = {self.temperature._value}",
+                        f"pressure = {self.pressure._value}",
+                        f"sampling time = {self.md_time._value}",
+                        f"engine = {self.md_engine}",
+                        f"outputs = {self.output_directory}",
+                        f"repeats = {self.n_repeats}",
+                        f"project directory = {self.workding_directory}",
+                        f"equilibration directory = {self.equilibration_directory}",
+                        f"ligand directory = {self.ligand_path}",
+                        f"protein directory = {self.protein_path}",
+                        f"log directory = {self.log_directory}",
+                        f"input directory = {self.input_directory}"]
+
+            protocol_file = self.input_directory + "/protocol.dat"
+            with open(protocol_file, "w") as file:
+                writer = csv.writer(file)
+                for protocol_line in protocol:
+                    writer.writerow([protocol_line])
+            return protocol_file
 
     def production_0(self, ligand_name, equilibrated_system, nonbonded_cut_off=9.0, dt=0.002, runtime=50):
 
@@ -387,7 +487,7 @@ class Meze(Network):
                                     extra_options=production_options,
                                     extra_lines=namelist)
         config = production_directory + "/*.cfg"
-        config_file = functions.read_files(config)[0]
+        config_file = functions.get_files(config)[0]
 
         with open(config_file, "a") as file:
             file.write("\n")
@@ -458,7 +558,7 @@ class Meze(Network):
                                           extra_lines=namelist,
                                           exe=amber_home + "/bin/pmemd.cuda")
         heat_02_config = heat_02_dir + "/*.cfg"
-        heat_02_config_file = functions.read_files(heat_02_config)[0]        
+        heat_02_config_file = functions.get_files(heat_02_config)[0]        
 
         with open(heat_02_config_file, "a") as file:
             file.write("\n")
@@ -507,7 +607,7 @@ class Meze(Network):
         
 
         relax_03_config = relax_03_dir + "/*.cfg"
-        relax_03_config_file = functions.read_files(relax_03_config)[0]
+        relax_03_config_file = functions.get_files(relax_03_config)[0]
 
         with open(relax_03_config_file, "r") as file:
             config = file.readlines()
@@ -547,7 +647,7 @@ class Meze(Network):
                                              extra_lines=namelist,
                                              exe=amber_home + "/bin/pmemd.cuda")
         lower_04_config = lower_04_dir + "/*.cfg"
-        lower_04_config_file = functions.read_files(lower_04_config)[0]
+        lower_04_config_file = functions.get_files(lower_04_config)[0]
 
         with open(lower_04_config_file, "r") as file:
             config = file.readlines()
@@ -600,7 +700,7 @@ class Meze(Network):
                                                  exe=amber_home + "/bin/pmemd.cuda")
         
         bb_min_05_config = bb_min_05_dir + "/*.cfg"
-        bb_min_05_config_file = functions.read_files(bb_min_05_config)[0]
+        bb_min_05_config_file = functions.get_files(bb_min_05_config)[0]
 
         with open(bb_min_05_config_file, "r") as file:
             config = file.readlines()
@@ -640,7 +740,7 @@ class Meze(Network):
                                           exe=amber_home + "/bin/pmemd.cuda")        
 
         relax_06_config = relax_06_dir + "/*.cfg"
-        relax_06_config_file = functions.read_files(relax_06_config)[0]   
+        relax_06_config_file = functions.get_files(relax_06_config)[0]   
 
         with open(relax_06_config_file, "r") as file:
             config = file.readlines()
@@ -683,7 +783,7 @@ class Meze(Network):
                                           exe=amber_home + "/bin/pmemd.cuda")
 
         reduce_07_config = reduce_07_dir + "/*.cfg"
-        reduce_07_config_file = functions.read_files(reduce_07_config)[0]          
+        reduce_07_config_file = functions.get_files(reduce_07_config)[0]          
 
         with open(reduce_07_config_file, "r") as file:
             config = file.readlines()
@@ -724,7 +824,7 @@ class Meze(Network):
                                                 exe=amber_home + "/bin/pmemd.cuda")
         
         continue_08_config = continue_08_dir + "/*.cfg"
-        continue_08_config_file = functions.read_files(continue_08_config)
+        continue_08_config_file = functions.get_files(continue_08_config)
 
         with open(continue_08_config_file, "r") as file:
             config = file.readlines()
@@ -777,7 +877,7 @@ class Meze(Network):
                                              exe=amber_home + "/bin/pmemd.cuda")
 
         relax_09_config = relax_09_dir + "/*.cfg"
-        relax_09_config_file = functions.read_files(relax_09_config)[0]        
+        relax_09_config_file = functions.get_files(relax_09_config)[0]        
 
         with open(relax_09_config_file, "a") as file:
             file.write("\n")
@@ -796,11 +896,10 @@ class Meze(Network):
         return equilibrated_system  
 
 
-
     def minimisation_0(self, ligand_name, nonbonded_cut_off=10.0):
 
         directory = functions.mkdir(self.equilibration_directory+f"{ligand_name}/")
-        files = functions.read_files(f"{self.protein_path}/bound_{ligand_name}_solvated.*")
+        files = functions.get_files(f"{self.protein_path}/bound_{ligand_name}_solvated.*")
         solvated_system = bss.IO.readMolecules(files)
         directories = lambda step: functions.mkdir(directory + step)
         min_dir = directories("01_min")
@@ -841,7 +940,7 @@ class Meze(Network):
                                                  exe=amber_home + "/bin/pmemd.cuda")
         
         min_config = min_dir + "/*.cfg"
-        config_file = functions.read_files(min_config)[0]
+        config_file = functions.get_files(min_config)[0]
 
         with open(config_file, "r") as file:
             config = file.readlines()
@@ -866,7 +965,7 @@ class Meze(Network):
     def qmmm_minimisation(self, ligand_name, nonbonded_cut_off=12.0):
 
         directory = functions.mkdir(self.equilibration_directory+f"{ligand_name}/")
-        files = functions.read_files(f"{self.protein_path}/bound_{ligand_name}_solvated.*")
+        files = functions.get_files(f"{self.protein_path}/bound_{ligand_name}_solvated.*")
         solvated_system = bss.IO.readMolecules(files)
         directories = lambda step: functions.mkdir(directory + step)
         min_dir = directories("min")
@@ -899,7 +998,7 @@ class Meze(Network):
                                                  extra_lines=qm_namelist)
         
         min_config = min_dir + "/*.cfg"
-        config_file = functions.read_files(min_config)[0]
+        config_file = functions.get_files(min_config)[0]
 
         with open(config_file, "r") as file:
             config = file.readlines()
@@ -954,7 +1053,7 @@ class Meze(Network):
                                                   extra_lines=qm_namelist)
         
         heat_config = heat_dir + "/*.cfg"
-        config_file = functions.read_files(heat_config)[0]
+        config_file = functions.get_files(heat_config)[0]
 
         with open(config_file, "r") as file:
             config = file.readlines()
@@ -973,7 +1072,7 @@ class Meze(Network):
       
         max_cycles = self.min_steps
         output_frequency = max_cycles // 20
-        ncsm = runtime // 10
+        ncsm = runtime // 10 # change this
         production_options = {"ioutfm": 1,
                               "cut": nonbonded_cut_off,
                               "iwrap": 0,
@@ -1008,7 +1107,7 @@ class Meze(Network):
                                                extra_lines=qm_namelist)
         
         production_config = directory + "/*.cfg"
-        config_file = functions.read_files(production_config)[0]
+        config_file = functions.get_files(production_config)[0]
 
         with open(config_file, "r") as file:
             config = file.readlines()
@@ -1019,46 +1118,7 @@ class Meze(Network):
             file.writelines(new_config)
 
 
-    def write_restraints_file_0(self):
-        """
-        Write an Amber-compatible restraint file for model 0. 
 
-        Parameters:
-        -----------
-
-        Return:
-        -------
-        """
-        metal_ligands = self.get_metal_ligands()
-        protein = self.universe.select_atoms("protein")
-        atom_ids = []
-        r1, r2, r3, r4 = [], [], [], []
-        for i in range(len(self.metal_atomids)):
-            metal_id = self.metal_atomids[i]
-            for ligating_atom in metal_ligands[metal_id]:
-                if ligating_atom in protein or ligating_atom.resname == "WAT":
-                    atom_ids.append(f"iat={metal_id},{ligating_atom.id}")
-                    atom_group_1 = self.universe.select_atoms(f"resid {self.metal_resids[i]}")
-                    atom_group_2 = self.universe.select_atoms(f"resid {ligating_atom.resid} and name {ligating_atom.name}")
-                    distance = MDAnalysis.analysis.distances.dist(atom_group_1, atom_group_2)[-1][0]
-                    linear_response_region_lower_bound = np.round(distance - 1.0, decimals=2)
-                    flat_region_lower_bound = np.round(distance - 0.5, decimals=2)
-                    flat_region_upper_bound = np.round(distance + 0.5, decimals=2)
-                    linear_response_region_upper_bound = np.round(distance + 1.0, decimals=2)
-                    r1.append("r1="+str(linear_response_region_lower_bound))
-                    r2.append("r2="+str(flat_region_lower_bound))
-                    r3.append("r3="+str(flat_region_upper_bound))
-                    r4.append("r4="+str(linear_response_region_upper_bound))
-
-        rk2 = ["rk2="+str(self.force_constant_0)] * len(atom_ids)
-        rk3 = ["rk3="+str(self.force_constant_0)] * len(atom_ids)
-        output_file = self.input_directory + "restraints_0.RST"
-        with open(output_file, "w") as file:
-            file.write(f"# Harmonic bond restraints between {self.metal_resname} and coordinating protein residues\n")
-            for i in range(len(atom_ids)):
-                line = f"&rst {atom_ids[i]}, {r1[i]}, {r2[i]}, {r3[i]}, {r4[i]}, {rk2[i]}, {rk3[i]},/\n"
-                file.write(line)
-        return output_file
 
 
 

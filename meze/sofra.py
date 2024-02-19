@@ -1,6 +1,8 @@
 import re
 import BioSimSpace as bss
 import functions
+import Protein
+import Ligand
 import pandas as pd
 import sys
 from definitions import ADJUST_OPTIONS, PICOSECOND, NANOSECOND, ANGSTROM, KELVIN, ATM
@@ -8,9 +10,7 @@ import numpy as np
 import shutil
 import os
 import logging
-import Ligand
 import csv
-import Protein
 import pathlib
 import shutil
 from BioSimSpace import _Exceptions
@@ -98,45 +98,6 @@ def combine_unbound_ligands(system_a, system_b):
     system_a.removeMolecules(ligand_1)
     system_a.addMolecules(merged_ligands)
     return system_a
-
-
-def combine_bound_ligands(system_1, system_2):
-    """
-    Take two bound bss.Systems and combine the ligands' systems
-
-    Parameters:
-    -----------
-    system_1: bss.System 
-    system_2: bss.System
-
-    Return:
-    -------
-    system_1: bss.System
-        system with combined ligand topologies
-    """
-    ligand_1 = None
-    protein = None
-    n_residues = [molecule.nResidues() for molecule in system_1]
-    n_atoms = [molecule.nAtoms() for molecule in system_1]
-    for j, (n_residues, n_atoms) in enumerate(zip(n_residues[:20], n_atoms[:20])):
-        if n_residues == 1 and n_atoms > 5:  
-            ligand_1 = system_1.getMolecule(j)
-        elif n_residues > 1:
-            protein = system_1.getMolecule(j)
-    ligand_2 = None
-    n_residues = [molecule.nResidues() for molecule in system_2]
-    n_atoms = [molecule.nAtoms() for molecule in system_2]   
-    for j, (n_residues, n_atoms) in enumerate(zip(n_residues, n_atoms)):
-        if n_residues == 1 and n_atoms > 5:
-            ligand_2 = system_2.getMolecule(j)
-    if ligand_1 and ligand_2 and protein:
-        pass
-    else:
-        raise _Exceptions.AlignmentError("Could not extract ligands or protein from input systems.")
-    merged_ligands = merge_ligands(ligand_1, ligand_2)
-    system_1.removeMolecules(ligand_1)
-    system_1.addMolecules(merged_ligands)
-    return system_1
 
 
 def merge_ligands(ligand_1, ligand_2):
@@ -240,7 +201,7 @@ def create_minimisation_configurations(files, min_cycles=1, min_moves=50000):
             f.writelines(replaced_config)
 
 
-class Network(object):
+class Sofra(object):
     """
     Network class object
 
@@ -252,7 +213,8 @@ class Network(object):
     Return:
     -------
     """
-    def __init__(self, protein_file, workdir=os.getcwd(), prepared=False, afe_input_path=None, equilibration_path=None, outputs=None,
+    def __init__(self, protein_file, workdir=os.getcwd(), prepared=False, 
+                 afe_input_path=os.getcwd()+"/afe/", equilibration_path=os.getcwd()+"/equilibration/", outputs=os.getcwd()+"/outputs/",
                  ligand_path=os.getcwd()+"/inputs/ligands/", ligand_charge=0, ligand_ff="gaff2", 
                  group_name=None, protein_path=os.getcwd()+"/inputs/protein/", water_model="tip3p", protein_ff="ff14SB", 
                  engine="SOMD", sampling_time=4, box_edges=20, box_shape="cubic", min_steps=5000, short_nvt=5, nvt=50, npt=200, 
@@ -264,24 +226,26 @@ class Network(object):
         self.md_engine = engine
         self.md_time = functions.convert_to_units(sampling_time, NANOSECOND)
         self.n_repeats = repeats
-        
-        self.prepared = prepared
-        if self.prepared:
-            self.prepared_protein = functions.read_files(protein_file + ".*")
-        
-        if afe_input_path:
-            self.afe_input_directory = afe_input_path
-        else: 
+
+        self.prepared = prepared 
+        if self.prepared: 
+            self.prepared_protein = functions.get_files(protein_file + ".*")
+            # with vim2 + equilibrate.py this returns None 
+            if not self.prepared_protein:
+                self.prepared_protein = self.protein_file
+            self.protein_file = self.prepared_protein
+            self.afe_input_directory = functions.path_exists(afe_input_path)
+            self.equilibration_directory = functions.path_exists(equilibration_path)  
+            self.outputs = functions.path_exists(outputs) 
+            self.output_directories = functions.get_files(self.outputs + f"/{engine}_*")
+            self.plots = functions.get_files("/outputs/plots/")
+        else:
+            self.protein_file = protein_file
             self.afe_input_directory = self.create_directory("/afe/")
-        
-        if equilibration_path:
-            self.equilibration_directory = equilibration_path
-        else:
             self.equilibration_directory = self.create_directory("/equilibration/")
-        if outputs:
-            self.output_directories = functions.read_files(outputs + "/*")
-        else:
+            self.outputs = self.create_directory("/outputs/")
             self.output_directories = self.create_output_directories()
+            self.plots = self.create_directory("/outputs/plots/")
 
         self.ligand_path = functions.path_exists(ligand_path)
         self.ligand_forcefield = ligand_ff
@@ -293,11 +257,8 @@ class Network(object):
         self.names = [ligand.get_name() for ligand in self.ligands]
 
         self.protein_forcefield = protein_ff
-        if self.prepared:
-            self.protein_file = self.prepared_protein
-        else:
-            self.protein_file = protein_file
-        self.protein_path = protein_path
+
+        self.protein_path = functions.path_exists(protein_path)
         self.group_name = self.get_name(group_name)
         self.protein = Protein.Protein(name=self.group_name,
                                        protein_file=self.protein_file,
@@ -351,7 +312,7 @@ class Network(object):
         Create AFE working directory in path.
 
         Parameters:
-        -----------xantham gum
+        -----------
         name: str
             name of new directory
         Return:
@@ -384,7 +345,7 @@ class Network(object):
         """
         output_directories = []
         for i in range(1, self.n_repeats + 1, 1):
-            output_directories.append(self.create_directory(f"/outputs/{self.md_engine}_{i}/", create_parents=True))
+            output_directories.append(self.create_directory(f"{self.outputs}/{self.md_engine}_{i}/"))
         return output_directories
 
 
@@ -459,14 +420,55 @@ class Network(object):
         """
         print("\n")
         print(f"Getting equilibrated ligands {ligand_a} and {ligand_b}")
-        unbound_files = [functions.read_files(self.equilibration_directory+f"/unbound/{ligand}/npt/{ligand}.*") for ligand in [ligand_a, ligand_b]]
+        unbound_files = [functions.get_files(self.equilibration_directory+f"/unbound/{ligand}/npt/{ligand}.*") for ligand in [ligand_a, ligand_b]]
         self.ligands = [Ligand.Ligand(files, parameterised=True) for files in unbound_files]
         self.names = [ligand.get_name() for ligand in self.ligands]
         self.ligand_molecules = [bss.IO.readMolecules(files) for files in unbound_files]
-        bound_files = [functions.read_files(self.equilibration_directory+f"/bound/{ligand}/npt/bound_{ligand}.*") for ligand in [ligand_a, ligand_b]]
+        bound_files = [functions.get_files(self.equilibration_directory+f"/bound/{ligand}/npt/bound_{ligand}.*") for ligand in [ligand_a, ligand_b]]
         self.bound_ligands = [Ligand.Ligand(files, parameterised=True) for files in bound_files]
         self.bound_ligand_molecules = [bss.IO.readMolecules(files) for files in bound_files]
         return self
+
+
+    def combine_bound_ligands(self):
+        """
+        Take two bound bss.Systems and combine the ligands' systems
+
+        Parameters:
+        -----------
+        system_1: bss.System 
+        system_2: bss.System
+
+        Return:
+        -------
+        system_1: bss.System
+            system with combined ligand topologies
+        """
+        system_1 = self.bound_ligand_molecules[0]
+        system_2 = self.bound_ligand_molecules[1]
+        ligand_1 = None
+        protein = None
+        n_residues = [molecule.nResidues() for molecule in system_1]
+        n_atoms = [molecule.nAtoms() for molecule in system_1]
+        for j, (n_residues, n_atoms) in enumerate(zip(n_residues[:20], n_atoms[:20])):
+            if n_residues == 1 and n_atoms > 5:  
+                ligand_1 = system_1.getMolecule(j)
+            elif n_residues > 1:
+                protein = system_1.getMolecule(j)
+        ligand_2 = None
+        n_residues = [molecule.nResidues() for molecule in system_2]
+        n_atoms = [molecule.nAtoms() for molecule in system_2]   
+        for j, (n_residues, n_atoms) in enumerate(zip(n_residues, n_atoms)):
+            if n_residues == 1 and n_atoms > 5:
+                ligand_2 = system_2.getMolecule(j)
+        if ligand_1 and ligand_2 and protein:
+            pass
+        else:
+            raise _Exceptions.AlignmentError("Could not extract ligands or protein from input systems.")
+        merged_ligands = merge_ligands(ligand_1, ligand_2)
+        system_1.removeMolecules(ligand_1)
+        system_1.addMolecules(merged_ligands)
+        return system_1
 
 
     def prepare_afe(self, ligand_a_name, ligand_b_name):
@@ -496,35 +498,41 @@ class Network(object):
         ligand_a = self.ligand_molecules[0]
         ligand_b = self.ligand_molecules[1]
         unbound = combine_unbound_ligands(ligand_a, ligand_b)
+        bound = self.combine_bound_ligands()
 
-        bound_ligand_a = self.bound_ligand_molecules[0]
-        bound_ligand_b = self.bound_ligand_molecules[1]
-        bound = combine_bound_ligands(bound_ligand_a, bound_ligand_b)
-    
         # Create ligand transformation directory tree in the first repeat directory, e.g. SOMD_1/lig_a~lig_b/ for bound/unbound
         # Only construct the BioSimSpace Relative AFE objects in the first repeat directory, to save on computation
         first_run_directory = self.output_directories[0]
         transformation_directory = first_run_directory + f"/{ligand_a_name}~{ligand_b_name}/"
         unbound_directory = transformation_directory + "/unbound/"
         bound_directory = transformation_directory + "/bound/"
+        
+        restart_interval = 200 #TODO add to config? or add function
+        report_interval = 200 #TODO add to config? or add function
 
-        free_energy_protocol = bss.Protocol.FreeEnergy(lam_vals=lambda_values, runtime=self.md_time, restart_interval=200, report_interval=200)
+        free_energy_protocol = bss.Protocol.FreeEnergy(lam_vals=lambda_values, runtime=self.md_time, restart_interval=restart_interval, report_interval=report_interval)
 
-        n_cycles = int(5 * self.md_time._value) #TODO make editable
-        # n_moves = self.set_n_moves()
-        n_moves = 100000 # keep n moves the same, change n cycles
-        frames = n_moves // 100
+        n_cycles = int(self.md_time._value) * 5 #TODO make editable; do 1 cycle per every 0.5 ns 
+        n_moves = self.set_n_moves(number_of_cycles=n_cycles) # n_cycles * n_moves * timestep = runtime in ps
+
+        n_frames = 250 #TODO add to config or add function
+        buffered_coordinates_frequency = max(int(n_moves / n_frames), 2000) # https://github.com/OpenBioSim/sire/issues/113#issuecomment-1834317501
+
+        cycles_per_saved_frame = max(1, restart_interval // n_moves) #Credit: Anna Herz https://github.com/michellab/BioSimSpace/blob/feature-amber-fep/python/BioSimSpace/_Config/_somd.py 
+
         config_options = {"ncycles": n_cycles, 
                           "nmoves": n_moves, 
-                          "buffered coordinates frequency": frames, 
-                          "cutoff distance": "8 angstrom", 
+                          "buffered coordinates frequency": buffered_coordinates_frequency, #CHANGE
+                          "ncycles_per_snap": cycles_per_saved_frame,
+                        #   "minimal coordinate saving": True,
+                        #   "cutoff distance": "8 angstrom", # Make editable? 
                           "minimise": False}
-        
+
         bss.FreeEnergy.Relative(system=unbound, protocol=free_energy_protocol, engine=self.md_engine, work_dir=unbound_directory, extra_options=config_options, setup_only=True)
         bss.FreeEnergy.Relative(system=bound, protocol=free_energy_protocol, engine=self.md_engine, work_dir=bound_directory, extra_options=config_options, setup_only=True)
-        
-        unbound_configurations = functions.read_files(unbound_directory + "/*/*.cfg")
-        bound_configurations = functions.read_files(bound_directory + "/*/*.cfg")
+
+        unbound_configurations = functions.get_files(unbound_directory + "/*/*.cfg")
+        bound_configurations = functions.get_files(bound_directory + "/*/*.cfg")
         fix_afe_configurations(unbound_configurations)
         fix_afe_configurations(bound_configurations)
 
@@ -535,18 +543,17 @@ class Network(object):
         os.system(f"cp -r {bound_directory}/lambda_* {bound_lambda_minimisation_directory}")
 
         # For SOMD only: Open the AFE MD configuration files and convert to minimisation configurations for the first repeat
-        unbound_configurations = functions.read_files(unbound_lambda_minimisation_directory + "/*/*.cfg")
-        bound_configurations = functions.read_files(bound_lambda_minimisation_directory + "/*/*.cfg")
+        unbound_configurations = functions.get_files(unbound_lambda_minimisation_directory + "/*/*.cfg")
+        bound_configurations = functions.get_files(bound_lambda_minimisation_directory + "/*/*.cfg")
         create_minimisation_configurations(unbound_configurations)
         create_minimisation_configurations(bound_configurations)
         print("\n")
 
         # Copy lambda transformation directories (including minimisation) from first repeat directory to the rest of the repeat directories, e.g. SOMD_2, SOMD_3
         _ = [os.system(f"cp -r {transformation_directory.rstrip('/')} {self.output_directories[i]}") for i in range(1, self.n_repeats)]
-
         
 
-    def set_n_moves(self, stepsize=2, number_of_cycles=5):
+    def set_n_moves(self, number_of_cycles, stepsize=2):
         """
         Set SOMD nmoves in a reasonable way for better performance.
         See reference to: https://github.com/michellab/BioSimSpace/issues/258 and
@@ -581,10 +588,10 @@ class Network(object):
         output: str
             full path to AFE run script
         """
-        output = self.afe_input_directory + f"run_{self.md_engine}.sh"
+        output = self.afe_input_directory + f"05_run_{self.md_engine}.sh"
         meze = os.environ["MEZEHOME"]
         
-        template = meze + "/run_afe.sh"
+        template = meze + "/05_run_afe.sh"
         with open(template, "r") as file:
             lines = file.readlines()
         
@@ -617,27 +624,30 @@ class Network(object):
         transformations: pd.DataFrame
             forward and backward transformations with their associated lomap scores, number of windows and lambda list
         """
-        lomap_work_directory = self.check_lomap_directory()
-        transformations, lomap_scores = bss.Align.generateNetwork(self.ligand_molecules, plot_network=True, names=self.names, work_dir=lomap_work_directory)        
-        start_ligand = [self.names[transformation[0]] for transformation in transformations]
-        end_ligand = [self.names[transformation[1]] for transformation in transformations] 
-        start_indices = [transformation[0] for transformation in transformations]
-        end_indices = [transformation[1] for transformation in transformations]
-        dataframe = pd.DataFrame()
-        dataframe["ligand_a"] = start_ligand
-        dataframe["index_a"] = start_indices
-        dataframe["ligand_b"] = end_ligand
-        dataframe["index_b"] = end_indices
-        dataframe["score"] = lomap_scores
-        for score in lomap_scores:
-            n_windows = self.set_n_windows(score)
-            self.n_windows.append(n_windows)
-            lambda_windows = create_lambda_windows(n_windows)
-            self.lambdas.append(lambda_windows)
-        dataframe["n_windows"] = self.n_windows
-        dataframe["lambdas"] = self.lambdas
         save_name = self.afe_input_directory+f"/meze_network.csv"
-        dataframe.to_csv(save_name)
+        if not os.path.isfile(save_name):
+            lomap_work_directory = self.check_lomap_directory()
+            transformations, lomap_scores = bss.Align.generateNetwork(self.ligand_molecules, plot_network=True, names=self.names, work_dir=lomap_work_directory)        
+            start_ligand = [self.names[transformation[0]] for transformation in transformations]
+            end_ligand = [self.names[transformation[1]] for transformation in transformations] 
+            start_indices = [transformation[0] for transformation in transformations]
+            end_indices = [transformation[1] for transformation in transformations]
+            dataframe = pd.DataFrame()
+            dataframe["ligand_a"] = start_ligand
+            dataframe["index_a"] = start_indices
+            dataframe["ligand_b"] = end_ligand
+            dataframe["index_b"] = end_indices
+            dataframe["score"] = lomap_scores
+            for score in lomap_scores:
+                n_windows = self.set_n_windows(score)
+                self.n_windows.append(n_windows)
+                lambda_windows = create_lambda_windows(n_windows)
+                self.lambdas.append(lambda_windows)
+            dataframe["n_windows"] = self.n_windows
+            dataframe["lambdas"] = self.lambdas
+            dataframe.to_csv(save_name)
+        else:
+            dataframe = pd.read_csv(save_name)
         return dataframe, save_name
     
 
@@ -666,8 +676,8 @@ class Network(object):
             list of ligand filenames
         """
         # Adapted from dbmol.py:
-        ligand_files = functions.read_files(f"{self.ligand_path}/*.sdf")
-        ligand_files += functions.read_files(f"{self.ligand_path}/*.mol2")        
+        ligand_files = functions.get_files(f"{self.ligand_path}/*.sdf")
+        ligand_files += functions.get_files(f"{self.ligand_path}/*.mol2")        
         if len(ligand_files) < 2:
             raise IOError(f"Path {self.ligand_path} must contain at least two sdf or mol2 files.")
         return ligand_files
@@ -793,7 +803,8 @@ class Network(object):
                     f"ligand directory = {self.ligand_path}",
                     f"protein directory = {self.protein_path}",
                     f"log directory = {self.log_directory}",
-                    f"afe input directory = {self.afe_input_directory}"]
+                    f"afe input directory = {self.afe_input_directory}",
+                    f"plots directory = {self.plots}"]
 
         protocol_file = self.afe_input_directory + "/protocol.dat"
 
@@ -1048,7 +1059,10 @@ class Network(object):
         if given_group_name:
             return given_group_name
         else:
-            return self.protein_file.split("/")[-1].split(".")[0]
+            if len(self.protein_file) > 1:
+                return self.protein_file[0].split("/")[-1].split(".")[0]
+            else:
+                return self.protein_file.split("/")[-1].split(".")[0]
 
 
 def main():

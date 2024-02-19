@@ -3,8 +3,6 @@ Ligands class object
 """
 import functions
 import BioSimSpace as bss
-import Network 
-import csv
 
 
 class Ligand(object):
@@ -57,9 +55,9 @@ class Ligand(object):
         names: list
         """
         if self.parameterised:
-            names = functions.get_filenames(self.file[0])
+            names = functions.get_filename(self.file[0])
         else:
-            names = functions.get_filenames(self.file)
+            names = functions.get_filename(self.file)
         return names
     
 
@@ -90,7 +88,6 @@ class Ligand(object):
 
 def main():
     lig = Ligand("/home/jguven/projects/alchemistry/add_caps_to_kpc2/inputs/ligands/ligand_1.sdf")
-    # ntwrk = Network.create_network(mols, names, lig.path)
     print(lig.molecule, lig.name)
 
 if __name__ == "__main__":

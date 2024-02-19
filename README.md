@@ -32,7 +32,7 @@ Useful software:
 
 The workflow starts by setting up the project directory tree with the use of a python script called `prepare.py`. This script can be ran directly from the command line, or with the use of a bash script as:
 ```
-$MEZEHOME/01_prepare.sh <path-to-input-files>/protein.pdb <ligand_charge>
+$MEZEHOME/01_prepare.sh <path-to-input-files>/protein.pdb <ligand_charge> kpc2
 ```
 
 For example, with KPC-2 with ligands whose net charge is -1:

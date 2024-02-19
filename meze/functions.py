@@ -4,6 +4,7 @@ import argparse
 import os
 import glob
 import re
+import numpy as np
 from definitions import ROOT_DIRECTORY
 
 
@@ -22,6 +23,7 @@ def file_exists(file):
         existing filepath
     """
     if not os.path.isfile(file):
+
         raise argparse.ArgumentTypeError(f"{file} does not exist")
     return os.path.abspath(file)
 
@@ -46,6 +48,7 @@ def path_exists(path):
         raise argparse.ArgumentTypeError(f"{path} does not exist")
     checked_path = path + "/"
     return re.sub(r"/+", "/", checked_path)
+
 
 def check_int(input):
     """
@@ -150,7 +153,7 @@ def mkdir(directory):
     return directory
 
 
-def read_files(path):
+def get_files(path):
     """
     Read and sort files in a given path
 
@@ -167,7 +170,7 @@ def read_files(path):
     return sorted(glob.glob(path))
 
 
-def get_filenames(path):
+def get_filename(path):
     """
     Read path to file and remove extension.
 
@@ -185,6 +188,25 @@ def get_filenames(path):
     extension = file_name.split(".")[-1]
     return file_name.replace("." + extension, "")
 
+
+def tuple_to_str(object):
+    """
+    Convert a tuple to a string for writing to file
+
+    Parameters:
+    -----------
+    object: any
+        any object in a dictionary
+
+    Return:
+    -------
+    str:
+        object converted to string
+    """
+    if isinstance(object, tuple):
+        return str(object)
+    return object
+    
 
 def convert_to_units(value, units):
     """
@@ -262,31 +284,32 @@ def write_slurm_script(template_file, path, log_dir, protocol_file, extra_option
         slurm script 
     """
     output = path + "/" + template_file
-    meze = os.environ["MEZEHOME"]
-    template = meze + "/" + template_file
-    with open(template, "r") as file:
-        lines = file.readlines()
-    
-    if extra_options:
-        options = extra_options
-    elif not extra_options:
-        options = {"PATH_TO_LOGS": log_dir,
-                   "N_TASKS": str(1),
-                   "N_GPUS": str(1), 
-                   "N_CPUS": str(10),
-                   "MEMORY": str(4069), # only for water and equilibration
-                   "PATH_TO_MEZE": meze,
-                   "PROTOCOLFILE": protocol_file}    
-    if extra_lines:
-        for key, value in extra_lines.items():
-            options[key] = str(value)
+    if not os.path.isfile(output):
+        meze = os.environ["MEZEHOME"]
+        template = meze + "/" + template_file
+        with open(template, "r") as file:
+            lines = file.readlines()
+        
+        if extra_options:
+            options = extra_options
+        elif not extra_options:
+            options = {"PATH_TO_LOGS": log_dir,
+                    "N_TASKS": str(1),
+                    "N_GPUS": str(1), 
+                    "N_CPUS": str(10),
+                    #    "MEMORY": str(4069), # only for water and equilibration
+                    "PATH_TO_MEZE": meze,
+                    "PROTOCOLFILE": protocol_file}    
+        if extra_lines:
+            for key, value in extra_lines.items():
+                options[key] = str(value)
 
-    with open(output, "w") as file:
-        for line in lines:
-            for key, value in options.items():
-                line = line.replace(key, value)
-            file.write(line)
-    os.system(f"chmod +x {output}")
+        with open(output, "w") as file:
+            for line in lines:
+                for key, value in options.items():
+                    line = line.replace(key, value)
+                file.write(line)
+        os.system(f"chmod +x {output}")
     return output
 
 
@@ -304,3 +327,124 @@ def separate(string, sep="~"):
         separated string as a list
     """
     return string.split(sep)
+
+
+def read_protocol(file):
+    """
+    Read the protocol.dat file in to a dictionary 
+
+    Parameters:
+    -----------
+    file: str
+        full path to the protocol.dat file written by meze.py
+
+    Return:
+    -------
+    protocol: dict
+        protocol file as a dictionary
+    """
+    protocol = {}
+    with open(file, "r") as f:
+        for line in f: 
+            key, value = line.rstrip().split(" = ")
+            protocol[key] = value
+    return protocol
+
+
+def check_nan(array):
+    """
+    Take an array(-like) and check if any of its values are NaN.
+    Return an array of indices where values are NaN.
+
+    Parameters:
+    -----------
+    array: array-like
+        input array 
+
+    Return:
+    -------
+    nan_indices: np.array([np.array, np.array])
+        indices of NaN values in input array
+    """
+    if not isinstance(array, np.ndarray):
+        array = np.array(array)
+
+    nan_indices = []
+    if np.isnan(array).any():
+        nan_indices = np.argwhere(np.isnan(array))
+
+    return nan_indices
+
+
+def average(values):
+    """
+    Compute the mean of values along columns.
+    Ignores NaN values, unless whole row is NaN.
+
+    Parameters:
+    -----------
+    values: np.array
+        array of values 
+
+    Return:
+    -------
+    np.array
+        mean of values along columns
+    """
+    if not isinstance(values, np.ndarray):
+        values = np.array(values)
+    return np.nanmean(values, axis=1)
+
+
+def add_in_quadrature(array):
+    """
+    Take the array of errors and add them in quadrature accross columns.
+
+    Parameters:
+    -----------
+    array: array-like
+        array of values
+
+    Return:
+    -------
+    np.array
+        array of errors added in quadrature
+    """
+    squared_errors = []
+    dividers = []
+    for row in array:
+        squares = np.array([value ** 2 for value in row])
+        squares_dropna = squares[~np.isnan(squares)]
+        squared_errors.append(squares_dropna)
+
+        divider = len(squares_dropna) # if some of the values are NaN, they are ignored
+        if divider > 0: 
+            dividers.append(divider)
+        else:
+            dividers.append(np.nan) 
+    propagated_errors = []
+    for i in range(len(squared_errors)):
+        sum_of_values = np.sum(squared_errors[i])
+        propagated_error = (1/dividers[i]) * np.sqrt(sum_of_values)
+        propagated_errors.append(propagated_error)
+
+    return np.array(propagated_errors)
+
+
+def standard_deviation(array):
+    """
+    Take the standard deviation of values accross columns
+
+    Parameters:
+    -----------
+    array: array-like 
+        array of values
+
+    Return:
+    -------
+    np.array:
+        array of standard deviation accross columns, NaNs are ignored
+    """
+    if not isinstance(array, np.ndarray):
+        array = np.array(array)
+    return np.nanstd(array, axis=1)

@@ -3,6 +3,8 @@
 
 INPUT_FILE=$1
 LIGAND_CHARGE=$2
-#RUNTIME=$3
+NAME=$3
 
-python $MEZEHOME/prepare.py --input-pdb-file $INPUT_FILE --ligand-charge $LIGAND_CHARGE 
+#HAVE TO ADD --non-metal somehow?
+
+python $MEZEHOME/prepare.py --input-pdb-file $INPUT_FILE --ligand-charge $LIGAND_CHARGE --group-name $NAME  
