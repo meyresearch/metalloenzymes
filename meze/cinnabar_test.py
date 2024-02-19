@@ -66,7 +66,11 @@ calculated_header = ["# Calculated block\n",
 
 free_energy_map = cinnabar.FEMap.from_csv("/home/jguven/projects/alchemistry/vim2/deprotonated_ligand/outputs/cinnabar_test_vim2.csv")
 
+
 fe_graph = free_energy_map.to_legacy_graph()
+
+for node, edge in zip(fe_graph.nodes(), fe_graph.edges()):
+    print(f"{node}: {edge}")
 
 cinnabar.plotting.plot_DGs(fe_graph, target_name="VIM-2", title="Test")
 
