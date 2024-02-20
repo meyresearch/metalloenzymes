@@ -166,6 +166,14 @@ def main():
                         help="number of lambda windows to use for AFE transformations",
                         type=int,
                         default=11)    
+    
+    parser.add_argument("-ld",
+                        "--lambda-windows-difficult",
+                        dest="n_difficult",
+                        help="number of lambda windows to use for difficult AFE transformations",
+                        type=int,
+                        default=17) 
+    
 
     arguments = parser.parse_args()
 
@@ -197,7 +205,8 @@ def main():
                             min_dt=arguments.emstep,
                             min_tol=arguments.emtol,
                             repeats=arguments.repeats,
-                            n_normal=arguments.lambdas)
+                            n_normal=arguments.lambdas,
+                            n_difficult=arguments.n_difficult)
         
     elif not metal:
 
@@ -221,7 +230,8 @@ def main():
                                 min_dt=arguments.emstep,
                                 min_tol=arguments.emtol,
                                 repeats=arguments.repeats,
-                                n_normal=arguments.lambdas)
+                                n_normal=arguments.lambdas,
+                                n_difficult=arguments.n_difficult)
         
     prepared_network = network.prepare_network()
 
