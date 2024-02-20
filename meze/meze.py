@@ -126,7 +126,7 @@ class Meze(sofra.Sofra):
         """
         self.protein_water_complex = self.protein.create_complex()
         self.prepared_protein = self.protein.tleap(self.protein_water_complex)
-        self.log_directory = self.create_directory("/logs/")
+        self.log_directory = self.create_directory(f"{self.working_directory}/logs/")
         self.protocol_file = self.create_qm_protocol_file()
         self.prepared = True
         return self
@@ -173,7 +173,7 @@ class Meze(sofra.Sofra):
                     f"outputs = {path_to_outputs}",
                     f"repeats = {self.n_repeats}",
                     f"network file = {self.network_file}",
-                    f"project directory = {self.workding_directory}",
+                    f"project directory = {self.working_directory}",
                     f"equilibration directory = {self.equilibration_directory}",
                     f"ligand directory = {self.ligand_path}",
                     f"protein directory = {self.protein_path}",
@@ -631,7 +631,7 @@ class Meze(sofra.Sofra):
                         f"engine = {self.md_engine}",
                         f"outputs = {self.output_directory}",
                         f"repeats = {self.n_repeats}",
-                        f"project directory = {self.workding_directory}",
+                        f"project directory = {self.working_directory}",
                         f"equilibration directory = {self.equilibration_directory}",
                         f"ligand directory = {self.ligand_path}",
                         f"protein directory = {self.protein_path}",

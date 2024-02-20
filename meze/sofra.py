@@ -222,7 +222,7 @@ class Sofra(object):
         """
         Class constructor
         """
-        self.workding_directory = functions.path_exists(workdir)
+        self.working_directory = functions.path_exists(workdir)
         self.md_engine = engine
         self.md_time = functions.convert_to_units(sampling_time, NANOSECOND)
         self.n_repeats = repeats
@@ -238,14 +238,14 @@ class Sofra(object):
             self.equilibration_directory = functions.path_exists(equilibration_path)  
             self.outputs = functions.path_exists(outputs) 
             self.output_directories = functions.get_files(self.outputs + f"/{engine}_*")
-            self.plots = functions.get_files("/outputs/plots/")
+            self.plots = functions.get_files(f"{self.outputs}/plots/")
         else:
             self.protein_file = protein_file
-            self.afe_input_directory = self.create_directory("/afe/")
-            self.equilibration_directory = self.create_directory("/equilibration/")
-            self.outputs = self.create_directory("/outputs/")
+            self.afe_input_directory = self.create_directory(afe_input_path)
+            self.equilibration_directory = self.create_directory(equilibration_path)
+            self.outputs = self.create_directory(outputs)
             self.output_directories = self.create_output_directories()
-            self.plots = self.create_directory("/outputs/plots/")
+            self.plots = self.create_directory(f"{self.outputs}/plots/")
 
         self.ligand_path = functions.path_exists(ligand_path)
         self.ligand_forcefield = ligand_ff
@@ -321,7 +321,7 @@ class Sofra(object):
             full path to afe directory
         """
         try:
-            directory = self.workding_directory + str(name)
+            directory = str(name)
             pathlib.Path(directory).mkdir(parents=create_parents, exist_ok=False)
         except FileNotFoundError as e:
             print(f"Could not create directory {directory}. Pathlib raised error: {e}")
@@ -363,7 +363,7 @@ class Sofra(object):
         """
         self.protein_water_complex = self.protein.create_complex()
         self.prepared_protein = self.protein.tleap(self.protein_water_complex)
-        self.log_directory = self.create_directory("/logs/")
+        self.log_directory = self.create_directory(f"{self.working_directory}/logs/")
         self.transformations, self.network_file = self.set_transformations()
         self.n_transformations = len(self.transformations)
         self.ligands_dat_file = self.create_ligand_dat_file()
@@ -603,7 +603,7 @@ class Sofra(object):
                 #    "JOB": f"{self.md_engine}_afe", 
                    "ENGINE": self.md_engine,
                    "N_REPEATS": str(self.n_repeats),
-                   "OUTPUTS_DIR": self.workding_directory + "/outputs/"}
+                   "OUTPUTS_DIR": self.working_directory + "/outputs/"}
 
         # Credit: https://stackoverflow.com/a/51240945
         with open(output, "w") as file:
@@ -798,7 +798,7 @@ class Sofra(object):
                     f"outputs = {path_to_outputs}",
                     f"repeats = {self.n_repeats}",
                     f"network file = {self.network_file}",
-                    f"project directory = {self.workding_directory}",
+                    f"project directory = {self.working_directory}",
                     f"equilibration directory = {self.equilibration_directory}",
                     f"ligand directory = {self.ligand_path}",
                     f"protein directory = {self.protein_path}",
