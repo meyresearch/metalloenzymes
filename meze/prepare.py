@@ -174,6 +174,21 @@ def main():
                         type=int,
                         default=17) 
     
+    parser.add_argument("-sm",
+                        "--solvation-method",
+                        dest="solvation_method",
+                        help="MD engine used for solvation; default is BioSimSpace (GROMACS)",
+                        choices=["amber", "gromacs"],
+                        default="gromacs",
+                        type=str)
+    
+    parser.add_argument("-sc",
+                        "--solvent-closeness",
+                        dest="solvent_closeness",
+                        help="control how close, in \AA, solvent atoms can come to solute atoms, default 1.0",
+                        type=float, 
+                        default=1.0)
+    
 
     arguments = parser.parse_args()
 
@@ -181,7 +196,7 @@ def main():
         metal = True
     elif arguments.non_metal:
         metal = False
-
+    
     if metal:
         network = meze.Meze(protein_file=arguments.protein,
                             cut_off=arguments.cut_off,
@@ -206,32 +221,36 @@ def main():
                             min_tol=arguments.emtol,
                             repeats=arguments.repeats,
                             n_normal=arguments.lambdas,
-                            n_difficult=arguments.n_difficult)
+                            n_difficult=arguments.n_difficult,
+                            solvation_method=arguments.solvation_method,
+                            solvent_closeness=arguments.solvent_closeness)
         
     elif not metal:
 
         network = sofra.Sofra(protein_file=arguments.protein,
-                                workdir=arguments.working_directory,
-                                ligand_path=arguments.ligand_directory,
-                                ligand_charge=arguments.ligand_charge,
-                                ligand_ff=arguments.ligand_forcefield,
-                                group_name=arguments.group_name,        
-                                protein_path=arguments.protein_directory,
-                                water_model=arguments.water_model,
-                                protein_ff=arguments.forcefield,
-                                engine=arguments.engine,
-                                sampling_time=arguments.sampling_time,
-                                box_edges=arguments.box_edges,
-                                box_shape=arguments.box_shape,
-                                min_steps=arguments.min_steps,
-                                short_nvt=arguments.short_nvt,
-                                nvt=arguments.nvt,
-                                npt=arguments.npt,
-                                min_dt=arguments.emstep,
-                                min_tol=arguments.emtol,
-                                repeats=arguments.repeats,
-                                n_normal=arguments.lambdas,
-                                n_difficult=arguments.n_difficult)
+                              workdir=arguments.working_directory,
+                              ligand_path=arguments.ligand_directory,
+                              ligand_charge=arguments.ligand_charge,
+                              ligand_ff=arguments.ligand_forcefield,
+                              group_name=arguments.group_name,        
+                              protein_path=arguments.protein_directory,
+                              water_model=arguments.water_model,
+                              protein_ff=arguments.forcefield,
+                              engine=arguments.engine,
+                              sampling_time=arguments.sampling_time,
+                              box_edges=arguments.box_edges,
+                              box_shape=arguments.box_shape,
+                              min_steps=arguments.min_steps,
+                              short_nvt=arguments.short_nvt,
+                              nvt=arguments.nvt,
+                              npt=arguments.npt,
+                              min_dt=arguments.emstep,
+                              min_tol=arguments.emtol,
+                              repeats=arguments.repeats,
+                              n_normal=arguments.lambdas,
+                              n_difficult=arguments.n_difficult,
+                              solvation_method=arguments.solvation_method,
+                              solvent_closeness=arguments.solvent_closeness)
         
     prepared_network = network.prepare_network()
 
