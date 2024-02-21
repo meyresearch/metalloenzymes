@@ -132,7 +132,7 @@ class Meze(sofra.Sofra):
 
     def create_protocol_file(self):
         """
-        Create protocol.dat file for AFE runs
+        Add metal protein information to the AFE protocol file 
 
         Parameters:
         -----------

@@ -247,19 +247,20 @@ class Sofra(object):
             self.outputs = self.create_directory(outputs)
             self.output_directories = self.create_output_directories()
             self.plots = self.create_directory(f"{self.outputs}/plots/")
-            self.solvation_method = solvation_method
-            self.solvent_closeness = functions.check_positive(solvent_closeness)
+            
+        self.solvation_method = solvation_method
+        self.solvent_closeness = functions.check_positive(solvent_closeness)
 
         self.ligand_path = functions.path_exists(ligand_path)
-        self.ligand_forcefield = ligand_ff
-        self.water_model = water_model
+        self.ligand_forcefield = ligand_ff.lower()
+        self.water_model = water_model.lower()
         self.input_files = self.get_files()
         self.ligand_charge = check_charge(ligand_charge)
         self.ligands = [Ligand.Ligand(file) for file in self.input_files]
         self.ligand_molecules = [ligand.get_ligand() for ligand in self.ligands]
         self.names = [ligand.get_name() for ligand in self.ligands]
 
-        self.protein_forcefield = protein_ff
+        self.protein_forcefield = protein_ff.lower()
 
         self.protein_path = functions.path_exists(protein_path)
         self.group_name = self.get_name(group_name)

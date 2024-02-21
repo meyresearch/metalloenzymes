@@ -3,6 +3,7 @@ Ligands class object
 """
 import functions
 import BioSimSpace as bss
+import os
 
 
 class Ligand(object):
@@ -24,6 +25,7 @@ class Ligand(object):
         """
         Class constructor
         """
+        self.path = os.path.dirname(file)
         self.parameterised = parameterised
         if not self.parameterised:
             self.file = functions.file_exists(file)
@@ -62,6 +64,21 @@ class Ligand(object):
     
 
     def parameterise(self, forcefield, charge):
+        """
+        Parameterise ligand using BioSimSpace
+
+        Parameters:
+        -----------
+        forcefield: 
+            name of the ligand force field, current options are GAFF and GAFF2
+        charge: 
+            charge of the ligand
+
+        Return:
+        -------
+        self.parameters: bss.Molecule
+            parameterised ligand molecule object
+        """
         self.parameters = None
         if forcefield == "gaff":
             self.parameters = bss.Parameters.gaff(molecule=self.molecule, net_charge=charge).getMolecule()
@@ -70,6 +87,51 @@ class Ligand(object):
         else:
             print(f"Forcefield {forcefield} is not supported for ligands.")
         return self.parameters  
+
+
+    def antechamber(self, charge, atom_type="gaff2", charge_method="bcc"):
+        """
+        Parameterise ligand using antechamber
+
+        Parameters:
+        -----------
+        charge: float
+            charge of the ligand
+
+        Return:
+        -------
+        self: Ligand
+            Ligand object
+        """
+        input_file_extension = functions.get_file_extension(self.file)
+        command = f"antechamber -fi {input_file_extension} -fo mol2 -i {self.file} -o {self.name}.mol2 -c {charge_method} -at {atom_type} -pf y -nc {charge}"
+        work_dir = os.getcwd()
+        os.chdir(self.path)
+        os.system(command)
+        os.chdir(work_dir)
+        self.file = f"{self.path}/{self.name}.mol2"
+        self.molecule = self.get_ligand()
+        return self
+
+
+    def parmcheck(self):
+        """
+        Run parmchk2 from amber to create an frcmod file
+
+        Parameters:
+        -----------
+
+        Return:
+        -------
+        str:
+            full path to frcmod file
+        """
+        command = f"parmchk2 -i {self.name}.mol2 -o {self.name}.frcmod -f mol2"
+        work_dir = os.getcwd()
+        os.chdir(self.path)
+        os.system(command)
+        os.chdir(work_dir)    
+        return functions.get_files(f"{self.path}/{self.name}.frcmod")[0]
 
 
     def get_system(self):

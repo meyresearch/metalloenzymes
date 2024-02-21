@@ -189,6 +189,24 @@ def get_filename(path):
     return file_name.replace("." + extension, "")
 
 
+def get_file_extension(path):
+    """
+    Read path to file and return only its extension
+
+    Parameters:
+    -----------
+    path: 
+        full path to file
+
+    Return:
+    -------
+    str
+        file extension
+    """
+    file_name = path.split("/")[-1]
+    return file_name.split(".")[-1]
+
+
 def tuple_to_str(object):
     """
     Convert a tuple to a string for writing to file
