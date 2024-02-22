@@ -1,5 +1,0 @@
-source leaprc.protein.ff14SB
-source leaprc.water.tip3p
-complex = loadpdb ../azetidinimines/kpc2//inputs/protein/protein_complex.pdb
-saveamberparm complex ../azetidinimines/kpc2//inputs/protein/kpc2_tleap.prm7 ../azetidinimines/kpc2//inputs/protein/kpc2_tleap.rst7
-quit

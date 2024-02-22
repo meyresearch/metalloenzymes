@@ -25,7 +25,6 @@ class Ligand(object):
         """
         Class constructor
         """
-        self.path = os.path.dirname(file)
         self.parameterised = parameterised
         if not self.parameterised:
             self.file = functions.file_exists(file)
@@ -89,7 +88,7 @@ class Ligand(object):
         return self.parameters  
 
 
-    def antechamber(self, charge, atom_type="gaff2", charge_method="bcc"):
+    def antechamber(self, charge, path, atom_type="gaff2", charge_method="bcc"):
         """
         Parameterise ligand using antechamber
 
@@ -109,7 +108,7 @@ class Ligand(object):
         os.chdir(self.path)
         os.system(command)
         os.chdir(work_dir)
-        self.file = f"{self.path}/{self.name}.mol2"
+        self.file = f"{path}/{self.name}.mol2"
         self.molecule = self.get_ligand()
         return self
 

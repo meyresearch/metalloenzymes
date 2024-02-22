@@ -19,15 +19,15 @@ def solvate_unbound(network, ligand_name):
         ligand name
     Return:
     -------
-    solvated_ligand: Ligand
+    Ligand:
         (solvated) Ligand object whose file attribute is the prm7 and rst7 files 
     """ 
     method = network.solvation_method
     ligand = network.get_ligand_by_name(ligand_name)
     ligand_savename = network.ligand_path + ligand_name + "_solvated"
+    print(f"Solvating unbound ligand {ligand_name}")
 
     if method == "gromacs":
-        print(f"Solvating unbound ligand {ligand_name}")
         ligand_parameters = ligand.parameterise(network.ligand_forcefield, network.ligand_charge)
         unbound_box, unbound_box_angles = network.create_box(ligand_parameters)
         solvated_molecule = bss.Solvent.solvate(model=network.protein.water_model, 
@@ -35,23 +35,24 @@ def solvate_unbound(network, ligand_name):
                                                 box=unbound_box,
                                                 angles=unbound_box_angles)
         solvated_files = bss.IO.saveMolecules(ligand_savename, solvated_molecule, ["PRM7", "RST7"])
-        solvated_ligand = Ligand.Ligand(file=solvated_files, parameterised=True)
-    
-    elif method == "amber":
 
-        if not os.path.isfile(f"{network.ligand_path}/{ligand.name}.mol2"):
-            parameterised_ligand = ligand.antechamber(charge=network.ligand_charge, atom_type=network.ligand_forcefield)
+    elif method == "amber":
+        
+        solvate_directory = network.create_directory(f"{network.ligand_path}/solvate_{ligand_name}/")
+
+        if not os.path.isfile(f"{solvate_directory}/{ligand.name}.mol2"):
+            parameterised_ligand = ligand.antechamber(charge=network.ligand_charge, path=network.ligand_path, atom_type=network.ligand_forcefield)
             ligand_mol2_file = parameterised_ligand.file
         else:
-            ligand_mol2_file = functions.get_files(f"{network.ligand_path}/{ligand.name}.mol2")[0]
+            ligand_mol2_file = functions.get_files(f"{solvate_directory}/{ligand.name}.mol2")[0]
         
-        if not os.path.isfile(f"{network.ligand_path}/{ligand.name}.frcmod"):
+        if not os.path.isfile(f"{solvate_directory}/{ligand.name}.frcmod"):
             ligand_frcmod_file = ligand.parmcheck()
         else:
-            ligand_frcmod_file = functions.get_files(f"{network.ligand_path}/{ligand.name}.frcmod")[0]
+            ligand_frcmod_file = functions.get_files(f"{solvate_directory}/{ligand.name}.frcmod")[0]
             
-        tleap_input_file = network.ligand_path + f"/tleap_{ligand.name}_solvate.in"
-        tleap_output_file = network.ligand_path + f"/tleap_{ligand.name}_solvate.out"
+        tleap_input_file = solvate_directory + f"/tleap_{ligand.name}_solvate.in"
+        tleap_output_file = solvate_directory + f"/tleap_{ligand.name}_solvate.out"
 
         if not os.path.isfile(f"{ligand_savename}.prm7") or not os.path.isfile(f"{ligand_savename}.rst7"):
             with open(tleap_input_file, "w") as tleap_in:
@@ -72,17 +73,13 @@ def solvate_unbound(network, ligand_name):
                 tleap_in.write(f"quit\n")
 
             work_dir = os.getcwd()
-            os.chdir(network.ligand_path)
+            os.chdir(solvate_directory)
             os.system(f"tleap -s -f {tleap_input_file} > {tleap_output_file}")
             os.chdir(work_dir)
             
         solvated_files = functions.get_files(ligand_savename + ".*")
-        solvated_ligand = Ligand.Ligand(file=solvated_files, parameterised=True)
-
-    return solvated_ligand
-
-
-
+    
+    return Ligand.Ligand(file=solvated_files, parameterised=True)
 
 
 
@@ -101,21 +98,60 @@ def solvate_bound(network, ligand_name):
     solvated_system: Ligand
         (solvated) Ligand object whose file attribute is the prm7 and rst7 files         
     """
+    method = network.solvation_method
     ligand = network.get_ligand_by_name(ligand_name)
-    print(f"Solvating bound ligand {ligand_name}")
-    ligand_parameters = ligand.parameterise(network.ligand_forcefield, network.ligand_charge)    
-    protein = network.protein.get_molecule()
-    system_parameters = ligand_parameters + protein
-    bound_box, bound_box_angles = network.create_box(system_parameters)
-    solvated_molecules = bss.Solvent.solvate(model=network.protein.water_model,
-                                                molecule=system_parameters,
-                                                box=bound_box,
-                                                angles=bound_box_angles)
-    
     system_savename = network.protein_path + "bound_" + ligand_name + "_solvated"
-    solvated_files = bss.IO.saveMolecules(system_savename, solvated_molecules, ["PRM7", "RST7"])
-    solvated_system = Ligand.Ligand(file=solvated_files, parameterised=True)
-    return solvated_system
+    print(f"Solvating bound ligand {ligand_name}")
+
+    if method == "gromacs":
+        ligand_parameters = ligand.parameterise(network.ligand_forcefield, network.ligand_charge)    
+        protein = network.protein.get_molecule()
+        system_parameters = ligand_parameters + protein
+        bound_box, bound_box_angles = network.create_box(system_parameters)
+        solvated_molecules = bss.Solvent.solvate(model=network.protein.water_model,
+                                                    molecule=system_parameters,
+                                                    box=bound_box,
+                                                    angles=bound_box_angles)
+        
+        
+        solvated_files = bss.IO.saveMolecules(system_savename, solvated_molecules, ["PRM7", "RST7"])
+
+    elif method == "amber":
+
+        if not os.path.isfile(f"{network.ligand_path}/{ligand.name}.mol2"):
+            parameterised_ligand = ligand.antechamber(charge=network.ligand_charge, path=network.ligand_path, atom_type=network.ligand_forcefield)
+            ligand_mol2_file = parameterised_ligand.file
+        else:
+            ligand_mol2_file = functions.get_files(f"{network.ligand_path}/{ligand.name}.mol2")[0]
+        
+        if not os.path.isfile(f"{network.ligand_path}/{ligand.name}.frcmod"):
+            ligand_frcmod_file = ligand.parmcheck()
+        else:
+            ligand_frcmod_file = functions.get_files(f"{network.ligand_path}/{ligand.name}.frcmod")[0]
+
+        tleap_input_file = network.protein_path + f"/tleap_bound_{ligand.name}_solvate.in"
+        tleap_output_file = network.protein_path + f"/tleap_bound_{ligand.name}_solvate.out"   
+
+        protein_pdb = functions.get_files(functions.file_exists(f"{network.protein_path}/{network.group_name}.pdb"))[0]
+        # concatenate = f"cat {protein_pdb} {}"
+
+        if not os.path.isfile(f"{system_savename}.prm7") or not os.path.isfile(f"{system_savename}.rst7"):
+            with open(tleap_input_file, "w") as tleap_in:
+                tleap_in.write(f"source leaprc.{network.ligand_forcefield}\n")
+                tleap_in.write(f"source leaprc.water.{network.water_model}\n")
+                if network.water_model == "tip3p":
+                    tleap_in.write(f"loadamberparams frcmod.ions1lm_126_tip3p\n")
+                tleap_in.write("\n")
+                tleap_in.write(f"lig = loadmol2 {ligand_mol2_file}\n")
+                tleap_in.write(f"loadamberparams {ligand_frcmod_file}\n")
+                tleap_in.write("\n")
+
+
+            
+
+    return Ligand.Ligand(file=solvated_files, parameterised=True)
+
+    
 
 
 def create_box(network, molecule):
