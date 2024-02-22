@@ -40,19 +40,19 @@ def solvate_unbound(network, ligand_name):
         
         solvate_directory = network.create_directory(f"{network.ligand_path}/solvate_{ligand_name}/")
 
-        if not os.path.isfile(f"{solvate_directory}/{ligand.name}.mol2"):
+        if not os.path.isfile(f"{solvate_directory}/{ligand_name}.mol2"):
             parameterised_ligand = ligand.antechamber(charge=network.ligand_charge, path=network.ligand_path, atom_type=network.ligand_forcefield)
             ligand_mol2_file = parameterised_ligand.file
         else:
-            ligand_mol2_file = functions.get_files(f"{solvate_directory}/{ligand.name}.mol2")[0]
+            ligand_mol2_file = functions.get_files(f"{solvate_directory}/{ligand_name}.mol2")[0]
         
-        if not os.path.isfile(f"{solvate_directory}/{ligand.name}.frcmod"):
+        if not os.path.isfile(f"{solvate_directory}/{ligand_name}.frcmod"):
             ligand_frcmod_file = ligand.parmcheck()
         else:
-            ligand_frcmod_file = functions.get_files(f"{solvate_directory}/{ligand.name}.frcmod")[0]
+            ligand_frcmod_file = functions.get_files(f"{solvate_directory}/{ligand_name}.frcmod")[0]
             
-        tleap_input_file = solvate_directory + f"/tleap_{ligand.name}_solvate.in"
-        tleap_output_file = solvate_directory + f"/tleap_{ligand.name}_solvate.out"
+        tleap_input_file = solvate_directory + f"/tleap_{ligand_name}_solvate.in"
+        tleap_output_file = solvate_directory + f"/tleap_{ligand_name}_solvate.out"
 
         if not os.path.isfile(f"{ligand_savename}.prm7") or not os.path.isfile(f"{ligand_savename}.rst7"):
             with open(tleap_input_file, "w") as tleap_in:
@@ -117,38 +117,55 @@ def solvate_bound(network, ligand_name):
         solvated_files = bss.IO.saveMolecules(system_savename, solvated_molecules, ["PRM7", "RST7"])
 
     elif method == "amber":
-
-        if not os.path.isfile(f"{network.ligand_path}/{ligand.name}.mol2"):
-            parameterised_ligand = ligand.antechamber(charge=network.ligand_charge, path=network.ligand_path, atom_type=network.ligand_forcefield)
+        
+        solvate_directory = network.create_directory(f"{network.protein_path}/solvate_{ligand_name}_bound/")
+        
+        if not os.path.isfile(f"{network.ligand_path}/solvate_{ligand_name}/{ligand_name}.mol2"):
+            parameterised_ligand = ligand.antechamber(charge=network.ligand_charge, path=solvate_directory, atom_type=network.ligand_forcefield)
             ligand_mol2_file = parameterised_ligand.file
         else:
-            ligand_mol2_file = functions.get_files(f"{network.ligand_path}/{ligand.name}.mol2")[0]
+            ligand_mol2_file = functions.get_files(f"{network.ligand_path}/solvate_{ligand_name}/{ligand_name}.mol2")[0]
         
-        if not os.path.isfile(f"{network.ligand_path}/{ligand.name}.frcmod"):
+        if not os.path.isfile(f"{network.ligand_path}/solvate_{ligand_name}/{ligand_name}.frcmod"):
             ligand_frcmod_file = ligand.parmcheck()
         else:
-            ligand_frcmod_file = functions.get_files(f"{network.ligand_path}/{ligand.name}.frcmod")[0]
+            ligand_frcmod_file = functions.get_files(f"{network.ligand_path}/solvate_{ligand_name}/{ligand_name}.frcmod")[0]
 
-        tleap_input_file = network.protein_path + f"/tleap_bound_{ligand.name}_solvate.in"
-        tleap_output_file = network.protein_path + f"/tleap_bound_{ligand.name}_solvate.out"   
+        tleap_input_file = solvate_directory + f"/tleap_bound_{ligand_name}_solvate.in"
+        tleap_output_file = solvate_directory + f"/tleap_bound_{ligand_name}_solvate.out"   
 
         protein_pdb = functions.get_files(functions.file_exists(f"{network.protein_path}/{network.group_name}.pdb"))[0]
-        # concatenate = f"cat {protein_pdb} {}"
-
+        ligand_pdb = bss.IO.saveMolecules(filebase=f"{solvate_directory}/{ligand_name}", system=bss.IO.readMolecules(ligand_mol2_file)[0], fileformat="pdb")[0]
+        complex_pdb = f"{solvate_directory}/{ligand_name}_complex.pdb"
+        concatenate = f"cat {protein_pdb} {ligand_pdb} > {complex_pdb}"
+        os.system(concatenate)
         if not os.path.isfile(f"{system_savename}.prm7") or not os.path.isfile(f"{system_savename}.rst7"):
             with open(tleap_input_file, "w") as tleap_in:
                 tleap_in.write(f"source leaprc.{network.ligand_forcefield}\n")
                 tleap_in.write(f"source leaprc.water.{network.water_model}\n")
+                tleap_in.write(f"source oldff/leaprc.{network.protein_forcefield}\n")
                 if network.water_model == "tip3p":
                     tleap_in.write(f"loadamberparams frcmod.ions1lm_126_tip3p\n")
                 tleap_in.write("\n")
                 tleap_in.write(f"lig = loadmol2 {ligand_mol2_file}\n")
                 tleap_in.write(f"loadamberparams {ligand_frcmod_file}\n")
                 tleap_in.write("\n")
-
-
+                tleap_in.write(f"complex = loadpdb {complex_pdb}\n")
+                box_shape_three_letter = network.box_shape[:3]
+                tleap_in.write(f"solvate{box_shape_three_letter} lig {network.water_model.upper()}BOX {network.box_edges} {network.solvent_closeness}\n")
+                tleap_in.write(f"addions lig Na+ 0\n")
+                tleap_in.write(f"addions lig Cl- 0\n")
+                tleap_in.write("\n")
+                tleap_in.write(f"saveamberparm complex {system_savename}.prm7 {system_savename}.rst7\n")
+                tleap_in.write(f"quit\n")
             
+            work_dir = os.getcwd()
+            os.chdir(solvate_directory)
+            os.system(f"tleap -s -f {tleap_input_file} > {tleap_output_file}")
+            os.chdir(work_dir)
 
+        solvated_files = functions.get_files(system_savename + ".*")
+            
     return Ligand.Ligand(file=solvated_files, parameterised=True)
 
     
