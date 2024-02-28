@@ -136,9 +136,12 @@ def solvate_bound(network, ligand_name):
 
         protein_pdb = functions.get_files(functions.file_exists(f"{network.protein_path}/{network.group_name}.pdb"))[0]
         ligand_pdb = bss.IO.saveMolecules(filebase=f"{solvate_directory}/{ligand_name}", system=bss.IO.readMolecules(ligand_mol2_file)[0], fileformat="pdb")[0]
-        complex_pdb = f"{solvate_directory}/{ligand_name}_complex.pdb"
-        concatenate = f"cat {protein_pdb} {ligand_pdb} > {complex_pdb}"
+        cat_pdb = f"{solvate_directory}/{ligand_name}_complex_cat.pdb"
+        concatenate = f"cat {protein_pdb} {ligand_pdb} > {cat_pdb}"
         os.system(concatenate)
+        complex_pdb = f"{solvate_directory}/{ligand_name}_complex.pdb"
+        pdb4amber = f"pdb4amber -i {cat_pdb} -o {complex_pdb}"
+        os.system(pdb4amber)
         if not os.path.isfile(f"{system_savename}.prm7") or not os.path.isfile(f"{system_savename}.rst7"):
             with open(tleap_input_file, "w") as tleap_in:
                 tleap_in.write(f"source leaprc.{network.ligand_forcefield}\n")
@@ -152,9 +155,9 @@ def solvate_bound(network, ligand_name):
                 tleap_in.write("\n")
                 tleap_in.write(f"complex = loadpdb {complex_pdb}\n")
                 box_shape_three_letter = network.box_shape[:3]
-                tleap_in.write(f"solvate{box_shape_three_letter} lig {network.water_model.upper()}BOX {network.box_edges} {network.solvent_closeness}\n")
-                tleap_in.write(f"addions lig Na+ 0\n")
-                tleap_in.write(f"addions lig Cl- 0\n")
+                tleap_in.write(f"solvate{box_shape_three_letter} complex {network.water_model.upper()}BOX {network.box_edges} {network.solvent_closeness}\n")
+                tleap_in.write(f"addions complex Na+ 0\n")
+                tleap_in.write(f"addions complex Cl- 0\n")
                 tleap_in.write("\n")
                 tleap_in.write(f"saveamberparm complex {system_savename}.prm7 {system_savename}.rst7\n")
                 tleap_in.write(f"quit\n")
