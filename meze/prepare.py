@@ -174,7 +174,14 @@ def main():
                         type=int,
                         default=17) 
     
-
+    parser.add_argument("-cs",
+                        "--cutoff-scheme",
+                        dest="cutoff_scheme",
+                        help="PME or Reaction Field",
+                        default="rf",
+                        choices=["pme", "rf"],
+                        type=str)
+    
     arguments = parser.parse_args()
 
     if not arguments.non_metal:
@@ -231,7 +238,8 @@ def main():
                                 min_tol=arguments.emtol,
                                 repeats=arguments.repeats,
                                 n_normal=arguments.lambdas,
-                                n_difficult=arguments.n_difficult)
+                                n_difficult=arguments.n_difficult,
+                                cutoff_scheme=arguments.cutoff_scheme)
         
     prepared_network = network.prepare_network()
 

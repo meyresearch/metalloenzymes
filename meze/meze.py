@@ -1389,6 +1389,8 @@ def main():
                         help="the pair of ligands undergoing AFE transformation, e.g. ligand_1~ligand_2",
                         type=str)
     
+    
+
     parser.add_argument("-s",
                         "--separator",
                         help="character separating the two ligand names",
@@ -1435,30 +1437,32 @@ def main():
     elif not metal:
 
         meze = sofra.Sofra(prepared=True,
-                               equilibration_path=protocol["equilibration directory"],
-                               outputs=protocol["outputs"],
-                               workdir=protocol["project directory"],
-                               ligand_path=protocol["ligand directory"],
-                               group_name=protocol["group name"],
-                               protein_file=protocol["prepared protein file"],
-                               protein_path=protocol["protein directory"],
-                               water_model=protocol["water model"],
-                               ligand_ff=protocol["ligand forcefield"],
-                               protein_ff=protocol["protein forcefield"],
-                               ligand_charge=protocol["ligand charge"],
-                               engine=protocol["engine"],
-                               sampling_time=protocol["sampling time"],
-                               box_edges=protocol["box edges"],
-                               box_shape=protocol["box shape"],
-                               min_steps=protocol["minimisation steps"],
-                               short_nvt=protocol["short nvt"],
-                               nvt=protocol["nvt"],
-                               npt=protocol["npt"],
-                               min_dt=protocol["minimisation stepsize"],
-                               min_tol=protocol["minimisation tolerance"],
-                               repeats=protocol["repeats"],
-                               temperature=protocol["temperature"],
-                               pressure=protocol["pressure"])
+                           afe_input_path=protocol["afe input directory"],
+                           equilibration_path=protocol["equilibration directory"],
+                           outputs=protocol["outputs"],
+                           workdir=protocol["project directory"],
+                           ligand_path=protocol["ligand directory"],
+                           group_name=protocol["group name"],
+                           protein_file=protocol["prepared protein file"],
+                           protein_path=protocol["protein directory"],
+                           water_model=protocol["water model"],
+                           ligand_ff=protocol["ligand forcefield"],
+                           protein_ff=protocol["protein forcefield"],
+                           ligand_charge=protocol["ligand charge"],
+                           engine=protocol["engine"],
+                           sampling_time=protocol["sampling time"],
+                           box_edges=protocol["box edges"],
+                           box_shape=protocol["box shape"],
+                           min_steps=protocol["minimisation steps"],
+                           short_nvt=protocol["short nvt"],
+                           nvt=protocol["nvt"],
+                           npt=protocol["npt"],
+                           min_dt=protocol["minimisation stepsize"],
+                           min_tol=protocol["minimisation tolerance"],
+                           repeats=protocol["repeats"],
+                           temperature=protocol["temperature"],
+                           pressure=protocol["pressure"],
+                           cutoff_scheme=protocol["cutoff scheme"])
           
     ligand_a, ligand_b = functions.separate(arguments.transformation)
 
