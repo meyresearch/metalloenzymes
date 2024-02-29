@@ -11,7 +11,6 @@ import argparse
 import os
 import meze
 import functions
-import analysis
 
 
 def read_results(protocol):
@@ -75,7 +74,9 @@ def output_statistics(experimental_free_energy, results):
 
     pearson_r = scipy.stats.pearsonr(experimental_values, calculated_values)
     spearman = scipy.stats.spearmanr(experimental_values, calculated_values)
+
     mue = sklearn.metrics.mean_absolute_error(experimental_values, calculated_values)
+    rmse = sklearn.metrics.root_mean_squared_error()
     print("\n")
     print("Bootstrapping statistics...\n")
     print("==============================================================")
@@ -86,23 +87,23 @@ def output_statistics(experimental_free_energy, results):
     stats = bootstrap_statistics(experimental_values, calculated_values)
     print("\n")
     print("--------------------------------------------------------------")
-    print(f"Pearson R:                                               {pearson_r[0]:.3f}")
-    print(f"                                          p value:   {pearson_r[1]:.3E}")
-    print(f"Bootstrapped statistics:")
-    print("\n")
-    print(f"                      Mean:        {stats['pearson_r']['mean_value']:.3f}") 
-    print(f"                   Lower Bound:    {stats['pearson_r']['lower_bound']:.3f}")
-    print(f"                   Upper bound:    {stats['pearson_r']['upper_bound']:.3f}")
-    print("\n")
+    # print(f"Pearson R:                                               {pearson_r[0]:.3f}")
+    # print(f"                                          p value:   {pearson_r[1]:.3E}")
+    # print(f"Bootstrapped statistics:")
+    # print("\n")
+    # print(f"                      Mean:        {stats['pearson_r']['mean_value']:.3f}") 
+    # print(f"                   Lower Bound:    {stats['pearson_r']['lower_bound']:.3f}")
+    # print(f"                   Upper bound:    {stats['pearson_r']['upper_bound']:.3f}")
+    # print("\n")
     print("--------------------------------------------------------------")
-    print(f"Spearman rho:                                            {spearman[0]:.3f}")
-    print(f"                                          p value:   {spearman[1]:.3E}")
-    print(f"Bootstrapped statistics:")
-    print("\n")
-    print(f"                      Mean:        {stats['spearman_rho']['mean_value']:.3f}") 
-    print(f"                   Lower Bound:    {stats['spearman_rho']['lower_bound']:.3f}")
-    print(f"                   Upper bound:    {stats['spearman_rho']['upper_bound']:.3f}")
-    print("\n")
+    # print(f"Spearman rho:                                            {spearman[0]:.3f}")
+    # print(f"                                          p value:   {spearman[1]:.3E}")
+    # print(f"Bootstrapped statistics:")
+    # print("\n")
+    # print(f"                      Mean:        {stats['spearman_rho']['mean_value']:.3f}") 
+    # print(f"                   Lower Bound:    {stats['spearman_rho']['lower_bound']:.3f}")
+    # print(f"                   Upper bound:    {stats['spearman_rho']['upper_bound']:.3f}")
+    # print("\n")
     print("--------------------------------------------------------------")
     print(f"Mean unsigned error:                                     {mue:.3f}")
     print("\n")
@@ -116,7 +117,7 @@ def output_statistics(experimental_free_energy, results):
     
     statistics_dataframe = pd.DataFrame.from_dict(stats).transpose()
     statistics_dataframe.rename(columns={0: "statistic"})
-    statistics_dataframe["p_values"] = [pearson_r[1], "", spearman[1]]
+    # statistics_dataframe["p_values"] = [pearson_r[1], "", spearman[1]]
     return statistics_dataframe
 
 
