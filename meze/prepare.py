@@ -35,7 +35,6 @@ def main():
                         "--input-pdb-file",
                         dest="protein",
                         type=functions.file_exists,
-                        required=True,
                         help="input pdb file for the metalloenzyme/protein")
     
     parser.add_argument("-g",
@@ -174,6 +173,19 @@ def main():
                         type=int,
                         default=17) 
     
+    parser.add_argument("-et",
+                        "--extra-transformations",
+                        dest="extra_transformations_file",
+                        help="file containing additional transformations in format: lig A lig B; equivalent to BioSimSpace.generateNetwork links file",
+                        type=str)
+    
+    parser.add_argument("-pf",
+                        "--protocol-file",
+                        dest="protocol_file",
+                        help="protocol file",
+                        type=str,
+                        default=os.getcwd() + "/afe/protocol.dat")
+
     parser.add_argument("-cs",
                         "--cutoff-scheme",
                         dest="cutoff_scheme",
@@ -182,6 +194,7 @@ def main():
                         choices=["pme", "rf"],
                         type=str)
     
+
     arguments = parser.parse_args()
 
     if not arguments.non_metal:
@@ -189,35 +202,11 @@ def main():
     elif arguments.non_metal:
         metal = False
 
-    if metal:
-        network = meze.Meze(protein_file=arguments.protein,
-                            cut_off=arguments.cut_off,
-                            force_constant_0=arguments.force_constant_0,
-                            workdir=arguments.working_directory,
-                            ligand_path=arguments.ligand_directory,
-                            ligand_charge=arguments.ligand_charge,
-                            ligand_ff=arguments.ligand_forcefield,
-                            group_name=arguments.group_name,        
-                            protein_path=arguments.protein_directory,
-                            water_model=arguments.water_model,
-                            protein_ff=arguments.forcefield,
-                            engine=arguments.engine,
-                            sampling_time=arguments.sampling_time,
-                            box_edges=arguments.box_edges,
-                            box_shape=arguments.box_shape,
-                            min_steps=arguments.min_steps,
-                            short_nvt=arguments.short_nvt,
-                            nvt=arguments.nvt,
-                            npt=arguments.npt,
-                            min_dt=arguments.emstep,
-                            min_tol=arguments.emtol,
-                            repeats=arguments.repeats,
-                            n_normal=arguments.lambdas,
-                            n_difficult=arguments.n_difficult)
-        
-    elif not metal:
-
-        network = sofra.Sofra(protein_file=arguments.protein,
+    if not arguments.extra_transformations_file:
+        if metal:
+            network = meze.Meze(protein_file=arguments.protein,
+                                cut_off=arguments.cut_off,
+                                force_constant_0=arguments.force_constant_0,
                                 workdir=arguments.working_directory,
                                 ligand_path=arguments.ligand_directory,
                                 ligand_charge=arguments.ligand_charge,
@@ -241,40 +230,144 @@ def main():
                                 n_difficult=arguments.n_difficult,
                                 cutoff_scheme=arguments.cutoff_scheme)
         
-    prepared_network = network.prepare_network()
+        elif not metal:
 
-    functions.write_slurm_script(template_file="02_add_water.sh", 
-                                 path=prepared_network.afe_input_directory, 
-                                 log_dir=prepared_network.log_directory,
-                                 protocol_file=prepared_network.protocol_file)
-    
-    functions.write_slurm_script(template_file="03_heat_meze.sh", 
-                                 path=prepared_network.afe_input_directory, 
-                                 log_dir=prepared_network.log_directory,
-                                 protocol_file=prepared_network.protocol_file)
-    
-    functions.write_slurm_script(template_file="04_meze.sh",
-                                 path=prepared_network.afe_input_directory, 
-                                 log_dir=prepared_network.log_directory,
-                                 protocol_file=prepared_network.protocol_file)
-     
-    prepared_network.write_afe_run_script()
+            network = sofra.Sofra(protein_file=arguments.protein,
+                                    workdir=arguments.working_directory,
+                                    ligand_path=arguments.ligand_directory,
+                                    ligand_charge=arguments.ligand_charge,
+                                    ligand_ff=arguments.ligand_forcefield,
+                                    group_name=arguments.group_name,        
+                                    protein_path=arguments.protein_directory,
+                                    water_model=arguments.water_model,
+                                    protein_ff=arguments.forcefield,
+                                    engine=arguments.engine,
+                                    sampling_time=arguments.sampling_time,
+                                    box_edges=arguments.box_edges,
+                                    box_shape=arguments.box_shape,
+                                    min_steps=arguments.min_steps,
+                                    short_nvt=arguments.short_nvt,
+                                    nvt=arguments.nvt,
+                                    npt=arguments.npt,
+                                    min_dt=arguments.emstep,
+                                    min_tol=arguments.emtol,
+                                    repeats=arguments.repeats,
+                                    n_normal=arguments.lambdas,
+                                    n_difficult=arguments.n_difficult)
 
-    functions.write_slurm_script(template_file="06_analyse.sh",
-                                 path=prepared_network.afe_input_directory,
-                                 log_dir=prepared_network.log_directory,
-                                 protocol_file=prepared_network.protein_file)
+        prepared_network = network.prepare_network()
 
-    functions.write_slurm_script(template_file="slurm_all.sh",
-                                 path=prepared_network.afe_input_directory,
-                                 log_dir=prepared_network.log_directory,
-                                 protocol_file=prepared_network.protocol_file,
-                                 extra_lines={"NUMBER_OF_LIGANDS": prepared_network.n_ligands,
-                                              "ENGINE": prepared_network.md_engine,
-                                              "AFE_PATH": prepared_network.afe_input_directory,
-                                              "LIGANDS_DATA_FILE": prepared_network.ligands_dat_file,
-                                              "TRANSFORMATIONS_DATA_FILE": prepared_network.network_file})
+        functions.write_slurm_script(template_file="02_add_water.sh", 
+                                     path=prepared_network.afe_input_directory, 
+                                     log_dir=prepared_network.log_directory,
+                                     protocol_file=prepared_network.protocol_file)
+        
+        functions.write_slurm_script(template_file="03_heat_meze.sh", 
+                                    path=prepared_network.afe_input_directory, 
+                                    log_dir=prepared_network.log_directory,
+                                    protocol_file=prepared_network.protocol_file)
+        
+        functions.write_slurm_script(template_file="04_meze.sh",
+                                    path=prepared_network.afe_input_directory, 
+                                    log_dir=prepared_network.log_directory,
+                                    protocol_file=prepared_network.protocol_file)
+        
+        prepared_network.write_afe_run_script()
+
+        functions.write_slurm_script(template_file="06_analyse.sh",
+                                    path=prepared_network.afe_input_directory,
+                                    log_dir=prepared_network.log_directory,
+                                    protocol_file=prepared_network.protein_file)
+
+        functions.write_slurm_script(template_file="slurm_all.sh",
+                                    path=prepared_network.afe_input_directory,
+                                    log_dir=prepared_network.log_directory,
+                                    protocol_file=prepared_network.protocol_file,
+                                    extra_lines={"NUMBER_OF_LIGANDS": prepared_network.n_ligands,
+                                                 "ENGINE": prepared_network.md_engine,
+                                                 "AFE_PATH": prepared_network.afe_input_directory,
+                                                 "LIGANDS_DATA_FILE": prepared_network.ligands_dat_file,
+                                                 "TRANSFORMATIONS_DATA_FILE": prepared_network.network_file})
     
+    elif arguments.extra_transformations_file:
+
+        protocol_file = functions.file_exists(arguments.protocol_file)
+        protocol = functions.input_to_dict(protocol_file)
+        if metal:
+            prepared_network = meze.Meze(prepared=True,
+                                         protein_file=protocol["protein input file"],
+                                         cut_off=protocol["cutoff"],
+                                         force_constant_0=protocol["force constant"],
+                                         workdir=protocol["project directory"],
+                                         ligand_path=protocol["ligand directory"],
+                                         ligand_charge=protocol["ligand charge"],
+                                         ligand_ff=protocol["ligand forcefield"],
+                                         group_name=protocol["group name"],        
+                                         protein_path=protocol["protein directory"],
+                                         water_model=protocol["water model"],
+                                         protein_ff=protocol["protein forcefield"],
+                                         engine=protocol["engine"],
+                                         sampling_time=protocol["sampling time"],
+                                         box_edges=protocol["box edges"],
+                                         box_shape=protocol["box shape"],
+                                         min_steps=protocol["minimisation steps"],
+                                         short_nvt=protocol["short nvt"],
+                                         nvt=protocol["nvt"],
+                                         npt=protocol["npt"],
+                                         min_dt=protocol["minimisation stepsize"],
+                                         min_tol=protocol["minimisation tolerance"],
+                                         repeats=protocol["repeats"],
+                                         temperature=protocol["temperature"],
+                                         pressure=protocol["pressure"],
+                                         n_normal=arguments.lambdas,
+                                         n_difficult=arguments.n_difficult)
+            
+        elif not metal:
+            prepared_network = sofra.Sofra(prepared=True,
+                                           equilibration_path=protocol["equilibration directory"],
+                                           outputs=protocol["outputs"],
+                                           workdir=protocol["project directory"],
+                                           ligand_path=protocol["ligand directory"],
+                                           group_name=protocol["group name"],
+                                           protein_file=protocol["prepared protein file"],
+                                           protein_path=protocol["protein directory"],
+                                           water_model=protocol["water model"],
+                                           ligand_ff=protocol["ligand forcefield"],
+                                           protein_ff=protocol["protein forcefield"],
+                                           ligand_charge=protocol["ligand charge"],
+                                           engine=protocol["engine"],
+                                           sampling_time=protocol["sampling time"],
+                                           box_edges=protocol["box edges"],
+                                           box_shape=protocol["box shape"],
+                                           min_steps=protocol["minimisation steps"],
+                                           short_nvt=protocol["short nvt"],
+                                           nvt=protocol["nvt"],
+                                           npt=protocol["npt"],
+                                           min_dt=protocol["minimisation stepsize"],
+                                           min_tol=protocol["minimisation tolerance"],
+                                           repeats=protocol["repeats"],
+                                           temperature=protocol["temperature"],
+                                           pressure=protocol["pressure"],
+                                           n_normal=arguments.lambdas,
+                                           n_difficult=arguments.n_difficult)
+
+        links_file = functions.file_exists(arguments.extra_transformations_file)
+
+        _, transformations_file = prepared_network.set_transformations(links_file=links_file)
+
+        functions.write_slurm_script(template_file="run_extra_edges.sh",
+                                     path=prepared_network.afe_input_directory,
+                                     log_dir=prepared_network.log_directory,
+                                     protocol_file=protocol_file,
+                                     extra_lines={"ENGINE": prepared_network.md_engine,
+                                                  "AFE_PATH": prepared_network.afe_input_directory,
+                                                  "TRANSFORMATIONS_DATA_FILE": transformations_file})  
+          
+        functions.write_slurm_script(template_file="07_extra_meze.sh",
+                                     path=prepared_network.afe_input_directory, 
+                                     log_dir=prepared_network.log_directory,
+                                     protocol_file=arguments.protocol_file,
+                                     extra_lines={"EXTRA_TRANSFORMATIONS": transformations_file})
     print("\n")
     print("Successfully prepared meze network for AFE calculations.")
     print(f"Run scripts saved in: {prepared_network.afe_input_directory}")
