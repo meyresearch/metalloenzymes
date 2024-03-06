@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH -o PATH_TO_LOGS/meze_%a.slurm.out
-#SBATCH -e PATH_TO_LOGS/meze_%a.slurm.err
+#SBATCH -o PATH_TO_LOGS/extra_meze_%a.slurm.out
+#SBATCH -e PATH_TO_LOGS/extra_meze_%a.slurm.err
 
 extra_transformations=EXTRA_TRANSFORMATIONS
 
@@ -14,7 +14,7 @@ id=$SLURM_ARRAY_TASK_ID
 source $MEZEHOME/parse_extra_edges.sh
 transformation=${transformations_array[$id]}
 
-python $MEZEHOME/meze.py PROTOCOLFILE $transformation $extra_transformations
+python $MEZEHOME/meze.py PROTOCOLFILE $transformation --extra-transformations $extra_transformations
 
 end=`date +%s`
 runtime=$((end - start))
