@@ -1399,7 +1399,7 @@ def main():
                         dest="extra_transformations_file",
                         help="file containing additional transformations in format: lig A lig B; equivalent to BioSimSpace.generateNetwork links file",
                         type=str)
-    
+  
     parser.add_argument("-s",
                         "--separator",
                         help="character separating the two ligand names",
@@ -1444,13 +1444,14 @@ def main():
                     pressure=protocol["pressure"])
         
     elif not metal:
-
+      
         meze = sofra.Sofra(prepared=True,
+                           afe_input_path=protocol["afe input directory"],
                            equilibration_path=protocol["equilibration directory"],
                            outputs=protocol["outputs"],
                            workdir=protocol["project directory"],
                            ligand_path=protocol["ligand directory"],
-                           group_name=protocol["group namcde"],
+                           group_name=protocol["group name"],
                            protein_file=protocol["prepared protein file"],
                            protein_path=protocol["protein directory"],
                            water_model=protocol["water model"],
@@ -1469,7 +1470,8 @@ def main():
                            min_tol=protocol["minimisation tolerance"],
                            repeats=protocol["repeats"],
                            temperature=protocol["temperature"],
-                           pressure=protocol["pressure"])
+                           pressure=protocol["pressure"],
+                           cutoff_scheme=protocol["cutoff scheme"])
           
     ligand_a, ligand_b = functions.separate(arguments.transformation)
     
