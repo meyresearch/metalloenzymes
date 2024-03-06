@@ -238,7 +238,7 @@ class Sofra(object):
             self.equilibration_directory = functions.path_exists(equilibration_path)  
             self.outputs = functions.path_exists(outputs) 
             self.log_directory = functions.path_exists(log_directory)
-            self.output_directories = functions.get_files(self.outputs + f"/{engine}_*")
+            self.output_directories = functions.get_files(self.outputs + f"/{engine}_*/")
             self.plots = functions.get_files(f"{self.outputs}/plots/")
         else:
             self.protein_file = protein_file
@@ -472,7 +472,7 @@ class Sofra(object):
         return system_1
 
 
-    def prepare_afe(self, ligand_a_name, ligand_b_name):
+    def prepare_afe(self, ligand_a_name, ligand_b_name, extra_edges=None):
         """
         Prepare minimisation and free energy lambda windows directory tree
 
@@ -486,11 +486,12 @@ class Sofra(object):
         Return:
         -------
         """
-        self.transformations = self.get_transformations()
+        self.transformations = self.get_transformations(extra_edges)
         self.n_transformations = len(self.transformations)
         dataframe = self.transformations.copy()
         condition_1 = dataframe["ligand_a"] == ligand_a_name
         condition_2 = dataframe["ligand_b"] == ligand_b_name
+        print(dataframe)
         row_index = dataframe[condition_1 & condition_2].index.tolist()[0]
 
         lambda_strings = dataframe.iloc[row_index]["lambdas"].split(" ")
@@ -678,7 +679,7 @@ class Sofra(object):
         return dataframe, save_name
     
 
-    def get_transformations(self):
+    def get_transformations(self, extra_edges=None):
         """
         Getter for transformations csv file
 
@@ -687,10 +688,14 @@ class Sofra(object):
 
         Return:
         -------
-        pd.DataFrame: 
+        df: pd.DataFrame: 
             meze network as a csv file
         """
-        return pd.read_csv(self.afe_input_directory+f"/meze_network.csv", header=0, index_col=0)
+        if not extra_edges:
+            df = pd.read_csv(self.afe_input_directory+f"/meze_network.csv", header=0, index_col=0)
+        else:
+            df = pd.read_csv(extra_edges, header=0, index_col=0)
+        return df
     
 
     def get_files(self):

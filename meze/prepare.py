@@ -249,9 +249,9 @@ def main():
         prepared_network = network.prepare_network()
 
         functions.write_slurm_script(template_file="02_add_water.sh", 
-                                    path=prepared_network.afe_input_directory, 
-                                    log_dir=prepared_network.log_directory,
-                                    protocol_file=prepared_network.protocol_file)
+                                     path=prepared_network.afe_input_directory, 
+                                     log_dir=prepared_network.log_directory,
+                                     protocol_file=prepared_network.protocol_file)
         
         functions.write_slurm_script(template_file="03_heat_meze.sh", 
                                     path=prepared_network.afe_input_directory, 
@@ -352,8 +352,13 @@ def main():
                                      protocol_file=protocol_file,
                                      extra_lines={"ENGINE": prepared_network.md_engine,
                                                   "AFE_PATH": prepared_network.afe_input_directory,
-                                                  "TRANSFORMATIONS_DATA_FILE": transformations_file})    
-
+                                                  "TRANSFORMATIONS_DATA_FILE": transformations_file})  
+          
+        functions.write_slurm_script(template_file="07_extra_meze.sh",
+                                     path=prepared_network.afe_input_directory, 
+                                     log_dir=prepared_network.log_directory,
+                                     protocol_file=arguments.protocol_file,
+                                     extra_lines={"EXTRA_TRANSFORMATIONS": transformations_file})
     print("\n")
     print("Successfully prepared meze network for AFE calculations.")
     print(f"Run scripts saved in: {prepared_network.afe_input_directory}")
