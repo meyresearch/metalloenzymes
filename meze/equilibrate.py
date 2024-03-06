@@ -287,6 +287,10 @@ class coldMeze(meze.Meze):
         bss.IO.saveMolecules(filebase=bound_savename, system=equilibrated_protein, fileformat=["PRM7", "RST7"])     
     
 
+    def heat():
+        # heat a bound system for md simulation
+        pass
+
 def main():
 
     parser = argparse.ArgumentParser(description="minimisation and equilibration for meze workflow")
