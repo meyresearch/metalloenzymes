@@ -589,7 +589,7 @@ def main():
                            outputs=protocol["outputs"],
                            workdir=protocol["project directory"],
                            ligand_path=protocol["ligand directory"],
-                           group_name=protocol["group namcde"],
+                           group_name=protocol["group name"],
                            protein_file=protocol["prepared protein file"],
                            protein_path=protocol["protein directory"],
                            water_model=protocol["water model"],
