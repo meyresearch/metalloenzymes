@@ -7,56 +7,215 @@ import BioSimSpace as bss
 import os
 
 
-def production(system, ligand_name, equilibrated_system, nonbonded_cut_off=9.0, dt=0.002, runtime=50):
 
-    directory = system.output_directory+f"{ligand_name}/"
-    production_directory = functions.mkdir(directory)
 
-    template_restraints_file = system.write_restraints_file_0()
-    restraints_file = shutil.copy(template_restraints_file, production_directory).split("/")[-1]
-    output_frequency = runtime // dt
-    production_options = {"ioutfm": 1,
-                            "cut": nonbonded_cut_off,
-                            "gamma_ln": 1.0,
-                            "ntp": 1,
-                            "ntb": 2, 
-                            "ntc": 2,
-                            "ntf": 2, 
-                            "iwrap": 1,  
-                            "nmropt": 1}
+def main():
     
-    runtime_ns = functions.convert_to_units(runtime, NANOSECOND)
-    namelist = ["&wt TYPE='DUMPFREQ', istep1=1 /"]
+    parser = argparse.ArgumentParser(description="MEZE: MetalloEnZymE FF-builder for alchemistry")
 
-    protocol = bss.Protocol.Production(timestep=dt*PICOSECOND,
-                                        runtime=runtime_ns,
-                                        temperature=system.temperature,
-                                        report_interval=output_frequency,
-                                        restart_interval=output_frequency,
-                                        restart=True)
+    parser.add_argument("ligand_name",
+                        help="name of ligand",
+                        type=SyntaxWarning)
+
+    parser.add_argument("-co",
+                        "--cut-off",
+                        dest="cut_off",
+                        help="cut off distance in Å, used to define zinc coordinating ligands and active site",
+                        default=2.6,
+                        type=float)
     
-    process = bss.Process.Amber(system=equilibrated_system, 
-                                protocol=protocol, 
-                                name="md",
-                                work_dir=production_directory,
-                                extra_options=production_options,
-                                extra_lines=namelist)
-    config = production_directory + "/*.cfg"
-    config_file = functions.get_files(config)[0]
+    parser.add_argument("-fc0",
+                        "--force-constant-0",
+                        dest="force_constant_0",
+                        help="force constant for model 0",
+                        default=100,
+                        type=float)    
+    
+    parser.add_argument("-if",
+                        "--input-pdb-file",
+                        dest="protein",
+                        type=functions.file_exists,
+                        help="input pdb file for the metalloenzyme/protein")
+    
+    parser.add_argument("-g",
+                        "--group-name",
+                        dest="group_name",
+                        help="group name for system, e.g. vim2/kpc2/ndm1/etc.; default taken from input filename",
+                        default="meze")
 
-    with open(config_file, "a") as file:
-        file.write("\n")
-        file.write(f"DISANG={restraints_file}\n")
-        file.write(f"DUMPAVE=distances.out\n")
+    parser.add_argument("-ppd",
+                        "--protein-prep-directory",
+                        dest="protein_directory",
+                        help="path to protein preparation directory, default: $CWD + /inputs/protein/",
+                        default=os.getcwd()+"/inputs/protein/")
 
-    process.start()
-    process.wait()
-    if process.isError():
-        print(process.stdout())
-        print(process.stderr())
-        raise bss._Exceptions.ThirdPartyError("The process exited with an error!")
+    parser.add_argument("-ff",
+                        "--force-field",
+                        dest="forcefield",
+                        help="protein force field, default is ff14SB",
+                        default="ff14SB")
+    
+    parser.add_argument("-w",
+                        "--water-model",
+                        dest="water_model",
+                        help="water model, default is tip3p",
+                        default="tip3p")
+    
+    parser.add_argument("-lpd",
+                        "--ligand-prep-directory",
+                        dest="ligand_directory",
+                        help="path to ligands preparation directory, default: $CWD + /inputs/ligands/",
+                        default=os.getcwd()+"/inputs/ligands/")
+   
+    parser.add_argument("-c",
+                        "--ligand-charge",
+                        dest="ligand_charge",
+                        help="ligand charge",
+                        default=0)
+
+    parser.add_argument("-pwd",
+                        "--project-working-directory",
+                        dest="working_directory",
+                        type=functions.path_exists,
+                        help="working directory for the project",
+                        default=os.getcwd())
+
+    parser.add_argument("-e",
+                        "--engine",
+                        dest="engine",
+                        help="MD engine",
+                        default="SOMD")
+    
+    parser.add_argument("-lf",
+                        "--ligand-forcefield",
+                        dest="ligand_forcefield",
+                        help="ligand force field",
+                        default="gaff2")
+    
+    parser.add_argument("-be",
+                        "--box-edges",
+                        dest="box_edges",
+                        help="box edges in angstroms",
+                        type=float,
+                        default=20) 
+    
+    parser.add_argument("-bs",
+                        "--box-shape",
+                        dest="box_shape",
+                        help="box shape",
+                        default="cubic") 
+
+    parser.add_argument("-st",
+                        "--sampling-time",
+                        dest="sampling_time",
+                        help="sampling time in nanoseconds",
+                        type=float,
+                        default=4) 
+    
+    parser.add_argument("-r",
+                        "--repeats",
+                        dest="repeats",
+                        help="number of AFE repeat runs",
+                        type=int, 
+                        default=3)
+
+    parser.add_argument("-min",
+                        "--minimisation-steps",
+                        dest="min_steps",
+                        help="number of minimisation steps for equilibration stage",
+                        type=int,
+                        default=5000)
+    
+    parser.add_argument("-t",
+                        "--equilibration-runtime",
+                        dest="equilibration_runtime",
+                        help="runtime in ps for equilibration steps",
+                        type=float,
+                        default=1000) 
+    
+    parser.add_argument("-wt",
+                        "--restraint-weight",
+                        dest="restraint_weight",
+                        help="positional restraint for equilibrations in kcal/mol*A^-2",
+                        type=float,
+                        default=100)
+    
+    parser.add_argument("-ntwr",
+                        "--restart-write-steps",
+                        dest="restart_write_steps",
+                        help="number of steps in which 'restrt' files are written, equivalent to amber ntwr",
+                        type=float,
+                        default=1000)
+    
+    parser.add_argument("-ntpr",
+                        "--coordinate-write-steps",
+                        dest="coordinate_write_steps",
+                        help="number of steps in which 'mdcrd' files are written, equivalent to amber ntpr option",
+                        type=float,
+                        default=1000)
+    
+    parser.add_argument("-p",
+                        "--pressure",
+                        dest="pressure",
+                        help="simulation pressure, in atm",
+                        type=float,
+                        default=1)
+    
+    parser.add_argument("-temp",
+                        "--temperature",
+                        dest="temperature",
+                        help="simulation temperature, in Kelvin",
+                        type=float,
+                        default=300)
+    
+    parser.add_argument("-edt",
+                        "--equilibration-timestep",
+                        dest="equilibration_timestep",
+                        help="timestep (in fs) for equilibration simulations",
+                        type=float,
+                        default=1)    
+    
+    parser.add_argument("--em-step",
+                        dest="emstep",
+                        help="Step size for energy minimisation",
+                        type=float,
+                        default=0.001)
+    
+    parser.add_argument("--em-tolerance",
+                        dest="emtol",
+                        help="kJ mol-1 nm-1, Maximum force tolerance for energy minimisation",
+                        type=float,
+                        default=1000)
+
+    arguments = parser.parse_args()
+
+    cold_meze = equilibrate.coldMeze(group_name=arguments.group_name,
+                                     ligand_name=arguments.ligand_name,
+                                     equilibration_directory=arguments.working_directory + "/equilibration/",
+                                     input_protein_file=arguments.protein,
+                                     protein_directory=arguments.protein_directory,
+                                     ligand_directory=arguments.ligand_directory,
+                                     min_steps=arguments.min_steps,
+                                     short_nvt=arguments.equilibration_runtime,
+                                     short_timestep=arguments.equilibration_timestep,
+                                     nvt=arguments.equilibration_runtime,
+                                     npt=arguments.equilibration_runtime,
+                                     min_dt=arguments.emstep,
+                                     min_tol=arguments.emtol,
+                                     temperature=arguments.temperature,
+                                     pressure=arguments.pressure,
+                                     restraint_weight=arguments.restraint_weight,
+                                     restart_write_steps=arguments.restart_write_steps,
+                                     coordinate_write_steps=arguments.coordinate_write_steps)
+
+    cold_meze.heat_md() 
 
 
+if __name__ == "__main__":
+    main()
+
+
+# To be depracated:
 def equilibration(system, ligand_name, minimised_system, nonbonded_cut_off=8.0, dt=0.001, runtime=1, start_temperature=100): 
         
     directory = system.equilibration_directory+f"{ligand_name}/"
@@ -516,207 +675,57 @@ def minimisation(system, ligand_name, nonbonded_cut_off=10.0):
     system = minimisation_process.getSystem()
     return system
 
+def production(system, ligand_name, equilibrated_system, nonbonded_cut_off=9.0, dt=0.002, runtime=50):
+
+    directory = system.output_directory+f"{ligand_name}/"
+    production_directory = functions.mkdir(directory)
+
+    template_restraints_file = system.write_restraints_file_0()
+    restraints_file = shutil.copy(template_restraints_file, production_directory).split("/")[-1]
+    output_frequency = runtime // dt
+    production_options = {"ioutfm": 1,
+                            "cut": nonbonded_cut_off,
+                            "gamma_ln": 1.0,
+                            "ntp": 1,
+                            "ntb": 2, 
+                            "ntc": 2,
+                            "ntf": 2, 
+                            "iwrap": 1,  
+                            "nmropt": 1}
+    
+    runtime_ns = functions.convert_to_units(runtime, NANOSECOND)
+    namelist = ["&wt TYPE='DUMPFREQ', istep1=1 /"]
+
+    protocol = bss.Protocol.Production(timestep=dt*PICOSECOND,
+                                        runtime=runtime_ns,
+                                        temperature=system.temperature,
+                                        report_interval=output_frequency,
+                                        restart_interval=output_frequency,
+                                        restart=True)
+    
+    process = bss.Process.Amber(system=equilibrated_system, 
+                                protocol=protocol, 
+                                name="md",
+                                work_dir=production_directory,
+                                extra_options=production_options,
+                                extra_lines=namelist)
+    config = production_directory + "/*.cfg"
+    config_file = functions.get_files(config)[0]
+
+    with open(config_file, "a") as file:
+        file.write("\n")
+        file.write(f"DISANG={restraints_file}\n")
+        file.write(f"DUMPAVE=distances.out\n")
+
+    process.start()
+    process.wait()
+    if process.isError():
+        print(process.stdout())
+        print(process.stderr())
+        raise bss._Exceptions.ThirdPartyError("The process exited with an error!")
+
 def run_md(system, ligand_name):
 
     minimised_system = minimisation(system, ligand_name)
     equilibrated_system = equilibration(system, ligand_name, minimised_system)
     production(system, ligand_name, equilibrated_system)
-
-
-def main():
-    
-    parser = argparse.ArgumentParser(description="MEZE: MetalloEnZymE FF-builder for alchemistry")
-
-    parser.add_argument("ligand_name",
-                        help="name of ligand",
-                        type=SyntaxWarning)
-
-    parser.add_argument("-co",
-                        "--cut-off",
-                        dest="cut_off",
-                        help="cut off distance in Å, used to define zinc coordinating ligands and active site",
-                        default=2.6,
-                        type=float)
-    
-    parser.add_argument("-fc0",
-                        "--force-constant-0",
-                        dest="force_constant_0",
-                        help="force constant for model 0",
-                        default=100,
-                        type=float)    
-    
-    parser.add_argument("-if",
-                        "--input-pdb-file",
-                        dest="protein",
-                        type=functions.file_exists,
-                        help="input pdb file for the metalloenzyme/protein")
-    
-    parser.add_argument("-g",
-                        "--group-name",
-                        dest="group_name",
-                        help="group name for system, e.g. vim2/kpc2/ndm1/etc.; default taken from input filename",
-                        default="meze")
-
-    parser.add_argument("-ppd",
-                        "--protein-prep-directory",
-                        dest="protein_directory",
-                        help="path to protein preparation directory, default: $CWD + /inputs/protein/",
-                        default=os.getcwd()+"/inputs/protein/")
-
-    parser.add_argument("-ff",
-                        "--force-field",
-                        dest="forcefield",
-                        help="protein force field, default is ff14SB",
-                        default="ff14SB")
-    
-    parser.add_argument("-w",
-                        "--water-model",
-                        dest="water_model",
-                        help="water model, default is tip3p",
-                        default="tip3p")
-    
-    parser.add_argument("-lpd",
-                        "--ligand-prep-directory",
-                        dest="ligand_directory",
-                        help="path to ligands preparation directory, default: $CWD + /inputs/ligands/",
-                        default=os.getcwd()+"/inputs/ligands/")
-   
-    parser.add_argument("-c",
-                        "--ligand-charge",
-                        dest="ligand_charge",
-                        help="ligand charge",
-                        default=0)
-
-    parser.add_argument("-pwd",
-                        "--project-working-directory",
-                        dest="working_directory",
-                        type=functions.path_exists,
-                        help="working directory for the project",
-                        default=os.getcwd())
-
-    parser.add_argument("-e",
-                        "--engine",
-                        dest="engine",
-                        help="MD engine",
-                        default="SOMD")
-    
-    parser.add_argument("-lf",
-                        "--ligand-forcefield",
-                        dest="ligand_forcefield",
-                        help="ligand force field",
-                        default="gaff2")
-    
-    parser.add_argument("-be",
-                        "--box-edges",
-                        dest="box_edges",
-                        help="box edges in angstroms",
-                        type=float,
-                        default=20) 
-    
-    parser.add_argument("-bs",
-                        "--box-shape",
-                        dest="box_shape",
-                        help="box shape",
-                        default="cubic") 
-
-    parser.add_argument("-st",
-                        "--sampling-time",
-                        dest="sampling_time",
-                        help="sampling time in nanoseconds",
-                        type=float,
-                        default=4) 
-    
-    parser.add_argument("-r",
-                        "--repeats",
-                        dest="repeats",
-                        help="number of AFE repeat runs",
-                        type=int, 
-                        default=3)
-
-    parser.add_argument("-min",
-                        "--minimisation-steps",
-                        dest="min_steps",
-                        help="number of minimisation steps for equilibration stage",
-                        type=int,
-                        default=5000)
-    
-    parser.add_argument("-snvt",
-                        "--short-nvt-runtime",
-                        dest="short_nvt",
-                        help="runtime in ps for short NVT equilibration",
-                        type=float,
-                        default=5) 
-    
-    parser.add_argument("-nvt",
-                        "--nvt-runtime",
-                        dest="nvt",
-                        help="runtime in ps for NVT equilibration",
-                        type=float,
-                        default=50)
-
-    parser.add_argument("-npt",
-                        "--npt-runtime",
-                        dest="npt",
-                        help="runtime in ps for NPT equilibration",
-                        type=float,
-                        default=200)
-    
-    parser.add_argument("--em-step",
-                        dest="emstep",
-                        help="Step size for energy minimisation",
-                        type=float,
-                        default=0.001)
-    
-    parser.add_argument("--em-tolerance",
-                        dest="emtol",
-                        help="kJ mol-1 nm-1, Maximum force tolerance for energy minimisation",
-                        type=float,
-                        default=1000)
-
-    arguments = parser.parse_args()
-
-    # system = meze.Meze(prepared=True,
-    #                    protein_file=arguments.protein,
-    #                    cut_off=arguments.cut_off,
-    #                    force_constant_0=arguments.force_constant_0,
-    #                    workdir=arguments.working_directory,
-    #                    ligand_path=arguments.ligand_directory,
-    #                    ligand_charge=arguments.ligand_charge,
-    #                    ligand_ff=arguments.ligand_forcefield,
-    #                    group_name=arguments.group_name,        
-    #                    protein_path=arguments.protein_directory,
-    #                    water_model=arguments.water_model,
-    #                    protein_ff=arguments.forcefield,
-    #                    engine=arguments.engine,
-    #                    sampling_time=arguments.sampling_time,
-    #                    box_edges=arguments.box_edges,
-    #                    box_shape=arguments.box_shape,
-    #                    min_steps=arguments.min_steps,
-    #                    short_nvt=arguments.short_nvt,
-    #                    nvt=arguments.nvt,
-    #                    npt=arguments.npt,
-    #                    min_dt=arguments.emstep,
-    #                    min_tol=arguments.emtol,
-    #                    repeats=arguments.repeats)
-    cold_meze = equilibrate.coldMeze(group_name=arguments.group_name,
-                                     ligand_name=arguments.ligand_name,
-                                     equilibration_directory=arguments.working_directory + "/equilibration/",
-                                     input_protein_file=arguments.protein,
-                                     protein_directory=arguments.protein_directory,
-                                     ligand_directory=arguments.ligand_directory,
-                                     min_steps=arguments.min_steps,
-                                     short_nvt=arguments.short_nvt,
-                                     nvt=arguments.nvt,
-                                     npt=arguments.npt,
-                                     min_dt=arguments.emstep,
-                                     min_tol=arguments.emtol,
-                                     temperature=300,
-                                     pressure=1)
-    # run_md(system, arguments.ligand_name)
-    cold_meze.heat()
-
-
-
-
-if __name__ == "__main__":
-    main()
