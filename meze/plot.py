@@ -3,6 +3,8 @@ import matplotlib
 import numpy as np
 import scipy.stats 
 import sklearn.metrics
+import cinnabar
+import cinnabar.plotting
 import pandas as pd
 from definitions import BOLTZMANN_CONSTANT, AVOGADROS_NUMBER, COLOURS
 import matplotlib.pyplot as plt
@@ -11,6 +13,7 @@ import argparse
 import os
 import meze
 import functions
+import analysis
 
 
 def read_results(protocol):
@@ -62,21 +65,16 @@ def output_statistics(experimental_free_energy, results):
     statistics_dataframe: pd.DataFrame
         dataframe containing the real statics values and the bootstrapped mean, lower and upper bounds
     """
-    x = np.array([[1,2,3,4],
-              [2,3,np.nan,5],
-              [np.nan,5,2,3]])
-    np.argwhere(np.isnan(x))
     
-    remove_indices = np.argwhere(np.isnan(experimental_free_energy)).flatten()
+    remove_indices_based_on_exp_nan = np.argwhere(np.isnan(experimental_free_energy)).flatten()
+    remove_indices_based_on_afe_nan = np.argwhere(np.isnan(results["average_ddg"].to_numpy())).flatten()
+    remove_indices = np.append(remove_indices_based_on_exp_nan, remove_indices_based_on_afe_nan)
     
     experimental_values = np.delete(experimental_free_energy, remove_indices)
     calculated_values = np.delete(results["average_ddg"].to_numpy(), remove_indices)
 
-    pearson_r = scipy.stats.pearsonr(experimental_values, calculated_values)
-    spearman = scipy.stats.spearmanr(experimental_values, calculated_values)
-
     mue = sklearn.metrics.mean_absolute_error(experimental_values, calculated_values)
-    rmse = sklearn.metrics.root_mean_squared_error()
+    rmse = sklearn.metrics.root_mean_squared_error(experimental_values, calculated_values)
     print("\n")
     print("Bootstrapping statistics...\n")
     print("==============================================================")
@@ -85,25 +83,16 @@ def output_statistics(experimental_free_energy, results):
     print("|                                                            |")
     print("==============================================================")
     stats = bootstrap_statistics(experimental_values, calculated_values)
+    print("--------------------------------------------------------------")
+    print(f"Root mean squared error:                                 {rmse:.3f}")
+    print("\n")
+    print(f"Bootstrapped statistics:")
+    print("\n")
+    print(f"                      Mean:        {stats['rmse']['mean_value']:.3f}") 
+    print(f"                   Lower Bound:    {stats['rmse']['lower_bound']:.3f}")
+    print(f"                   Upper bound:    {stats['rmse']['upper_bound']:.3f}")
     print("\n")
     print("--------------------------------------------------------------")
-    # print(f"Pearson R:                                               {pearson_r[0]:.3f}")
-    # print(f"                                          p value:   {pearson_r[1]:.3E}")
-    # print(f"Bootstrapped statistics:")
-    # print("\n")
-    # print(f"                      Mean:        {stats['pearson_r']['mean_value']:.3f}") 
-    # print(f"                   Lower Bound:    {stats['pearson_r']['lower_bound']:.3f}")
-    # print(f"                   Upper bound:    {stats['pearson_r']['upper_bound']:.3f}")
-    # print("\n")
-    print("--------------------------------------------------------------")
-    # print(f"Spearman rho:                                            {spearman[0]:.3f}")
-    # print(f"                                          p value:   {spearman[1]:.3E}")
-    # print(f"Bootstrapped statistics:")
-    # print("\n")
-    # print(f"                      Mean:        {stats['spearman_rho']['mean_value']:.3f}") 
-    # print(f"                   Lower Bound:    {stats['spearman_rho']['lower_bound']:.3f}")
-    # print(f"                   Upper bound:    {stats['spearman_rho']['upper_bound']:.3f}")
-    # print("\n")
     print("--------------------------------------------------------------")
     print(f"Mean unsigned error:                                     {mue:.3f}")
     print("\n")
@@ -117,7 +106,6 @@ def output_statistics(experimental_free_energy, results):
     
     statistics_dataframe = pd.DataFrame.from_dict(stats).transpose()
     statistics_dataframe.rename(columns={0: "statistic"})
-    # statistics_dataframe["p_values"] = [pearson_r[1], "", spearman[1]]
     return statistics_dataframe
 
 
@@ -271,7 +259,7 @@ def write_results_warning(nan_indices, results_file, transformations):
 
 
 
-def inhibition_to_ddg(ki_a, ki_b, temperature=300.0) -> float:
+def inhibition_to_ddg(ki_a, ki_b, temperature=300.0):
     """
     Convert experimental inhibition constant (K_i) values to relative binding free energy
 
@@ -294,6 +282,25 @@ def inhibition_to_ddg(ki_a, ki_b, temperature=300.0) -> float:
     ic50_b = 2 * ki_b
 
     return (BOLTZMANN_CONSTANT * AVOGADROS_NUMBER * temperature / 4184) * np.log(ic50_b / ic50_a)
+
+
+def inhibition_to_dg(ki, temperature=300.0):
+    """
+    Convert experimental inhibition constant (K_i) values to absolute binding free energy
+
+    Parameters:
+    -----------
+    ki: float
+        experimental K_i of ligand 
+    temperature: float
+        temperature in kelvin
+
+    Return:
+    -------
+    float
+        absolute binding free energy
+    """
+    return (BOLTZMANN_CONSTANT * AVOGADROS_NUMBER * temperature / 4184) * np.log(ki / 1)
 
 
 def propagate_experimental_error(error_a, ki_a, error_b, ki_b, temperature=300):
@@ -321,6 +328,25 @@ def propagate_experimental_error(error_a, ki_a, error_b, ki_b, temperature=300):
     return (BOLTZMANN_CONSTANT * temperature * fraction_error / fraction) * AVOGADROS_NUMBER / 4184
 
 
+def propagate_experimental_dg_error(error, ki, temperature=300):
+    """
+    Propagate experimental error to obtain error on experimental absolute binding free energy
+
+    Parameters:
+    -----------
+    error: float
+        experimentall error in K_i for ligand 
+    ki: float
+        experimental K_i of ligand 
+
+    Return:
+    -------
+    float
+        propagated error in kcal / mol
+    """
+    return (BOLTZMANN_CONSTANT * temperature * AVOGADROS_NUMBER / 4184) * (error / ki)
+
+
 def bootstrap_statistics(experimental: np.array, calculated: np.array, n_samples = 10000, alpha_level = 0.05):
     """
     _summary_
@@ -338,13 +364,12 @@ def bootstrap_statistics(experimental: np.array, calculated: np.array, n_samples
     Return:
     -------
     results: dict
-        dictionary of Pearson's r, MUE and Spearman's r coefficient with the real value, 
+        dictionary RMSE and MUE with the real value, 
         bootsrapped mean and bootstrapped lower and upper bounds
     """
     n_data_samples = len(experimental)
-    statistics_dict = {"pearson_r": [],
-                       "mue": [],
-                       "spearman_rho": []}
+    statistics_dict = {"rmse": [],
+                       "mue": []}
 
     for i in range(n_samples):
         if i==0:
@@ -355,16 +380,14 @@ def bootstrap_statistics(experimental: np.array, calculated: np.array, n_samples
             experimental_samples = [experimental[i] for i in bootstrap_sample]
             calculated_samples = [calculated[i] for i in bootstrap_sample]
 
-        pearson, _ = scipy.stats.pearsonr(experimental_samples, calculated_samples)
+        rmse = sklearn.metrics.root_mean_squared_error(experimental_samples, calculated_samples)
         mue = sklearn.metrics.mean_absolute_error(experimental_samples, calculated_samples)
-        spearman, _ = scipy.stats.spearmanr(experimental_samples, calculated_samples)
-        statistics_dict["pearson_r"].append(pearson)
+        
+        statistics_dict["rmse"].append(rmse)
         statistics_dict["mue"].append(mue)
-        statistics_dict["spearman_rho"].append(spearman)
-
-    results = {"pearson_r": {},
-               "mue": {},
-               "spearman_rho": {}}
+        
+    results = {"rmse": {},
+               "mue": {}}
     
     lower_fraction = alpha_level/2.0
     upper_fraction = 1 - lower_fraction
@@ -429,7 +452,7 @@ def plot_individual_runs(protocol, experimental_free_energies_with_nans, experim
     experimental_errors = experimental_errors_array[~np.isnan(experimental_errors_array)]
 
     fig, ax = plt.subplots(1, 1, figsize=(16, 20))
-    sns.set(context="notebook", palette="colorblind", style="ticks")
+    sns.set_theme(context="notebook", palette="colorblind", style="ticks")
     outputs = protocol["outputs"]
     plots = protocol["plots directory"]
     repeats = functions.check_int(protocol["repeats"])
@@ -513,10 +536,10 @@ def plot_correlation(plots_directory, results, experimental_free_energies_with_n
     -------
     
     """
-    means_from_file = results["average_ddg"].to_numpy() 
+    means_from_file = results.iloc[:, 1].to_numpy() 
     calculated_nan_indices = functions.check_nan(means_from_file).flatten()
 
-    errors_from_file = results["standard_deviation"].to_numpy()
+    errors_from_file = results.iloc[:, 2].to_numpy()
     calculated_std_nan_indices = functions.check_nan(errors_from_file).flatten()
 
     experimental_nan_indices = functions.check_nan(experimental_free_energies_with_nans).flatten()
@@ -545,9 +568,8 @@ def plot_correlation(plots_directory, results, experimental_free_energies_with_n
     experimental_errors_array = np.array(experimental_errors_array)
     experimental_errors = experimental_errors_array[~np.isnan(experimental_errors_array)]
 
-
     fig, ax = plt.subplots(1, 1, figsize=(10,10))
-    sns.set(context="notebook", palette="colorblind", style="ticks", font_scale=2)
+    sns.set_theme(context="notebook", palette="colorblind", style="ticks", font_scale=2)
 
     ax.scatter(experimental_free_energies, 
                calculated_free_energies, 
@@ -614,7 +636,7 @@ def plot_bar(plots_directory, afe_df, exp_free_energy, exp_error):
     experimental_x = n_x_labels + (bar_width / 2)
 
     fig, ax = plt.subplots(1, 1, figsize=(10,10))
-    sns.set(context="notebook", palette="colorblind", style="ticks", font_scale=2)
+    sns.set_theme(context="notebook", palette="colorblind", style="ticks", font_scale=2)
 
     ax.bar(x=calculated_x,
            height=means,
@@ -807,7 +829,7 @@ def plot_overlap_matrix(protocol):
                 if not os.path.isfile(plot_file):
                     try:    
                         fig, ax = plt.subplots(1, 1, figsize=(10, 10))
-                        sns.set(context="notebook", style="ticks", font_scale=2)  
+                        sns.set_theme(context="notebook", style="ticks", font_scale=2)  
                         sns.heatmap(ax=ax,
                                     data=overlap_matrices[k], 
                                     annot=True, 
@@ -831,18 +853,241 @@ def plot_overlap_matrix(protocol):
                         print(f"transformation {transformation_directory.split('/')[-2]} at repeat {i} raised error: {e}")
 
 
+
+
+
+
+def plot_absolute_dGs(absolute_dG_dataframe, plots_directory, region=True):
+
+    experimental_free_energies = absolute_dG_dataframe.iloc[:, 1].to_numpy()
+    experimental_errors = absolute_dG_dataframe.iloc[:, 2].to_numpy()
+    calculated_free_energies = absolute_dG_dataframe.iloc[:, 3].to_numpy()
+    calculated_errors = absolute_dG_dataframe.iloc[:, 4].to_numpy()
+
+    fig, ax = plt.subplots(1, 1, figsize=(10,10))
+    sns.set_theme(context="notebook", palette="colorblind", style="ticks", font_scale=2)
+
+    ax.scatter(experimental_free_energies, 
+               calculated_free_energies, 
+               s=50, 
+               color=COLOURS["PINK"])
+
+    ax.errorbar(experimental_free_energies,
+                calculated_free_energies,
+                color=COLOURS["PINK"],
+                yerr=calculated_errors,
+                xerr=experimental_errors,
+                capsize=3,
+                linestyle="",
+                zorder=-1)
+
+    max_calculated = max(np.absolute(calculated_free_energies)) + 1 
+    max_experimental = max(np.absolute(experimental_free_energies)) + 1
+    max_y = max(max_calculated, max_experimental)
+
+    ax.plot([-max_y, max_y], [-max_y, max_y], color=COLOURS["BLUE"], linestyle=":", zorder=-1)
+    ax.vlines(0, -max_y, max_y, color="silver", linestyle="--", zorder=-1)
+    ax.hlines(0, -max_y, max_y, color="silver", linestyle="--", zorder=-1)
+
+    if region:
+        top = np.arange(-max_y+0.5, max_y+1.5)
+        bottom = np.arange(-max_y-0.5, max_y+0.5)
+        x = np.arange(-max_y, max_y+1)
+        ax.fill_between(x, bottom, top, alpha=0.2, zorder=-1)
+
+    ax.set_xlim(-max_y, max_y)
+    ax.set_ylim(-max_y, max_y)
+    ax.set_xlabel("$\Delta$ G$_\mathrm{EXP}$ (kcal mol \u207B \u00B9)")
+    ax.set_ylabel("$\Delta$ G$_\mathrm{AFE}$ (kcal mol \u207B \u00B9)")
+    fig.tight_layout()
+    fig.savefig(f"{plots_directory}/meze_absolute_dG_correlation.png", dpi=1000)    
+
+
+def get_absolute_dGs(experimental_file, calculated_dataframe, protocol):
+    """
+    Use cinnabar to convert calculated relative binding free energies to absolute binding free energies
+
+    Parameters:
+    -----------
+    experimental_file: str
+        file containing Kis and errors
+    calculated_dataframe: pd.DataFrame 
+        calculated averaged ddG values
+    protocol: dict
+        protocol file as a dictionary
+
+    Return:
+    -------
+    clean_dataframe: pd.DataFrame
+        cleaned dataframe of calculated and experimental absolute binding free energies
+    """
+    outputs_directory = protocol["outputs"]
+    group_name = protocol["group name"]
+    savename = outputs_directory + f"cinnabar_absolute_dGs_{group_name}.csv"
+    cinnabar_input_file = write_cinnabar_input_file(experimental_file, calculated_dataframe, outputs_directory, group_name)
+
+    free_energy_map = cinnabar.FEMap.from_csv(cinnabar_input_file)
+    free_energy_map.generate_absolute_values()
+    absolute_values_df = free_energy_map.get_absolute_dataframe()
+    experimental_values = absolute_values_df[absolute_values_df["computational"] == False]
+    calculated_values = absolute_values_df[absolute_values_df["computational"] == True]
+    merged_dataframe = functions.reset_index(pd.merge(experimental_values, calculated_values, on="label", how="left").drop(columns=["source_x",
+                                                                                                                                    "source_y",
+                                                                                                                                    "computational_x",
+                                                                                                                                    "computational_y"]).dropna())
+    clean_dataframe =  merged_dataframe.rename(columns={"DG (kcal/mol)_x": "exp_dG",
+                                                        "DG (kcal/mol)_y": "calc_dG",
+                                                        "uncertainty (kcal/mol)_x": "exp_err",
+                                                        "uncertainty (kcal/mol)_y": "calc_err"})   
+    clean_dataframe.to_csv(savename, index=False)
+    return clean_dataframe
+       
+
+
+
+def write_cinnabar_input_file(experimental_file, calculated_dataframe, outputs_directory, group_name):
+    """
+    Parse the experimental Ki file and calculated, averaged ddGs dataframe into a cinnabar-readable input file. 
+
+    Parameters:
+    -----------
+    experimental_file: str
+        csv file containing experimental Kis and errors
+    calculated_dataframe: pd.DataFrame 
+        averaged ddG values and standard deviations
+    protocol: dict
+        protocol file as a dictionary
+
+    Return:
+    -------
+    output_file: str
+        cinnabar-readable input file
+    """
+    output_file = outputs_directory + "/cinnabar_input_" + group_name + ".csv"
+
+    experimental_dataframe = pd.read_csv(experimental_file)
+    calculated_dataframe = functions.reset_index(calculated_dataframe.copy().loc[~((calculated_dataframe["average_ddg"] == 0) | calculated_dataframe["standard_deviation"] == 0)])
+
+    inhibition_constants = experimental_dataframe.iloc[:, 1].to_numpy()
+    inhibition_constant_errors = experimental_dataframe.iloc[:, 2].to_numpy()
+    
+    experimental_dg = np.array([inhibition_to_dg(ki) for ki in inhibition_constants])
+    experimental_dg_error = np.array([propagate_experimental_dg_error(inhibition_constant_errors[i], inhibition_constants[i]) for i in range(len(inhibition_constants))])
+
+    calculated_ddg = calculated_dataframe["average_ddg"].to_numpy()
+    calculated_error = calculated_dataframe["standard_deviation"].to_numpy()
+
+    remove_indices = nan_indices(calculated_ddg, experimental_dg)
+
+    experimental_dg_nona = np.delete(experimental_dg, remove_indices)
+    experimental_dg_error_nona = np.delete(experimental_dg_error, remove_indices)
+    calculated_ddg_nona = np.delete(calculated_ddg, remove_indices)
+    calculated_error_nona = np.delete(calculated_error, remove_indices)
+
+    ligand_numbers = experimental_dataframe.iloc[:, 0].to_numpy()
+    ligands = np.array([f"ligand_{n}" for n in ligand_numbers])
+    ligand_numbers_nona = np.delete(ligand_numbers, remove_indices)
+    ligands_nona = np.delete(ligands, remove_indices)
+
+    experimental_dg_df = pd.DataFrame()
+    experimental_dg_df["ligand"] = ligands_nona
+    experimental_dg_df["ligand_number"] = ligand_numbers_nona
+    experimental_dg_df["exp_dg"] = experimental_dg_nona
+    experimental_dg_df["exp_err"] = experimental_dg_error_nona
+
+    experimental_header = ["# Experimental block\n",
+                           "# Ligand, expt_DG, expt_dDG\n"]
+
+    with open(output_file, "w") as file:
+        file.writelines(experimental_header)
+        for i in range(len(experimental_dg_nona)):
+            exp_data = [ligands_nona[i], experimental_dg_nona[i], experimental_dg_error_nona[i]]
+            exp_data_line = ", ".join(str(item) for item in exp_data) + "\n"
+            file.write(exp_data_line)    
+    
+    transformations = calculated_dataframe["transformation"].tolist()
+    split_transformations = np.array([transformation.replace("~", ",") for transformation in transformations])
+    all_split_transformations_nona = np.delete(split_transformations, remove_indices)
+    
+    drop_indices = drop_transformation_based_on_exp(all_split_transformations_nona, ligands_nona)
+    split_transformations = np.delete(all_split_transformations_nona, drop_indices)
+    calculated_ddg = np.delete(calculated_ddg_nona, drop_indices)
+    calculated_error = np.delete(calculated_error_nona, drop_indices)
+    calculated_header = ["# Calculated block\n",
+                         "# Ligand1,Ligand2, calc_DDG, calc_dDDG(MBAR), calc_dDDG(additional)\n"]
+
+    with open(output_file, "a") as file:
+        file.write("\n")
+        file.writelines(calculated_header)
+
+        for i in range(len(calculated_ddg)):
+            calculated_data = [split_transformations[i], calculated_ddg[i], calculated_error[i], 0.0]
+            calculated_data_line = ", ".join(str(item) for item in calculated_data) + "\n"
+            file.write(calculated_data_line)
+    
+    return output_file
+
+
+    
+def drop_transformation_based_on_exp(split_transformations, ligands_from_experiment):
+    """
+    Get a list of indices to remove transformations for which we don't have experimental data. 
+    Mainly for cinnabar analysis.
+
+    Parameters:
+    -----------
+    split_transformations: 
+        list of calculated transformations, e.g. ["lig_1,lig_10", "lig_3,lig4"]
+    ligands_from_experiment: 
+        list of ligand names for which we have experimental data
+
+    Return:
+    -------
+    drop_transformation_at_i: list
+        list of indices to drop 
+        
+    """
+    drop_transformation_at_i = []
+    for i in range(len(split_transformations)):
+        transformation = split_transformations[i].split(",")
+        for ligand in transformation:
+            if ligand not in ligands_from_experiment:
+                drop_transformation_at_i.append(i)
+    
+    return drop_transformation_at_i
+
+
+def nan_indices(array, array_2=np.array([])):
+    """
+    Get indices where array values are NaN
+
+    Parameters:
+    -----------
+    array: np.array
+    
+    array_2: np.array
+        optional
+
+    Return:
+    -------
+    np.array
+
+    """
+    first_indices = np.argwhere(np.isnan(array)).flatten()
+    second_indices = np.argwhere(np.isnan(array_2)).flatten()
+    return np.append(first_indices, second_indices)
+
+    
 def main():
 
     parser = argparse.ArgumentParser(description="MEZE: MetalloEnZymE FF-builder for alchemistry")
 
     parser.add_argument("protocol_file",
                         help="protocol file containing equilibration options",
-                        type=str,
-                        default=os.getcwd() + "/afe/protocol.dat")
-
+                        type=str)
     
     parser.add_argument("experimental_file",
-                        default=os.getcwd() + "/afe/experimental_K_i.csv",
+                        type=str,
                         help="file containing experimental inhibition constants and errors")
     
     parser.add_argument("-s",
@@ -863,14 +1108,19 @@ def main():
     results = combine_results(protocol)
     experimental_file = arguments.experimental_file
     experimental_free_energy, experimental_error = get_experimental_data(experimental_file, transformations)
+    # statistics = output_statistics(experimental_free_energy, results)
+    # save_statistics_to_file(protocol["outputs"], statistics)
     
+    absolute_dG_dataframe = get_absolute_dGs(experimental_file, results, protocol)
+    plot_absolute_dGs(absolute_dG_dataframe, protocol["plots directory"])
+   
     plot_bar(protocol["plots directory"], results, experimental_free_energy, experimental_error)
     plot_correlation(protocol["plots directory"], results, experimental_free_energy, experimental_error)
     plot_individual_runs(protocol, experimental_free_energy, experimental_error, results)
 
-    statistics = output_statistics(experimental_free_energy, results)
-    save_statistics_to_file(protocol["outputs"], statistics)
-    
+
+
+
 
 if __name__ == "__main__":
     main()

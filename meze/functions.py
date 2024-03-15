@@ -466,3 +466,21 @@ def standard_deviation(array):
     if not isinstance(array, np.ndarray):
         array = np.array(array)
     return np.nanstd(array, axis=1)
+
+
+def reset_index(dataframe):
+    """
+    Over-write pandas reset index to automatically also drop the superfluous index column
+
+    Parameters:
+    -----------
+    dataframe: pd.DataFrame 
+        
+
+    Return:
+    -------
+    pd.DataFrame
+        
+    """
+    return dataframe.copy().reset_index().drop(columns="index")
+
