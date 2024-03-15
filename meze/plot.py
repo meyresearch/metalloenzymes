@@ -347,7 +347,7 @@ def propagate_experimental_dg_error(error, ki, temperature=300):
     return (BOLTZMANN_CONSTANT * temperature * AVOGADROS_NUMBER / 4184) * (error / ki)
 
 
-def bootstrap_statistics(experimental: np.array, calculated: np.array, n_samples = 10000, alpha_level = 0.05):
+def bootstrap_statistics(experimental: np.array, calculated: np.array, n_samples = 10000, alpha_level = 0.95):
     """
     _summary_
 
@@ -396,8 +396,8 @@ def bootstrap_statistics(experimental: np.array, calculated: np.array, n_samples
         results[statistic]["real"] = statistics_dict[statistic][0]
         statistics_dict[statistic] = sorted(statistics_dict[statistic])
         results[statistic]["mean_value"] = np.mean(statistics_dict[statistic])
-        results[statistic]["lower_bound"] = statistics_dict[statistic][int(n_samples * lower_fraction)]
-        results[statistic]["upper_bound"] = statistics_dict[statistic][int(n_samples * upper_fraction)]
+        results[statistic]["lower_bound"] = statistics_dict[statistic][int(n_samples * lower_fraction)] # np.floor ? from cinnabar? 
+        results[statistic]["upper_bound"] = statistics_dict[statistic][int(n_samples * upper_fraction)] # np.ceil from cinnabar? 
     return results
 
 
@@ -1108,8 +1108,8 @@ def main():
     results = combine_results(protocol)
     experimental_file = arguments.experimental_file
     experimental_free_energy, experimental_error = get_experimental_data(experimental_file, transformations)
-    # statistics = output_statistics(experimental_free_energy, results)
-    # save_statistics_to_file(protocol["outputs"], statistics)
+    statistics = output_statistics(experimental_free_energy, results) # need another one for dGs !
+    save_statistics_to_file(protocol["outputs"], statistics) 
     
     absolute_dG_dataframe = get_absolute_dGs(experimental_file, results, protocol)
     plot_absolute_dGs(absolute_dG_dataframe, protocol["plots directory"])
@@ -1118,7 +1118,21 @@ def main():
     plot_correlation(protocol["plots directory"], results, experimental_free_energy, experimental_error)
     plot_individual_runs(protocol, experimental_free_energy, experimental_error, results)
 
+### can do something like this from cinnabar to print out stats on plots: 
+    #         string = f"{statistic}:   {s[statistic_type]:.2f} [95%: {s['low']:.2f}, {s['high']:.2f}] " + "\n"
+    #     statistics_string += string
 
+    # long_title = f"{title} \n {target_name} (N = {nsamples}) \n {statistics_string}"
+
+    # plt.title(
+    #     long_title,
+    #     fontsize=font_sizes["title"],
+    #     loc="right",
+    #     horizontalalignment="right",
+    #     family="monospace",
+    # )
+
+###
 
 
 
