@@ -141,7 +141,7 @@ class Protein(object):
             os.chdir(self.path)
             os.system(f"tleap -s -f {tleap_input_file} > {tleap_output_file}")
             os.chdir(work_dir)
-        return save_file + "_tleap"
+        return self.path + save_file + "_tleap"
         
 
 def main():
