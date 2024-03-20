@@ -49,15 +49,15 @@ def read_results(protocol):
     return transformations, np.array(free_energies).T, np.array(errors).T
 
 
-def output_statistics(experimental_free_energy, results):
+def output_statistics(experimental_free_energy, computational, absolute=False):
     """
     Output statistics in a nice way and show bootstrapped statistics.
 
     Parameters:
     -----------
-    experimental_free_energy: list
+    experimental_free_energy: np.array
         experimental free energy values (converted from inhibition constants)
-    results: pd.DataFrame
+    results: np.array
         averaged calculated free energy values and errors
 
     Return:
@@ -67,46 +67,51 @@ def output_statistics(experimental_free_energy, results):
     """
     
     remove_indices_based_on_exp_nan = np.argwhere(np.isnan(experimental_free_energy)).flatten()
-    remove_indices_based_on_afe_nan = np.argwhere(np.isnan(results["average_ddg"].to_numpy())).flatten()
+    remove_indices_based_on_afe_nan = np.argwhere(np.isnan(computational)).flatten()
     remove_indices = np.append(remove_indices_based_on_exp_nan, remove_indices_based_on_afe_nan)
     
     experimental_values = np.delete(experimental_free_energy, remove_indices)
-    calculated_values = np.delete(results["average_ddg"].to_numpy(), remove_indices)
+    calculated_values = np.delete(computational, remove_indices)
 
-    mue = sklearn.metrics.mean_absolute_error(experimental_values, calculated_values)
-    rmse = sklearn.metrics.root_mean_squared_error(experimental_values, calculated_values)
-    print("\n")
-    print("Bootstrapping statistics...\n")
-    print("==============================================================")
-    print("|                                                            |")
-    print("|                        Statistics                          |")
-    print("|                                                            |")
-    print("==============================================================")
-    stats = bootstrap_statistics(experimental_values, calculated_values)
-    print("--------------------------------------------------------------")
-    print(f"Root mean squared error:                                 {rmse:.3f}")
-    print("\n")
-    print(f"Bootstrapped statistics:")
-    print("\n")
-    print(f"                      Mean:        {stats['rmse']['mean_value']:.3f}") 
-    print(f"                   Lower Bound:    {stats['rmse']['lower_bound']:.3f}")
-    print(f"                   Upper bound:    {stats['rmse']['upper_bound']:.3f}")
-    print("\n")
-    print("--------------------------------------------------------------")
-    print("--------------------------------------------------------------")
-    print(f"Mean unsigned error:                                     {mue:.3f}")
-    print("\n")
-    print(f"Bootstrapped statistics:")
-    print("\n")
-    print(f"                      Mean:        {stats['mue']['mean_value']:.3f}") 
-    print(f"                   Lower Bound:    {stats['mue']['lower_bound']:.3f}")
-    print(f"                   Upper bound:    {stats['mue']['upper_bound']:.3f}")
-    print("\n")
-    print("--------------------------------------------------------------")
+    # mue = sklearn.metrics.mean_absolute_error(experimental_values, calculated_values)
+    # rmse = sklearn.metrics.root_mean_squared_error(experimental_values, calculated_values)
+    stats = bootstrap_statistics(experimental=experimental_values, n_samples=100, calculated=calculated_values, absolute=absolute)
+
+    mue = f"{stats['mue']['mean_value']:.2f}"
+
+    mue_text = f"MUE:"
+    mue_value = f"{mue}" + r"$^{{{upper:.2f}}}_{{{lower:.2f}}}$ kcal mol$^{{-1}}$".format(upper = stats["mue"]["upper_bound"],
+                                                                                          lower = stats["mue"]["lower_bound"])
+    
+    rmse = f"{stats['rmse']['mean_value']:.2f}"
+    rmse_text = f"RMSE:" 
+    rmse_value = f"{rmse}" + r"$^{{{upper:.2f}}}_{{{lower:.2f}}}$ kcal mol$^{{-1}}$".format(upper = stats["rmse"]["upper_bound"],
+                                                                                            lower = stats["rmse"]["lower_bound"])
+    
+    formatted_mue = mue_text + 10 * " " + mue_value
+    formatted_rmse = rmse_text + 8 * " " + rmse_value 
+
+    text_string = "\n".join((formatted_mue, formatted_rmse))
+
+   
+    if absolute:
+        pearson = f"{stats['pearson_r2']['mean_value']:.2f}"
+        pearson_text =  r"R$^2$:"
+        pearson_value =f"{pearson}" + r"$^{{{upper:.2f}}}_{{{lower:.2f}}}$".format(upper = stats["pearson_r2"]["upper_bound"],
+                                                                                   lower = stats["pearson_r2"]["lower_bound"])
+        
+        pearson_formatted = pearson_text + 31 * " " + pearson_value
+        spearman = f"{stats['pearson_r2']['mean_value']:.2f}"
+        spearman_text = r"$\rho$:"
+        spearman_value = f"{spearman}" + r"$^{{{upper:.2f}}}_{{{lower:.2f}}}$".format(upper = stats["spearman_rho"]["upper_bound"],
+                                                                                      lower = stats["spearman_rho"]["lower_bound"])
+        spearman_formatted = spearman_text + 31 * " " + spearman_value
+        
+        text_string = "\n".join((text_string, pearson_formatted, spearman_formatted))
     
     statistics_dataframe = pd.DataFrame.from_dict(stats).transpose()
     statistics_dataframe.rename(columns={0: "statistic"})
-    return statistics_dataframe
+    return statistics_dataframe, text_string
 
 
 def get_ligand_indices(transformations):
@@ -166,7 +171,7 @@ def get_experimental_data(file, transformations):
     return free_energies, errors
 
 
-def save_statistics_to_file(outputs, statistics):
+def save_statistics_to_file(outputs, statistics, filename="meze_statistics"):
     """
     Take the statistics dataframe and save it to the outputs directory as a csv 
 
@@ -180,10 +185,10 @@ def save_statistics_to_file(outputs, statistics):
     Return:
     -------
     """
-    statistics.to_csv(f"{outputs}/meze_statistics.csv")
+    statistics.to_csv(f"{outputs}/{filename}.csv")
 
 
-def combine_results(protocol):
+def combine_results(protocol, transformations, free_energies, errors):
     """
     Take values and errors from individual runs and average them and propagate errors.
 
@@ -198,7 +203,6 @@ def combine_results(protocol):
         dataframe containing averaged results and propagated errors
     """
 
-    transformations, free_energies, errors = read_results(protocol)
     
     nan_indices = functions.check_nan(free_energies)
     calculated_means = functions.average(free_energies) 
@@ -347,7 +351,7 @@ def propagate_experimental_dg_error(error, ki, temperature=300):
     return (BOLTZMANN_CONSTANT * temperature * AVOGADROS_NUMBER / 4184) * (error / ki)
 
 
-def bootstrap_statistics(experimental: np.array, calculated: np.array, n_samples = 10000, alpha_level = 0.95):
+def bootstrap_statistics(experimental, calculated, n_samples = 10000, alpha_level = 0.95, absolute=False):
     """
     _summary_
 
@@ -370,6 +374,9 @@ def bootstrap_statistics(experimental: np.array, calculated: np.array, n_samples
     n_data_samples = len(experimental)
     statistics_dict = {"rmse": [],
                        "mue": []}
+    if absolute:
+        statistics_dict["pearson_r2"] = []
+        statistics_dict["spearman_rho"] = []
 
     for i in range(n_samples):
         if i==0:
@@ -386,8 +393,17 @@ def bootstrap_statistics(experimental: np.array, calculated: np.array, n_samples
         statistics_dict["rmse"].append(rmse)
         statistics_dict["mue"].append(mue)
         
+        if absolute:
+            pearson_r2 = scipy.stats.pearsonr(experimental_samples, calculated_samples)[0]**2
+            spearman_rho = scipy.stats.spearmanr(experimental_samples, calculated_samples)[0]
+            statistics_dict["pearson_r2"].append(pearson_r2)
+            statistics_dict["spearman_rho"].append(spearman_rho)
+
     results = {"rmse": {},
                "mue": {}}
+    if absolute:
+        results["pearson_r2"] = {}
+        results["spearman_rho"] = {}
     
     lower_fraction = alpha_level/2.0
     upper_fraction = 1 - lower_fraction
@@ -396,8 +412,9 @@ def bootstrap_statistics(experimental: np.array, calculated: np.array, n_samples
         results[statistic]["real"] = statistics_dict[statistic][0]
         statistics_dict[statistic] = sorted(statistics_dict[statistic])
         results[statistic]["mean_value"] = np.mean(statistics_dict[statistic])
-        results[statistic]["lower_bound"] = statistics_dict[statistic][int(n_samples * lower_fraction)] # np.floor ? from cinnabar? 
-        results[statistic]["upper_bound"] = statistics_dict[statistic][int(n_samples * upper_fraction)] # np.ceil from cinnabar? 
+        results[statistic]["lower_bound"] = statistics_dict[statistic][int(np.floor(n_samples * lower_fraction))] 
+        results[statistic]["upper_bound"] = statistics_dict[statistic][int(np.ceil(n_samples * upper_fraction))] 
+         
     return results
 
 
@@ -517,7 +534,7 @@ def plot_individual_runs(protocol, experimental_free_energies_with_nans, experim
     fig.savefig(f"{plots}/individual_correlation.png", dpi=1000)
 
 
-def plot_correlation(plots_directory, results, experimental_free_energies_with_nans, experimental_errors_with_nans, region=True):
+def plot_correlation(plots_directory, results, experimental_free_energies_with_nans, experimental_errors_with_nans, region=True, text_box=None, plot_threshold=10):
     """
     Plot the correlation plot of experimental binding free energies vs calculated free energies
 
@@ -588,7 +605,8 @@ def plot_correlation(plots_directory, results, experimental_free_energies_with_n
     max_calculated = max(np.absolute(calculated_free_energies)) + 1 
     max_experimental = max(np.absolute(experimental_free_energies)) + 1
     max_y = max(max_calculated, max_experimental)
-
+    if max_y > plot_threshold:
+        max_y = plot_threshold
     ax.plot([-max_y, max_y], [-max_y, max_y], color=COLOURS["BLUE"], linestyle=":", zorder=-1)
     ax.vlines(0, -max_y, max_y, color="silver", linestyle="--", zorder=-1)
     ax.hlines(0, -max_y, max_y, color="silver", linestyle="--", zorder=-1)
@@ -599,6 +617,20 @@ def plot_correlation(plots_directory, results, experimental_free_energies_with_n
         x = np.arange(-max_y, max_y+1)
         ax.fill_between(x, bottom, top, alpha=0.2, zorder=-1)
 
+    if text_box:
+        box_properties = dict(boxstyle="square", facecolor="white")
+        ax.text(0.05, 0.95, text_box, transform=ax.transAxes, fontsize=16, verticalalignment="top", bbox=box_properties)
+    
+    labels = [transformation.strip().replace("_", "").replace("ligand", "").replace("~", " to ") for transformation in results["transformation"].tolist()]
+    for i in experimental_nan_indices:
+        labels[i] = np.nan
+    for i in calculated_nan_indices:
+        labels[i] = np.nan
+    
+    labels = [value for value in labels if str(value).lower() != "nan"]
+    for i in range(len(labels)):
+        ax.annotate(labels[i], (experimental_free_energies[i] + 0.07, calculated_free_energies[i] + 0.07), fontsize=9)
+    
     ax.set_xlim(-max_y, max_y)
     ax.set_ylim(-max_y, max_y)
     ax.set_xlabel("$\Delta \Delta$ G$_\mathrm{EXP}$ (kcal mol \u207B \u00B9)")
@@ -853,17 +885,13 @@ def plot_overlap_matrix(protocol):
                         print(f"transformation {transformation_directory.split('/')[-2]} at repeat {i} raised error: {e}")
 
 
-
-
-
-
-def plot_absolute_dGs(absolute_dG_dataframe, plots_directory, region=True):
+def plot_absolute_dGs(absolute_dG_dataframe, plots_directory, text_box, region=True):
 
     experimental_free_energies = absolute_dG_dataframe.iloc[:, 1].to_numpy()
     experimental_errors = absolute_dG_dataframe.iloc[:, 2].to_numpy()
     calculated_free_energies = absolute_dG_dataframe.iloc[:, 3].to_numpy()
     calculated_errors = absolute_dG_dataframe.iloc[:, 4].to_numpy()
-
+    ligand_names = absolute_dG_dataframe.iloc[:, 0].tolist()
     fig, ax = plt.subplots(1, 1, figsize=(10,10))
     sns.set_theme(context="notebook", palette="colorblind", style="ticks", font_scale=2)
 
@@ -893,8 +921,15 @@ def plot_absolute_dGs(absolute_dG_dataframe, plots_directory, region=True):
         top = np.arange(-max_y+0.5, max_y+1.5)
         bottom = np.arange(-max_y-0.5, max_y+0.5)
         x = np.arange(-max_y, max_y+1)
-        ax.fill_between(x, bottom, top, alpha=0.2, zorder=-1)
-
+        ax.fill_between(x, bottom, top, alpha=0.2, color=COLOURS["BLUE"], zorder=-1)
+    
+    box_properties = dict(boxstyle="square", facecolor="white")
+    ax.text(0.05, 0.95, text_box, transform=ax.transAxes, fontsize=16, verticalalignment="top", bbox=box_properties)
+    
+    labels = [name.replace("ligand_", "") for name in ligand_names]
+    for i in range(len(labels)):
+        ax.annotate(labels[i], (experimental_free_energies[i] + 0.07, calculated_free_energies[i]), fontsize=14)
+    
     ax.set_xlim(-max_y, max_y)
     ax.set_ylim(-max_y, max_y)
     ax.set_xlabel("$\Delta$ G$_\mathrm{EXP}$ (kcal mol \u207B \u00B9)")
@@ -1104,35 +1139,22 @@ def main():
     plot_pairwise_lambda_rmsd(protocol)
     plot_overlap_matrix(protocol)
 
-    transformations, _, _ = read_results(protocol) 
-    results = combine_results(protocol)
+    transformations, free_energies, errors = read_results(protocol) 
+    results = combine_results(protocol, transformations, free_energies, errors)
+    average_free_energies = results["average_ddg"].to_numpy()
     experimental_file = arguments.experimental_file
     experimental_free_energy, experimental_error = get_experimental_data(experimental_file, transformations)
-    statistics = output_statistics(experimental_free_energy, results) # need another one for dGs !
+    statistics, text_box = output_statistics(experimental_free_energy, average_free_energies) 
     save_statistics_to_file(protocol["outputs"], statistics) 
     
     absolute_dG_dataframe = get_absolute_dGs(experimental_file, results, protocol)
-    plot_absolute_dGs(absolute_dG_dataframe, protocol["plots directory"])
+    absolute_statistics, absolute_text_box = output_statistics(absolute_dG_dataframe["exp_dG"].to_numpy(), absolute_dG_dataframe["calc_dG"].to_numpy(), absolute=True)
+    save_statistics_to_file(protocol["outputs"], absolute_statistics, filename="absolute_statistics") 
+    plot_absolute_dGs(absolute_dG_dataframe, protocol["plots directory"], absolute_text_box)
    
     plot_bar(protocol["plots directory"], results, experimental_free_energy, experimental_error)
-    plot_correlation(protocol["plots directory"], results, experimental_free_energy, experimental_error)
+    plot_correlation(protocol["plots directory"], results, experimental_free_energy, experimental_error, text_box=text_box)
     plot_individual_runs(protocol, experimental_free_energy, experimental_error, results)
-
-### can do something like this from cinnabar to print out stats on plots: 
-    #         string = f"{statistic}:   {s[statistic_type]:.2f} [95%: {s['low']:.2f}, {s['high']:.2f}] " + "\n"
-    #     statistics_string += string
-
-    # long_title = f"{title} \n {target_name} (N = {nsamples}) \n {statistics_string}"
-
-    # plt.title(
-    #     long_title,
-    #     fontsize=font_sizes["title"],
-    #     loc="right",
-    #     horizontalalignment="right",
-    #     family="monospace",
-    # )
-
-###
 
 
 
