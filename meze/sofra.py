@@ -215,7 +215,7 @@ class Sofra(object):
     """
     def __init__(self, protein_file, workdir=os.getcwd(), prepared=False, 
                  afe_input_path=os.getcwd()+"/afe/", equilibration_path=os.getcwd()+"/equilibration/", outputs=os.getcwd()+"/outputs/",
-                 ligand_path=os.getcwd()+"/inputs/ligands/", ligand_charge=0, ligand_ff="gaff2", 
+                 ligand_path=os.getcwd()+"/inputs/ligands/", ligand_charge=0, ligand_ff="gaff2", ligand_atom_type=None, 
                  group_name=None, protein_path=os.getcwd()+"/inputs/protein/", water_model="tip3p", protein_ff="ff14SB", 
                  engine="SOMD", sampling_time=4, box_edges=20, box_shape="cubic", min_steps=5000, short_nvt=5, nvt=50, npt=200, 
                  min_dt=0.01, min_tol=1000, repeats=3, temperature=300, pressure=1, threshold=0.4, n_normal=11, n_difficult=17,
@@ -259,6 +259,10 @@ class Sofra(object):
         self.ligands = [Ligand.Ligand(file) for file in self.input_files]
         self.ligand_molecules = [ligand.get_ligand() for ligand in self.ligands]
         self.names = [ligand.get_name() for ligand in self.ligands]
+        if ligand_atom_type:
+            self.ligand_atom_type = ligand_atom_type.lower()
+        else:
+            self.ligand_atom_type = self.ligand_forcefield
 
         self.protein_forcefield = protein_ff
 
@@ -782,6 +786,7 @@ class Sofra(object):
         path_to_outputs = self.output_directories[0].replace(strip, "")
         protocol = [f"group name = {self.group_name}",
                     f"ligand forcefield = {self.ligand_forcefield}", 
+                    f"ligand atom type = {self.ligand_atom_type}",
                     f"ligand charge = {self.ligand_charge}",
                     f"prepared protein file = {self.prepared_protein}",
                     f"protein input file = {self.protein_file}",

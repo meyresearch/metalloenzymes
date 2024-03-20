@@ -105,7 +105,7 @@ class Ligand(object):
         input_file_extension = functions.get_file_extension(self.file)
         command = f"antechamber -fi {input_file_extension} -fo mol2 -i {self.file} -o {self.name}.mol2 -c {charge_method} -at {atom_type} -pf y -nc {charge}"
         work_dir = os.getcwd()
-        os.chdir(self.path)
+        os.chdir(path)
         os.system(command)
         os.chdir(work_dir)
         self.file = f"{path}/{self.name}.mol2"

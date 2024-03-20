@@ -41,7 +41,7 @@ def solvate_unbound(network, ligand_name):
         solvate_directory = network.create_directory(f"{network.ligand_path}/solvate_{ligand_name}/")
 
         if not os.path.isfile(f"{solvate_directory}/{ligand_name}.mol2"):
-            parameterised_ligand = ligand.antechamber(charge=network.ligand_charge, path=network.ligand_path, atom_type=network.ligand_forcefield)
+            parameterised_ligand = ligand.antechamber(charge=network.ligand_charge, path=network.ligand_path, atom_type=network.ligand_atom_type)
             ligand_mol2_file = parameterised_ligand.file
         else:
             ligand_mol2_file = functions.get_files(f"{solvate_directory}/{ligand_name}.mol2")[0]

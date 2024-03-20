@@ -93,6 +93,12 @@ def main():
                         help="ligand force field",
                         default="gaff2")
     
+    parser.add_argument("-at",
+                        "--ligand-atom-type",
+                        dest="ligand_atom_type",
+                        help="ligand atom types to be used with antechamber",
+                        default=None)
+    
     parser.add_argument("-be",
                         "--box-edges",
                         dest="box_edges",
@@ -223,7 +229,8 @@ def main():
                             n_normal=arguments.lambdas,
                             n_difficult=arguments.n_difficult,
                             solvation_method=arguments.solvation_method,
-                            solvent_closeness=arguments.solvent_closeness)
+                            solvent_closeness=arguments.solvent_closeness,
+                            ligand_atom_type=arguments.ligand_atom_type)
         
     elif not metal:
 
@@ -250,7 +257,8 @@ def main():
                               n_normal=arguments.lambdas,
                               n_difficult=arguments.n_difficult,
                               solvation_method=arguments.solvation_method,
-                              solvent_closeness=arguments.solvent_closeness)
+                              solvent_closeness=arguments.solvent_closeness,
+                              ligand_atom_type=arguments.ligand_atom_type)
         
     prepared_network = network.prepare_network()
 
