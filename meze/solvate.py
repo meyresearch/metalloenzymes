@@ -40,14 +40,24 @@ def solvate_unbound(network, ligand_name):
         
         solvate_directory = network.create_directory(f"{network.ligand_path}/solvate_{ligand_name}/")
 
+        ## Convert input ligand file to pdb with openbabel:
+        ligand_pdb = f"{solvate_directory}/{ligand_name}.pdb"
+        if not os.path.isfile(ligand_pdb):
+            input_ligand_file = ligand.file
+            obabel_command = f"obabel {input_ligand_file} -O "
+            work_dir = os.getcwd()
+            os.chdir(solvate_directory)
+            os.system(obabel_command)
+            os.chdir(work_dir)
+
         if not os.path.isfile(f"{solvate_directory}/{ligand_name}.mol2"):
-            parameterised_ligand = ligand.antechamber(charge=network.ligand_charge, path=network.ligand_path, atom_type=network.ligand_atom_type)
+            parameterised_ligand = ligand.antechamber(charge=network.ligand_charge, path=solvate_directory, atom_type=network.ligand_atom_type)
             ligand_mol2_file = parameterised_ligand.file
         else:
             ligand_mol2_file = functions.get_files(f"{solvate_directory}/{ligand_name}.mol2")[0]
         
         if not os.path.isfile(f"{solvate_directory}/{ligand_name}.frcmod"):
-            ligand_frcmod_file = ligand.parmcheck()
+            ligand_frcmod_file = ligand.parmcheck(path=solvate_directory)
         else:
             ligand_frcmod_file = functions.get_files(f"{solvate_directory}/{ligand_name}.frcmod")[0]
             
@@ -127,7 +137,7 @@ def solvate_bound(network, ligand_name):
             ligand_mol2_file = functions.get_files(f"{network.ligand_path}/solvate_{ligand_name}/{ligand_name}.mol2")[0]
         
         if not os.path.isfile(f"{network.ligand_path}/solvate_{ligand_name}/{ligand_name}.frcmod"):
-            ligand_frcmod_file = ligand.parmcheck()
+            ligand_frcmod_file = ligand.parmcheck(path=solvate_directory)
         else:
             ligand_frcmod_file = functions.get_files(f"{network.ligand_path}/solvate_{ligand_name}/{ligand_name}.frcmod")[0]
 
@@ -250,7 +260,8 @@ def main():
                           temperature=protocol["temperature"],
                           pressure=protocol["pressure"],
                           solvation_method=protocol["solvation method"],
-                          solvent_closeness=protocol["solvent closeness"])
+                          solvent_closeness=protocol["solvent closeness"],
+                          ligand_atom_type=protocol["ligand atom type"])
 
     solvate_unbound(network=network, ligand_name=arguments.ligand_name)
     solvate_bound(network=network, ligand_name=arguments.ligand_name)

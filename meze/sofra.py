@@ -786,7 +786,7 @@ class Sofra(object):
         path_to_outputs = self.output_directories[0].replace(strip, "")
         protocol = [f"group name = {self.group_name}",
                     f"ligand forcefield = {self.ligand_forcefield}", 
-                    f"ligand atom type = {self.ligand_atom_type}",
+                    f"ligand atom type = {self.ligand_atom_type}"
                     f"ligand charge = {self.ligand_charge}",
                     f"prepared protein file = {self.prepared_protein}",
                     f"protein input file = {self.protein_file}",

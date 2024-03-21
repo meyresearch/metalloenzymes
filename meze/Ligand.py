@@ -88,7 +88,7 @@ class Ligand(object):
         return self.parameters  
 
 
-    def antechamber(self, charge, path, atom_type="gaff2", charge_method="bcc"):
+    def antechamber(self, charge, path, input_file=None, atom_type="gaff2", charge_method="bcc"):
         """
         Parameterise ligand using antechamber
 
@@ -102,8 +102,14 @@ class Ligand(object):
         self: Ligand
             Ligand object
         """
-        input_file_extension = functions.get_file_extension(self.file)
-        command = f"antechamber -fi {input_file_extension} -fo mol2 -i {self.file} -o {self.name}.mol2 -c {charge_method} -at {atom_type} -pf y -nc {charge}"
+        if not input_file:
+            input_file = self.file
+            
+        else:
+            input_file = functions.file_exists(input_file)
+
+        input_file_extension = functions.get_file_extension(input_file)
+        command = f"antechamber -fi {input_file_extension} -fo mol2 -i {input_file} -o {self.name}.mol2 -c {charge_method} -at {atom_type} -pf y -nc {charge}"
         work_dir = os.getcwd()
         os.chdir(path)
         os.system(command)
@@ -113,7 +119,7 @@ class Ligand(object):
         return self
 
 
-    def parmcheck(self):
+    def parmcheck(self, path):
         """
         Run parmchk2 from amber to create an frcmod file
 
@@ -127,10 +133,10 @@ class Ligand(object):
         """
         command = f"parmchk2 -i {self.name}.mol2 -o {self.name}.frcmod -f mol2"
         work_dir = os.getcwd()
-        os.chdir(self.path)
+        os.chdir(path)
         os.system(command)
         os.chdir(work_dir)    
-        return functions.get_files(f"{self.path}/{self.name}.frcmod")[0]
+        return functions.get_files(f"{path}/{self.name}.frcmod")[0]
 
 
     def get_system(self):
