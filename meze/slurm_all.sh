@@ -14,10 +14,10 @@ export transformations_file=TRANSFORMATIONS_DATA_FILE
 
 source $MEZEHOME/parse.sh 
 
-solvation_job_id=$(sbatch --parsable --array=1-$N_LIGANDS $AFE_INPUT_DIR/02_add_water.sh)
+solvation_job_id=$(sbatch --parsable --array=0-$((${N_LIGANDS}-1)) $AFE_INPUT_DIR/02_add_water.sh)
 echo "Adding water with slurm job $solvation_job_id"
 
-heating_job_id=$(sbatch --dependency=afterok:${solvation_job_id} --parsable --array=1-$N_LIGANDS $AFE_INPUT_DIR/03_heat_meze.sh)
+heating_job_id=$(sbatch --dependency=afterok:${solvation_job_id} --parsable --array=0-$((${N_LIGANDS}-1)) $AFE_INPUT_DIR/03_heat_meze.sh)
 echo "Heating meze with slurm job $heating_job_id"
 
 meze_job_id=$(sbatch --dependency=afterok:${heating_job_id} --parsable --array=0-$((${#transformations_array[@]}-1)) $AFE_INPUT_DIR/04_meze.sh)

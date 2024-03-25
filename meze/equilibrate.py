@@ -11,17 +11,19 @@ import meze
 
 
 class coldMeze(meze.Meze):
-    def __init__(self, group_name, ligand_name, equilibration_directory, input_protein_file, protein_directory, ligand_directory, min_steps, short_nvt, nvt, npt, min_dt, min_tol, temperature, pressure, short_timestep=0.5, is_metal=True, prepared=True, ):
+    def __init__(self, group_name, ligand_name, equilibration_directory, afe_input_directory, outputs, input_protein_file, protein_directory, ligand_directory, min_steps, short_nvt, nvt, npt, min_dt, min_tol, temperature, pressure, short_timestep=0.5, is_metal=True, prepared=True, ):
         
         self.is_metal = is_metal
         self.prepared = prepared
         if self.is_metal:
-            super().__init__(protein_file=input_protein_file, prepared=prepared, group_name=group_name)
+            super().__init__(protein_file=input_protein_file, prepared=prepared, group_name=group_name, 
+                             equilibration_path=equilibration_directory, afe_input_path=afe_input_directory, outputs=outputs,
+                             protein_path=protein_directory, ligand_path=ligand_directory)
         #TODO what happens with init if not metal?
         self.ligand_name = ligand_name
-        self.equilibration_directory = equilibration_directory
-        self.ligand_path = functions.path_exists(ligand_directory)
-        self.protein_path = functions.path_exists(protein_directory)
+        # self.equilibration_directory = equilibration_directory
+        # self.ligand_path = functions.path_exists(ligand_directory)
+        # self.protein_path = functions.path_exists(protein_directory)
         self.short_nvt = functions.convert_to_units(short_nvt, PICOSECOND)
         self.nvt = functions.convert_to_units(nvt, PICOSECOND)
         self.npt = functions.convert_to_units(npt, PICOSECOND)
@@ -312,6 +314,8 @@ def main():
     cold_meze = coldMeze(is_metal=metal,
                          group_name=protocol["group name"],
                          ligand_name=arguments.ligand_name,
+                         afe_input_directory=protocol["afe input directory"],
+                         outputs=protocol["outputs"],
                          equilibration_directory=protocol["equilibration directory"],
                          input_protein_file=protocol["protein input file"],
                          protein_directory=protocol["protein directory"],

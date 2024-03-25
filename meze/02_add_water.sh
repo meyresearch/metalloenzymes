@@ -3,17 +3,20 @@
 #SBATCH -o PATH_TO_LOGS/add_water_%a.slurm.out
 #SBATCH -e PATH_TO_LOGS/add_water_%a.slurm.err
 #SBATCH -n N_TASKS
-#SBATCH --gres=gpu:N_GPUS
-#SBATCH --cpus-per-gpu=N_CPUS
 
+export ligands_dat_file=LIGANDS_DATA_FILE
+export transformations_file=TRANSFORMATIONS_DATA_FILE
+
+source $MEZEHOME/parse.sh 
 
 export MEZEHOME=PATH_TO_MEZE
 
-LIG_NUMBER=$SLURM_ARRAY_TASK_ID
+lig_i=$SLURM_ARRAY_TASK_ID
+ligand=${ligand_array[$lig_i]}
 
 start=`date +%s`
 
-python $MEZEHOME/solvate.py "ligand_$LIG_NUMBER" PROTOCOLFILE
+python $MEZEHOME/solvate.py "$ligand" PROTOCOLFILE
 
 end=`date +%s`
 runtime=$((end - start))

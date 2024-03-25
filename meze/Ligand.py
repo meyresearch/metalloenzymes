@@ -119,7 +119,7 @@ class Ligand(object):
         return self
 
 
-    def parmcheck(self, path):
+    def parmcheck(self, path, atom_type="gaff2"):
         """
         Run parmchk2 from amber to create an frcmod file
 
@@ -131,7 +131,7 @@ class Ligand(object):
         str:
             full path to frcmod file
         """
-        command = f"parmchk2 -i {self.name}.mol2 -o {self.name}.frcmod -f mol2"
+        command = f"parmchk2 -i {self.name}.mol2 -o {self.name}.frcmod -f mol2 -s {atom_type}"
         work_dir = os.getcwd()
         os.chdir(path)
         os.system(command)
