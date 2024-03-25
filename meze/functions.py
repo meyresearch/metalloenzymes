@@ -312,12 +312,12 @@ def write_slurm_script(template_file, path, log_dir, protocol_file, extra_option
             options = extra_options
         elif not extra_options:
             options = {"PATH_TO_LOGS": log_dir,
-                    "N_TASKS": str(1),
-                    "N_GPUS": str(1), 
-                    "N_CPUS": str(10),
-                    #    "MEMORY": str(4069), # only for water and equilibration
-                    "PATH_TO_MEZE": meze,
-                    "PROTOCOLFILE": protocol_file}    
+                       "N_TASKS": str(1),
+                       "N_GPUS": str(1), 
+                       "N_CPUS": str(10),
+                       #    "MEMORY": str(4069), # only for water and equilibration
+                       "PATH_TO_MEZE": meze,
+                       "PROTOCOLFILE": protocol_file}    
         if extra_lines:
             for key, value in extra_lines.items():
                 options[key] = str(value)

@@ -77,6 +77,11 @@ def residue_restraint_mask(residue_ids):
 
 class Meze(sofra.Sofra):
 
+    #TODO change the afe_input_path=os.getcwd()+"/afe/" (etc.) somehow 
+    # it should not be taken from the cwd as this raises an error if we run any of the run scripts from the afe dir
+    # it's annoying to have to put this in as an argument to the constructor everytime
+
+
     def __init__(self, protein_file, prepared=False, metal="ZN", cut_off=2.6, force_constant_0=100, water_file=None, 
                  workdir=os.getcwd(), afe_input_path=os.getcwd()+"/afe/", equilibration_path=os.getcwd()+"/equilibration/", outputs=os.getcwd()+"/outputs/",
                  ligand_path=os.getcwd()+"/inputs/ligands/", ligand_charge=0, ligand_ff="gaff2", 
@@ -244,7 +249,7 @@ class Meze(sofra.Sofra):
         return final_system
 
 
-    def prepare_afe(self, ligand_a_name, ligand_b_name):
+    def prepare_afe(self, ligand_a_name, ligand_b_name, extra_edges=None):
         """
         Inherited method from sofra.Network; adds restraints to somd config files
 
@@ -259,7 +264,7 @@ class Meze(sofra.Sofra):
         -------
         """
         
-        super().prepare_afe(ligand_a_name, ligand_b_name)
+        super().prepare_afe(ligand_a_name, ligand_b_name, extra_edges=extra_edges)
         first_run_directory = self.output_directories[0]
         transformation_directory = first_run_directory + f"/{ligand_a_name}~{ligand_b_name}/"
         bound_directory = transformation_directory + "/bound/" # unbound doesn't have restraints
@@ -1357,6 +1362,12 @@ def main():
                         help="the pair of ligands undergoing AFE transformation, e.g. ligand_1~ligand_2",
                         type=str)
     
+    parser.add_argument("-et",
+                        "--extra-transformations",
+                        dest="extra_transformations_file",
+                        help="file containing additional transformations in format: lig A lig B; equivalent to BioSimSpace.generateNetwork links file",
+                        type=str)
+  
     parser.add_argument("-s",
                         "--separator",
                         help="character separating the two ligand names",
@@ -1404,7 +1415,7 @@ def main():
                     pressure=protocol["pressure"])
         
     elif not metal:
-
+      
         meze = sofra.Sofra(prepared=True,
                                equilibration_path=protocol["equilibration directory"],
                                outputs=protocol["outputs"],
@@ -1433,9 +1444,10 @@ def main():
                                pressure=protocol["pressure"])
           
     ligand_a, ligand_b = functions.separate(arguments.transformation)
-
+    
     equilibrated_network = meze.get_equilibrated(ligand_a, ligand_b)
-    equilibrated_network.prepare_afe(ligand_a, ligand_b) 
+
+    equilibrated_network.prepare_afe(ligand_a, ligand_b, extra_edges=arguments.extra_transformations_file) 
 
 if __name__ == "__main__":
     main()

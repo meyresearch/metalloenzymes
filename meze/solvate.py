@@ -238,7 +238,7 @@ def main():
                         type=str)
     
     parser.add_argument("protocol_file",
-                        help="protocol file containing equilibration options",
+                        help="protocol file",
                         type=str,
                         default=os.getcwd() + "/afe/protocol.dat")
     

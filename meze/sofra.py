@@ -214,12 +214,12 @@ class Sofra(object):
     -------
     """
     def __init__(self, protein_file, workdir=os.getcwd(), prepared=False, 
-                 afe_input_path=os.getcwd()+"/afe/", equilibration_path=os.getcwd()+"/equilibration/", outputs=os.getcwd()+"/outputs/",
-                 ligand_path=os.getcwd()+"/inputs/ligands/", ligand_charge=0, ligand_ff="gaff2",  
+                 afe_input_path=os.getcwd()+"/afe/", equilibration_path=os.getcwd()+"/equilibration/", outputs=os.getcwd()+"/outputs/", log_directory=os.getcwd()+"/logs/",
+                 ligand_path=os.getcwd()+"/inputs/ligands/", ligand_charge=0, ligand_ff="gaff2", 
                  group_name=None, protein_path=os.getcwd()+"/inputs/protein/", water_model="tip3p", protein_ff="ff14SB", 
                  engine="SOMD", sampling_time=4, box_edges=20, box_shape="cubic", min_steps=5000, short_nvt=5, nvt=50, npt=200, 
                  min_dt=0.01, min_tol=1000, repeats=3, temperature=300, pressure=1, threshold=0.4, n_normal=11, n_difficult=17,
-                 solvation_method="gromacs", solvent_closeness=1.0):
+                 cutoff_scheme="rf"):
         """
         Class constructor
         """
@@ -238,7 +238,8 @@ class Sofra(object):
             self.afe_input_directory = functions.path_exists(afe_input_path)
             self.equilibration_directory = functions.path_exists(equilibration_path)  
             self.outputs = functions.path_exists(outputs) 
-            self.output_directories = functions.get_files(self.outputs + f"/{engine}_*")
+            self.log_directory = functions.path_exists(log_directory)
+            self.output_directories = functions.get_files(self.outputs + f"/{engine}_*/")
             self.plots = functions.get_files(f"{self.outputs}/plots/")
         else:
             self.protein_file = protein_file
@@ -272,6 +273,7 @@ class Sofra(object):
                                        water_model=self.water_model,
                                        parameterised=self.prepared)
 
+        self.cutoff_scheme = cutoff_scheme.lower()
         self.threshold = threshold
         self.n_normal = n_normal
         self.n_difficult = n_difficult
@@ -476,7 +478,7 @@ class Sofra(object):
         return system_1
 
 
-    def prepare_afe(self, ligand_a_name, ligand_b_name):
+    def prepare_afe(self, ligand_a_name, ligand_b_name, extra_edges=None):
         """
         Prepare minimisation and free energy lambda windows directory tree
 
@@ -490,11 +492,12 @@ class Sofra(object):
         Return:
         -------
         """
-        self.transformations = self.get_transformations()
+        self.transformations = self.get_transformations(extra_edges)
         self.n_transformations = len(self.transformations)
         dataframe = self.transformations.copy()
         condition_1 = dataframe["ligand_a"] == ligand_a_name
         condition_2 = dataframe["ligand_b"] == ligand_b_name
+        print(dataframe)
         row_index = dataframe[condition_1 & condition_2].index.tolist()[0]
 
         lambda_strings = dataframe.iloc[row_index]["lambdas"].split(" ")
@@ -525,6 +528,8 @@ class Sofra(object):
 
         cycles_per_saved_frame = max(1, restart_interval // n_moves) #Credit: Anna Herz https://github.com/michellab/BioSimSpace/blob/feature-amber-fep/python/BioSimSpace/_Config/_somd.py 
 
+        
+
         config_options = {"ncycles": n_cycles, 
                           "nmoves": n_moves, 
                           "buffered coordinates frequency": buffered_coordinates_frequency, #CHANGE
@@ -532,6 +537,9 @@ class Sofra(object):
                         #   "minimal coordinate saving": True,
                         #   "cutoff distance": "8 angstrom", # Make editable? 
                           "minimise": False}
+
+        if self.cutoff_scheme == "pme":
+            config_options["cutoff type"] = "PME"
 
         bss.FreeEnergy.Relative(system=unbound, protocol=free_energy_protocol, engine=self.md_engine, work_dir=unbound_directory, extra_options=config_options, setup_only=True)
         bss.FreeEnergy.Relative(system=bound, protocol=free_energy_protocol, engine=self.md_engine, work_dir=bound_directory, extra_options=config_options, setup_only=True)
@@ -620,7 +628,7 @@ class Sofra(object):
         return output
           
 
-    def set_transformations(self):
+    def set_transformations(self, links_file=None):
         """
         Create a transformation network with LOMAP
 
@@ -629,10 +637,36 @@ class Sofra(object):
         transformations: pd.DataFrame
             forward and backward transformations with their associated lomap scores, number of windows and lambda list
         """
-        save_name = self.afe_input_directory+f"/meze_network.csv"
-        if not os.path.isfile(save_name):
+        if links_file:
+            links_filename = functions.get_filename(links_file)
+            save_name = self.afe_input_directory + f"{links_filename}.csv"
+            links = pd.read_csv(links_file, sep="\s", names=["ligA", "ligB"])
+            first_column = links["ligA"].tolist()
+            second_column = links["ligB"].tolist()
             lomap_work_directory = self.check_lomap_directory()
-            transformations, lomap_scores = bss.Align.generateNetwork(self.ligand_molecules, plot_network=True, names=self.names, work_dir=lomap_work_directory)        
+            scores = [0.5] * len(first_column)
+            start_ligand = [ligand for ligand in first_column]
+            end_ligand = [ligand for ligand in second_column] 
+
+            dataframe = pd.DataFrame()
+            dataframe["ligand_a"] = start_ligand
+            dataframe["ligand_b"] = end_ligand
+            dataframe["score"] = scores
+            for score in scores:
+                n_windows = self.set_n_windows(score)
+                self.n_windows.append(n_windows)
+                lambda_windows = create_lambda_windows(n_windows)
+                self.lambdas.append(lambda_windows)
+            dataframe["n_windows"] = self.n_windows
+            dataframe["lambdas"] = self.lambdas
+            dataframe.to_csv(save_name)
+            
+        else:
+            save_name = self.afe_input_directory+f"/meze_network.csv"
+            lomap_work_directory = self.check_lomap_directory()
+            transformations, lomap_scores = bss.Align.generateNetwork(self.ligand_molecules, plot_network=True, names=self.names, work_dir=lomap_work_directory)   
+        
+        if not os.path.isfile(save_name):
             start_ligand = [self.names[transformation[0]] for transformation in transformations]
             end_ligand = [self.names[transformation[1]] for transformation in transformations] 
             start_indices = [transformation[0] for transformation in transformations]
@@ -656,7 +690,7 @@ class Sofra(object):
         return dataframe, save_name
     
 
-    def get_transformations(self):
+    def get_transformations(self, extra_edges=None):
         """
         Getter for transformations csv file
 
@@ -665,10 +699,14 @@ class Sofra(object):
 
         Return:
         -------
-        pd.DataFrame: 
+        df: pd.DataFrame: 
             meze network as a csv file
         """
-        return pd.read_csv(self.afe_input_directory+f"/meze_network.csv", header=0, index_col=0)
+        if not extra_edges:
+            df = pd.read_csv(self.afe_input_directory+f"/meze_network.csv", header=0, index_col=0)
+        else:
+            df = pd.read_csv(extra_edges, header=0, index_col=0)
+        return df
     
 
     def get_files(self):
@@ -710,11 +748,17 @@ class Sofra(object):
         str
             updated working directory to be input into bss.generateNetwork
         """
+
         lomap_work_directory = self.ligand_path
+        
         lomap_names = ["/images/", "/inputs/", "/outputs/"]
         lomap_directories = [self.ligand_path + name for name in lomap_names]
 
         exists = directories_exist(lomap_directories)
+
+        if os.path.isfile(lomap_work_directory + "/outputs/network.png"):
+            os.rename(lomap_work_directory + "/outputs/network.png", lomap_work_directory + "initial_network.png")
+
         if exists:
             remove_lomap_directories(lomap_directories)
 
@@ -787,6 +831,7 @@ class Sofra(object):
                     f"prepared protein file = {self.prepared_protein}",
                     f"protein input file = {self.protein_file}",
                     f"protein forcefield = {self.protein_forcefield}", 
+                    f"cutoff scheme = {self.cutoff_scheme}",
                     f"water model = {self.water_model}", 
                     f"box edges = {self.box_edges}", # in angstrom 
                     f"box shape = {self.box_shape}", 
