@@ -75,10 +75,6 @@ def residue_restraint_mask(residue_ids):
     return restraint_mask
 
 
-
-    
-
-
 class Meze(sofra.Sofra):
 
     #TODO change the afe_input_path=os.getcwd()+"/afe/" (etc.) somehow 
@@ -88,10 +84,11 @@ class Meze(sofra.Sofra):
 
     def __init__(self, protein_file, prepared=False, metal="ZN", cut_off=2.6, force_constant_0=100, water_file=None, 
                  workdir=os.getcwd(), afe_input_path=os.getcwd()+"/afe/", equilibration_path=os.getcwd()+"/equilibration/", outputs=os.getcwd()+"/outputs/",
-                 ligand_path=os.getcwd()+"/inputs/ligands/", ligand_charge=0, ligand_ff="gaff2",
+                 ligand_path=os.getcwd()+"/inputs/ligands/", ligand_charge=0, ligand_ff="gaff2", 
                  group_name=None, protein_path=os.getcwd()+"/inputs/protein/", water_model="tip3p", protein_ff="ff14SB", 
                  engine="SOMD", sampling_time=4, box_edges=20, box_shape="cubic", min_steps=5000, short_nvt=50, nvt=1, npt=200, 
-                 min_dt=0.01, min_tol=1000, repeats=3, temperature=300, pressure=1, threshold=0.4, n_normal=11, n_difficult=17):
+                 min_dt=0.01, min_tol=1000, repeats=3, temperature=300, pressure=1, threshold=0.4, n_normal=11, n_difficult=17,
+                 solvation_method="gromacs", solvent_closeness=1.0):
         
         self.protein_file = protein_file
 
@@ -99,7 +96,8 @@ class Meze(sofra.Sofra):
                          water_model=water_model, ligand_ff=ligand_ff, protein_ff=protein_ff, ligand_charge=ligand_charge, 
                          afe_input_path=afe_input_path, equilibration_path=equilibration_path, outputs=outputs,
                          engine=engine, sampling_time=sampling_time, box_edges=box_edges, box_shape=box_shape, min_steps=min_steps, short_nvt=short_nvt, nvt=nvt, npt=npt, 
-                         min_dt=min_dt, min_tol=min_tol, repeats=repeats, temperature=temperature, pressure=pressure, threshold=threshold, n_normal=n_normal, n_difficult=n_difficult)
+                         min_dt=min_dt, min_tol=min_tol, repeats=repeats, temperature=temperature, pressure=pressure, threshold=threshold, n_normal=n_normal, n_difficult=n_difficult,
+                         solvation_method=solvation_method, solvent_closeness=solvent_closeness)
         
         self.universe = mda.Universe(self.protein_file, format="pdb")
         self.force_constant_0 = functions.check_float(force_constant_0)
@@ -139,7 +137,7 @@ class Meze(sofra.Sofra):
 
     def create_protocol_file(self):
         """
-        Create protocol.dat file for AFE runs
+        Add metal protein information to the AFE protocol file 
 
         Parameters:
         -----------
@@ -151,45 +149,14 @@ class Meze(sofra.Sofra):
         protocol_file: str
             protocol datafile
         """
-        strip = self.output_directories[0].split("/")[-2]
-        path_to_outputs = self.output_directories[0].replace(strip, "")
-        protocol = [f"group name = {self.group_name}",
-                    f"metal = {self.metal_resname}",
-                    f"cutoff = {self.cut_off}",
-                    f"force constant = {self.force_constant_0}",
-                    f"ligand forcefield = {self.ligand_forcefield}", 
-                    f"ligand charge = {self.ligand_charge}",
-                    f"prepared protein file = {self.prepared_protein}",
-                    f"protein input file = {self.protein_file}",
-                    f"protein forcefield = {self.protein_forcefield}", 
-                    f"water model = {self.water_model}", 
-                    f"box edges = {self.box_edges}", # in angstrom 
-                    f"box shape = {self.box_shape}", 
-                    f"minimisation steps = {self.min_steps}",
-                    f"minimisation stepsize = {self.min_dt}",
-                    f"minimisation tolerance = {self.min_tol}",
-                    f"short nvt = {self.short_nvt._value}",
-                    f"nvt = {self.nvt._value}",
-                    f"npt = {self.npt._value}",
-                    f"temperature = {self.temperature._value}",
-                    f"pressure = {self.pressure._value}",
-                    f"sampling time = {self.md_time._value}",
-                    f"engine = {self.md_engine}",
-                    f"outputs = {path_to_outputs}",
-                    f"repeats = {self.n_repeats}",
-                    f"network file = {self.network_file}",
-                    f"project directory = {self.working_directory}",
-                    f"equilibration directory = {self.equilibration_directory}",
-                    f"ligand directory = {self.ligand_path}",
-                    f"protein directory = {self.protein_path}",
-                    f"log directory = {self.log_directory}",
-                    f"afe input directory = {self.afe_input_directory}"]
+        protocol_file = super().create_protocol_file()
+        metal_protocol = [f"metal = {self.metal_resname}",
+                          f"cutoff = {self.cut_off}",
+                          f"force constant = {self.force_constant_0}"]
 
-        protocol_file = self.afe_input_directory + "/protocol.dat"
-
-        with open(protocol_file, "w") as file:
+        with open(protocol_file, "a") as file:
             writer = csv.writer(file)
-            for protocol_line in protocol:
+            for protocol_line in metal_protocol:
                 writer.writerow([protocol_line])
         return protocol_file
             
@@ -310,6 +277,7 @@ class Meze(sofra.Sofra):
             self.add_somd_restraints(minimisation_directories[i])   
             
         _ = [os.system(f"cp -r {transformation_directory.rstrip('/')} {self.output_directories[i]}") for i in range(1, self.n_repeats)]
+
 
     def set_universe(self, file_name):
         """
@@ -1422,6 +1390,9 @@ def main():
                     cut_off=protocol["cutoff"],
                     force_constant_0=protocol["force constant"],
                     workdir=protocol["project directory"],
+                    equilibration_path=protocol["equilibration directory"],
+                    afe_input_path=protocol["afe input directory"],
+                    outputs=protocol["outputs"],
                     ligand_path=protocol["ligand directory"],
                     ligand_charge=protocol["ligand charge"],
                     ligand_ff=protocol["ligand forcefield"],
@@ -1446,32 +1417,31 @@ def main():
     elif not metal:
       
         meze = sofra.Sofra(prepared=True,
-                           afe_input_path=protocol["afe input directory"],
-                           equilibration_path=protocol["equilibration directory"],
-                           outputs=protocol["outputs"],
-                           workdir=protocol["project directory"],
-                           ligand_path=protocol["ligand directory"],
-                           group_name=protocol["group name"],
-                           protein_file=protocol["prepared protein file"],
-                           protein_path=protocol["protein directory"],
-                           water_model=protocol["water model"],
-                           ligand_ff=protocol["ligand forcefield"],
-                           protein_ff=protocol["protein forcefield"],
-                           ligand_charge=protocol["ligand charge"],
-                           engine=protocol["engine"],
-                           sampling_time=protocol["sampling time"],
-                           box_edges=protocol["box edges"],
-                           box_shape=protocol["box shape"],
-                           min_steps=protocol["minimisation steps"],
-                           short_nvt=protocol["short nvt"],
-                           nvt=protocol["nvt"],
-                           npt=protocol["npt"],
-                           min_dt=protocol["minimisation stepsize"],
-                           min_tol=protocol["minimisation tolerance"],
-                           repeats=protocol["repeats"],
-                           temperature=protocol["temperature"],
-                           pressure=protocol["pressure"],
-                           cutoff_scheme=protocol["cutoff scheme"])
+                               equilibration_path=protocol["equilibration directory"],
+                               outputs=protocol["outputs"],
+                               workdir=protocol["project directory"],
+                               afe_input_path=protocol["afe input directory"],
+                               ligand_path=protocol["ligand directory"],
+                               group_name=protocol["group name"],
+                               protein_file=protocol["prepared protein file"],
+                               protein_path=protocol["protein directory"],
+                               water_model=protocol["water model"],
+                               ligand_ff=protocol["ligand forcefield"],
+                               protein_ff=protocol["protein forcefield"],
+                               ligand_charge=protocol["ligand charge"],
+                               engine=protocol["engine"],
+                               sampling_time=protocol["sampling time"],
+                               box_edges=protocol["box edges"],
+                               box_shape=protocol["box shape"],
+                               min_steps=protocol["minimisation steps"],
+                               short_nvt=protocol["short nvt"],
+                               nvt=protocol["nvt"],
+                               npt=protocol["npt"],
+                               min_dt=protocol["minimisation stepsize"],
+                               min_tol=protocol["minimisation tolerance"],
+                               repeats=protocol["repeats"],
+                               temperature=protocol["temperature"],
+                               pressure=protocol["pressure"])
           
     ligand_a, ligand_b = functions.separate(arguments.transformation)
     
