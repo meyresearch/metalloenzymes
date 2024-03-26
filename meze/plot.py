@@ -101,7 +101,7 @@ def output_statistics(experimental_free_energy, computational, absolute=False):
                                                                                    lower = stats["pearson_r2"]["lower_bound"])
         
         pearson_formatted = pearson_text + 31 * " " + pearson_value
-        spearman = f"{stats['pearson_r2']['mean_value']:.2f}"
+        spearman = f"{stats['spearman_rho']['mean_value']:.2f}"
         spearman_text = r"$\rho$:"
         spearman_value = f"{spearman}" + r"$^{{{upper:.2f}}}_{{{lower:.2f}}}$".format(upper = stats["spearman_rho"]["upper_bound"],
                                                                                       lower = stats["spearman_rho"]["lower_bound"])
@@ -615,7 +615,7 @@ def plot_correlation(plots_directory, results, experimental_free_energies_with_n
         top = np.arange(-max_y+0.5, max_y+1.5)
         bottom = np.arange(-max_y-0.5, max_y+0.5)
         x = np.arange(-max_y, max_y+1)
-        ax.fill_between(x, bottom, top, alpha=0.2, zorder=-1)
+        ax.fill_between(x, bottom, top, color=COLOURS["BLUE"], alpha=0.2, zorder=-1)
 
     if text_box:
         box_properties = dict(boxstyle="square", facecolor="white")

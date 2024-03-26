@@ -390,7 +390,8 @@ def check_nan(array):
     nan_indices = []
     if np.isnan(array).any():
         nan_indices = np.argwhere(np.isnan(array))
-
+    else: 
+        nan_indices = np.array([])
     return nan_indices
 
 
