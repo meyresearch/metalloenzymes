@@ -324,7 +324,6 @@ def plot_and_compute_rmsd(directory, topology_format="PARM7"):
             plt.close(fig)
 
 
-
 def save_rmsds(protocol, transformation):
     """
     Compute RMSD of each trajectory + pairwise lambda RMSDs and save as npy files
