@@ -83,21 +83,22 @@ class Meze(sofra.Sofra):
 
 
     def __init__(self, protein_file, prepared=False, metal="ZN", cut_off=2.6, force_constant_0=100, water_file=None, 
-                 workdir=os.getcwd(), afe_input_path=os.getcwd()+"/afe/", equilibration_path=os.getcwd()+"/equilibration/", outputs=os.getcwd()+"/outputs/",
+                 workdir=os.getcwd(), 
+                 afe_input_path=os.getcwd()+"/afe/", equilibration_path=os.getcwd()+"/equilibration/", outputs=os.getcwd()+"/outputs/", log_directory=os.getcwd()+"/logs/",
                  ligand_path=os.getcwd()+"/inputs/ligands/", ligand_charge=0, ligand_ff="gaff2", 
                  group_name=None, protein_path=os.getcwd()+"/inputs/protein/", water_model="tip3p", protein_ff="ff14SB", 
                  engine="SOMD", sampling_time=4, box_edges=20, box_shape="cubic", min_steps=5000, short_nvt=50, nvt=1, npt=200, 
                  min_dt=0.01, min_tol=1000, repeats=3, temperature=300, pressure=1, threshold=0.4, n_normal=11, n_difficult=17,
-                 solvation_method="gromacs", solvent_closeness=1.0):
+                 cutoff_scheme="rf", solvation_method="gromacs", solvent_closeness=1.0):
         
         self.protein_file = protein_file
 
         super().__init__(prepared=prepared, workdir=workdir, ligand_path=ligand_path, group_name=group_name, protein_file=protein_file, protein_path=protein_path, 
                          water_model=water_model, ligand_ff=ligand_ff, protein_ff=protein_ff, ligand_charge=ligand_charge, 
-                         afe_input_path=afe_input_path, equilibration_path=equilibration_path, outputs=outputs,
+                         afe_input_path=afe_input_path, equilibration_path=equilibration_path, outputs=outputs, log_directory=log_directory,
                          engine=engine, sampling_time=sampling_time, box_edges=box_edges, box_shape=box_shape, min_steps=min_steps, short_nvt=short_nvt, nvt=nvt, npt=npt, 
                          min_dt=min_dt, min_tol=min_tol, repeats=repeats, temperature=temperature, pressure=pressure, threshold=threshold, n_normal=n_normal, n_difficult=n_difficult,
-                         solvation_method=solvation_method, solvent_closeness=solvent_closeness)
+                         cutoff_scheme=cutoff_scheme, solvation_method=solvation_method, solvent_closeness=solvent_closeness)
         
         self.universe = mda.Universe(self.protein_file, format="pdb")
         self.force_constant_0 = functions.check_float(force_constant_0)
@@ -212,6 +213,12 @@ class Meze(sofra.Sofra):
         protein = None
         n_residues = [molecule.nResidues() for molecule in system_1]
         n_atoms = [molecule.nAtoms() for molecule in system_1]
+
+        # Debugging: 
+        # residues = system_1.getResidues()
+        bss.IO.saveMolecules(os.getcwd()+"/test.pdb", system_1, "pdb")
+
+
         for j, (n_residues, n_atoms) in enumerate(zip(n_residues[:20], n_atoms[:20])):
             if n_residues == 1 and n_atoms > 5:  
                 ligand_1 = system_1.getMolecule(j)
@@ -231,7 +238,7 @@ class Meze(sofra.Sofra):
 
         removal_system = system_1.copy()
         removal_system.removeWaterMolecules()
-        protein = removal_system.getMolecules()[0]
+        # protein = removal_system.getMolecules()[0]
         removal_system.removeMolecules(ligand_1)
         zn_and_salts = removal_system - protein
 
@@ -1374,6 +1381,12 @@ def main():
                         default="~",
                         type=character)
     
+    parser.add_argument("-o",
+                        "--only-save-end-states",
+                        help="tell somd to only save trajectories for lambda 0 and lambda 1",
+                        action=argparse.BooleanOptionalAction,
+                        dest="only_save_end_states")
+    
     arguments = parser.parse_args()
     
     protocol = functions.input_to_dict(arguments.protocol_file)
@@ -1392,6 +1405,7 @@ def main():
                     workdir=protocol["project directory"],
                     equilibration_path=protocol["equilibration directory"],
                     afe_input_path=protocol["afe input directory"],
+                    log_directory=protocol["log directory"],
                     outputs=protocol["outputs"],
                     ligand_path=protocol["ligand directory"],
                     ligand_charge=protocol["ligand charge"],
@@ -1417,37 +1431,38 @@ def main():
     elif not metal:
       
         meze = sofra.Sofra(prepared=True,
-                               equilibration_path=protocol["equilibration directory"],
-                               outputs=protocol["outputs"],
-                               workdir=protocol["project directory"],
-                               afe_input_path=protocol["afe input directory"],
-                               ligand_path=protocol["ligand directory"],
-                               group_name=protocol["group name"],
-                               protein_file=protocol["prepared protein file"],
-                               protein_path=protocol["protein directory"],
-                               water_model=protocol["water model"],
-                               ligand_ff=protocol["ligand forcefield"],
-                               protein_ff=protocol["protein forcefield"],
-                               ligand_charge=protocol["ligand charge"],
-                               engine=protocol["engine"],
-                               sampling_time=protocol["sampling time"],
-                               box_edges=protocol["box edges"],
-                               box_shape=protocol["box shape"],
-                               min_steps=protocol["minimisation steps"],
-                               short_nvt=protocol["short nvt"],
-                               nvt=protocol["nvt"],
-                               npt=protocol["npt"],
-                               min_dt=protocol["minimisation stepsize"],
-                               min_tol=protocol["minimisation tolerance"],
-                               repeats=protocol["repeats"],
-                               temperature=protocol["temperature"],
-                               pressure=protocol["pressure"])
+                           equilibration_path=protocol["equilibration directory"],
+                           outputs=protocol["outputs"],
+                           workdir=protocol["project directory"],
+                           log_directory=protocol["log directory"],
+                           afe_input_path=protocol["afe input directory"],
+                           ligand_path=protocol["ligand directory"],
+                           group_name=protocol["group name"],
+                           protein_file=protocol["prepared protein file"],
+                           protein_path=protocol["protein directory"],
+                           water_model=protocol["water model"],
+                           ligand_ff=protocol["ligand forcefield"],
+                           protein_ff=protocol["protein forcefield"],
+                           ligand_charge=protocol["ligand charge"],
+                           engine=protocol["engine"],
+                           sampling_time=protocol["sampling time"],
+                           box_edges=protocol["box edges"],
+                           box_shape=protocol["box shape"],
+                           min_steps=protocol["minimisation steps"],
+                           short_nvt=protocol["short nvt"],
+                           nvt=protocol["nvt"],
+                           npt=protocol["npt"],
+                           min_dt=protocol["minimisation stepsize"],
+                           min_tol=protocol["minimisation tolerance"],
+                           repeats=protocol["repeats"],
+                           temperature=protocol["temperature"],
+                           pressure=protocol["pressure"])
           
     ligand_a, ligand_b = functions.separate(arguments.transformation)
     
     equilibrated_network = meze.get_equilibrated(ligand_a, ligand_b)
 
-    equilibrated_network.prepare_afe(ligand_a, ligand_b, extra_edges=arguments.extra_transformations_file) 
+    equilibrated_network.prepare_afe(ligand_a, ligand_b, extra_edges=arguments.extra_transformations_file, only_save_end_states=arguments.only_save_end_states) 
 
 if __name__ == "__main__":
     main()
