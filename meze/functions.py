@@ -189,6 +189,24 @@ def get_filename(path):
     return file_name.replace("." + extension, "")
 
 
+def get_file_extension(path):
+    """
+    Read path to file and return only its extension
+
+    Parameters:
+    -----------
+    path: 
+        full path to file
+
+    Return:
+    -------
+    str
+        file extension
+    """
+    file_name = path.split("/")[-1]
+    return file_name.split(".")[-1]
+
+
 def tuple_to_str(object):
     """
     Convert a tuple to a string for writing to file
@@ -372,7 +390,8 @@ def check_nan(array):
     nan_indices = []
     if np.isnan(array).any():
         nan_indices = np.argwhere(np.isnan(array))
-
+    else: 
+        nan_indices = np.array([])
     return nan_indices
 
 
@@ -448,3 +467,21 @@ def standard_deviation(array):
     if not isinstance(array, np.ndarray):
         array = np.array(array)
     return np.nanstd(array, axis=1)
+
+
+def reset_index(dataframe):
+    """
+    Over-write pandas reset index to automatically also drop the superfluous index column
+
+    Parameters:
+    -----------
+    dataframe: pd.DataFrame 
+        
+
+    Return:
+    -------
+    pd.DataFrame
+        
+    """
+    return dataframe.copy().reset_index().drop(columns="index")
+

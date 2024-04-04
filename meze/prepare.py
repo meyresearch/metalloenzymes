@@ -173,6 +173,21 @@ def main():
                         type=int,
                         default=17) 
     
+    parser.add_argument("-sm",
+                        "--solvation-method",
+                        dest="solvation_method",
+                        help="MD engine used for solvation; default is BioSimSpace (GROMACS)",
+                        choices=["amber", "gromacs"],
+                        default="gromacs",
+                        type=str)
+    
+    parser.add_argument("-sc",
+                        "--solvent-closeness",
+                        dest="solvent_closeness",
+                        help="control how close, in \AA, solvent atoms can come to solute atoms, default 1.0",
+                        type=float, 
+                        default=1.0)
+
     parser.add_argument("-et",
                         "--extra-transformations",
                         dest="extra_transformations_file",
@@ -193,6 +208,7 @@ def main():
                         default="rf",
                         choices=["pme", "rf"],
                         type=str)
+
     
 
     arguments = parser.parse_args()
@@ -229,6 +245,7 @@ def main():
                                 n_normal=arguments.lambdas,
                                 n_difficult=arguments.n_difficult,
                                 cutoff_scheme=arguments.cutoff_scheme)
+
         
         elif not metal:
 

@@ -219,7 +219,7 @@ class Sofra(object):
                  group_name=None, protein_path=os.getcwd()+"/inputs/protein/", water_model="tip3p", protein_ff="ff14SB", 
                  engine="SOMD", sampling_time=4, box_edges=20, box_shape="cubic", min_steps=5000, short_nvt=5, nvt=50, npt=200, 
                  min_dt=0.01, min_tol=1000, repeats=3, temperature=300, pressure=1, threshold=0.4, n_normal=11, n_difficult=17,
-                 cutoff_scheme="rf"):
+                 cutoff_scheme="rf", solvation_method="gromacs", solvent_closeness=1.0):
         """
         Class constructor
         """
@@ -249,14 +249,18 @@ class Sofra(object):
             self.output_directories = self.create_output_directories()
             self.plots = self.create_directory(f"{self.outputs}/plots/")
 
+        self.solvation_method = solvation_method
+        self.solvent_closeness = functions.check_positive(solvent_closeness)
+
         self.ligand_path = functions.path_exists(ligand_path)
         self.ligand_forcefield = ligand_ff
-        self.water_model = water_model
+        self.water_model = water_model.lower()
         self.input_files = self.get_files()
         self.ligand_charge = check_charge(ligand_charge)
         self.ligands = [Ligand.Ligand(file) for file in self.input_files]
         self.ligand_molecules = [ligand.get_ligand() for ligand in self.ligands]
         self.names = [ligand.get_name() for ligand in self.ligands]
+
 
         self.protein_forcefield = protein_ff
 
@@ -831,6 +835,8 @@ class Sofra(object):
                     f"water model = {self.water_model}", 
                     f"box edges = {self.box_edges}", # in angstrom 
                     f"box shape = {self.box_shape}", 
+                    f"solvation method = {self.solvation_method}",
+                    f"solvent closeness = {self.solvent_closeness}",
                     f"minimisation steps = {self.min_steps}",
                     f"minimisation stepsize = {self.min_dt}",
                     f"minimisation tolerance = {self.min_tol}",
