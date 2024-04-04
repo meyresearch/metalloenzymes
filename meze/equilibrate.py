@@ -11,14 +11,20 @@ import meze
 
 
 class coldMeze(meze.Meze):
-    def __init__(self, group_name, ligand_name, equilibration_directory, afe_input_directory, outputs, input_protein_file, protein_directory, ligand_directory, min_steps, short_nvt, nvt, npt, min_dt, min_tol, temperature, pressure, short_timestep=0.5, is_metal=True, prepared=True, ):
+
+    def __init__(self, group_name, ligand_name, equilibration_directory, input_protein_file, protein_directory, ligand_directory, 
+                 min_steps, short_nvt, nvt, npt, min_dt, min_tol, temperature, pressure, short_timestep=0.5, 
+                 is_metal=True, prepared=True, 
+                 force_constant_0=100, restraint_weight=10, restart_write_steps=100, coordinate_write_steps=500):
+
         
         self.is_metal = is_metal
         self.prepared = prepared
         if self.is_metal:
             super().__init__(protein_file=input_protein_file, prepared=prepared, group_name=group_name, 
                              equilibration_path=equilibration_directory, afe_input_path=afe_input_directory, outputs=outputs,
-                             protein_path=protein_directory, ligand_path=ligand_directory)
+                             protein_path=protein_directory, ligand_path=ligand_directory, force_constant_0=force_constant_0)
+
         #TODO what happens with init if not metal?
         self.ligand_name = ligand_name
         # self.equilibration_directory = equilibration_directory
@@ -33,7 +39,10 @@ class coldMeze(meze.Meze):
         self.min_tol = min_tol
         self.temperature = functions.convert_to_units(temperature, KELVIN)
         self.pressure = functions.convert_to_units(pressure, ATM)
-        
+        self.restraint_weight = functions.check_float(restraint_weight)
+        self.restart_write_steps = functions.check_positive(functions.check_int(restart_write_steps))
+        self.coordinate_write_steps = functions.check_positive(functions.check_int(coordinate_write_steps))
+
 
     def run(self, system, protocol, name, working_directory, configuration={}, checkpoint=None, restraints_file=None):
         """
@@ -51,7 +60,7 @@ class coldMeze(meze.Meze):
         working_directory: str
             save output into this directory
         configuration: dict 
-            extra options to pass to the process
+            extra options to pass to the process, overwrites defaults
         checkpoint: str
             path to a checkpoint file from a previous run; corresponds to the -t flag for gmx grompp
 
@@ -82,6 +91,15 @@ class coldMeze(meze.Meze):
         else:
             process = bss.Process.Gromacs(system, protocol, name=name, work_dir=working_directory, extra_options=configuration, checkpoint_file=checkpoint)
             process.setArg("-ntmpi", 1)
+        
+        if "amber" in process.exe() and checkpoint:            
+            process.deleteArg("-r")
+            process.deleteArg("-ref")
+            process.addArgs({"-r": checkpoint})
+            process.addArgs({"-ref": checkpoint})
+            for key, value in process.getArgs().items():
+                print(f"{key}: {value}")
+
         process.start()
         process.wait()
         if process.isError():
@@ -92,7 +110,7 @@ class coldMeze(meze.Meze):
         return system
 
 
-    def minimise(self, system, working_directory, configuration={}, restraints_file=None):
+    def minimise(self, system, working_directory, process_name="min", configuration={}, restraints_file=None, position_restraints=None, checkpoint=None):
         """
         Minimise the system using Gromacs
 
@@ -109,12 +127,14 @@ class coldMeze(meze.Meze):
         minimsed_system: bss.System
             minimised system
         """
-        protocol = bss.Protocol.Minimisation(steps=self.min_steps)
-        minimised_system = self.run(system, protocol, "min", working_directory, configuration=configuration, restraints_file=restraints_file)
+
+        protocol = bss.Protocol.Minimisation(steps=self.min_steps, restraint=position_restraints, force_constant=self.restraint_weight)
+
+        minimised_system = self.run(system, protocol, process_name, working_directory, configuration=configuration, restraints_file=restraints_file, checkpoint=checkpoint)
         return minimised_system   
 
 
-    def heat(self, system, process_name, working_directory, time, timestep=2, start_t=300, end_t=300, temperature=None, pressure=None, configuration={}, restraints=None, checkpoint=None, restraints_file=None):
+    def heat(self, system, process_name, working_directory, time, timestep=2, start_t=300, end_t=300, temperature=None, pressure=None, configuration={}, position_restraints=None, checkpoint=None, restraints_file=None):
         """
         Run NVT or NPT equilibration
 
@@ -142,7 +162,10 @@ class coldMeze(meze.Meze):
                                               temperature_end=end_t,
                                               temperature=temperature,
                                               pressure=pressure,
-                                              restraint=restraints)
+                                              restraint=position_restraints,
+                                              force_constant=self.restraint_weight,
+                                              restart_interval=self.restart_write_steps,
+                                              report_interval=self.coordinate_write_steps)
         equilibrated_system = self.run(system, protocol, process_name, working_directory, configuration, checkpoint, restraints_file) 
         return equilibrated_system
 
@@ -178,7 +201,7 @@ class coldMeze(meze.Meze):
                                    time=self.short_nvt,
                                    start_t=start_temp, end_t=self.temperature,
                                    timestep=self.short_timestep,
-                                   restraints="all")
+                                   position_restraints="all")
         nvt = self.heat(system=restrained_nvt,
                         process_name="nvt",
                         working_directory=nvt_directory,
@@ -191,7 +214,7 @@ class coldMeze(meze.Meze):
                                    time=self.npt,
                                    pressure=self.pressure,
                                    temperature=self.temperature,
-                                   restraints="heavy",
+                                   position_restraints="heavy",
                                    checkpoint=nvt_directory + "/nvt.cpt")
         equilibrated_molecule = self.heat(system=restrained_npt,
                                           process_name="npt",
@@ -245,7 +268,7 @@ class coldMeze(meze.Meze):
                                    process_name="r_nvt",
                                    time=self.short_nvt,
                                    start_t=start_temp, end_t=self.temperature,
-                                   restraints="all",
+                                   position_restraints="all",
                                    timestep=self.short_timestep, 
                                    restraints_file=restraints_file,
                                    configuration=configuration) 
@@ -254,7 +277,7 @@ class coldMeze(meze.Meze):
                                             working_directory=bb_r_nvt_dir,
                                             time=self.nvt,
                                             temperature=self.temperature,
-                                            restraints="backbone",
+                                            position_restraints="backbone",
                                             checkpoint=r_nvt_dir + "/r_nvt.cpt",
                                             restraints_file=restraints_file,
                                             configuration=configuration)
@@ -272,7 +295,7 @@ class coldMeze(meze.Meze):
                                    time=self.npt,
                                    pressure=self.pressure,
                                    temperature=self.temperature,
-                                   restraints="heavy",
+                                   position_restraints="heavy",
                                    checkpoint=nvt_dir + "/nvt.cpt", 
                                    restraints_file=restraints_file,
                                    configuration=configuration)
@@ -288,6 +311,136 @@ class coldMeze(meze.Meze):
         bound_savename = npt_dir + f"/bound_{self.ligand_name}"
         bss.IO.saveMolecules(filebase=bound_savename, system=equilibrated_protein, fileformat=["PRM7", "RST7"])     
     
+
+    def heat_md(self):
+        # heat a bound system for md simulation
+        directory = functions.mkdir(self.equilibration_directory+f"/{self.ligand_name}/")
+        filename = f"bound_{self.ligand_name}_solvated"
+        files = functions.get_files(f"{self.protein_path}/{filename}" + ".*")
+        solvated_system = bss.IO.readMolecules(files)
+        
+        self.set_universe(self.protein_path + "/" + filename)
+        
+        start_temp = functions.convert_to_units(0, KELVIN)
+        
+        directories = lambda step: functions.mkdir(directory+step)
+
+        min_dir = directories("01_min")
+        heat_02_dir = directories("02_heat")
+        relax_03_dir = directories("03_relax")
+        lower_04_dir = directories("04_lower")
+        bb_min_05_dir = directories("05_bb_min")
+        relax_06_dir = directories("06_relax")
+        reduce_07_dir = directories("07_reduce")
+        continue_08_dir = directories("08_continue")
+        relax_09_dir = directories("09_relax")   
+
+        if self.is_metal:
+            configuration = {"nmropt": 1}
+            restraints_file = self.write_restraints_file_0(workdir=directory)
+
+        else:
+            configuration = {"emstep": self.min_dt, "emtol": self.min_tol}
+
+        minimised_system = self.minimise(system=solvated_system, 
+                                         process_name="01_min", 
+                                         working_directory=min_dir, 
+                                         position_restraints="heavy", 
+                                         configuration=configuration, 
+                                         restraints_file=restraints_file)
+        
+        heat_02_system = self.heat(system=minimised_system,
+                                   working_directory=heat_02_dir,
+                                   process_name="02_heat",
+                                   time=10*PICOSECOND,
+                                   start_t=start_temp, end_t=self.temperature,
+                                   position_restraints="heavy",
+                                   timestep=self.short_timestep,
+                                   restraints_file=restraints_file,
+                                   configuration=configuration) 
+        
+        relax_03_system = self.heat(system=heat_02_system,
+                                    working_directory=relax_03_dir,
+                                    process_name="03_relax",
+                                    time=self.nvt,
+                                    temperature=self.temperature,
+                                    position_restraints="heavy",
+                                    timestep=self.short_timestep,
+                                    restraints_file=restraints_file,
+                                    configuration=configuration,
+                                    checkpoint=heat_02_dir + "/02_heat.rst7")
+        
+        self.restraint_weight = self.restraint_weight / 10
+
+        lower_04_system = self.heat(system=relax_03_system,
+                                    working_directory=lower_04_dir,
+                                    process_name="04_lower",
+                                    time=self.nvt,
+                                    temperature=self.temperature,
+                                    position_restraints="heavy",
+                                    timestep=self.short_timestep,
+                                    restraints_file=restraints_file,
+                                    configuration=configuration,
+                                    checkpoint=relax_03_dir + "/03_relax.rst7")
+        
+        bb_min_05_system = self.minimise(system=lower_04_system,
+                                         working_directory=bb_min_05_dir,
+                                         process_name="05_bb_min",
+                                         configuration=configuration,
+                                         restraints_file=restraints_file,
+                                         position_restraints="backbone",
+                                         checkpoint=lower_04_dir + "/04_lower.rst7")
+        
+        relax_06_system = self.heat(system=bb_min_05_system,
+                                    working_directory=relax_06_dir,
+                                    process_name="06_relax",
+                                    time=self.nvt,
+                                    temperature=self.temperature,
+                                    position_restraints="backbone",
+                                    timestep=self.short_timestep,
+                                    restraints_file=restraints_file,
+                                    configuration=configuration,
+                                    checkpoint=bb_min_05_dir + "05_bb_min.rst7")
+        
+        self.restraint_weight = self.restraint_weight / 10
+
+        reduce_07_system = self.heat(system=relax_06_system,
+                                     working_directory=reduce_07_dir,
+                                     process_name="07_reduce",
+                                     time=self.nvt,
+                                     temperature=self.temperature,
+                                     position_restraints="backbone",
+                                     timestep=self.short_timestep,
+                                     restraints_file=restraints_file,
+                                     configuration=configuration,
+                                     checkpoint=relax_06_dir + "06_relax.rst7")
+        
+        self.restraint_weight = self.restraint_weight / 10
+
+        continue_08_system = self.heat(system=reduce_07_system,
+                                       working_directory=continue_08_dir,
+                                       process_name="08_continue",
+                                       time=self.nvt,
+                                       temperature=self.temperature,
+                                       position_restraints="backbone",
+                                       timestep=self.short_timestep,
+                                       restraints_file=restraints_file,
+                                       configuration=configuration,
+                                       checkpoint=reduce_07_dir + "07_reduce.rst7")
+        
+        relax_09_system = self.heat(system=continue_08_system,
+                                    working_directory=relax_09_dir,
+                                    process_name="09_relax",
+                                    time=self.nvt,
+                                    temperature=self.temperature,
+                                    timestep=self.short_timestep,
+                                    restraints_file=restraints_file,
+                                    configuration=configuration,
+                                    checkpoint=continue_08_dir + "08_continue.rst7")
+        
+        savename = relax_09_dir + f"bound_{self.ligand_name}"
+        bss.IO.saveMolecules(filebase=savename, system=relax_09_system, fileformat=["PRM7", "RST7"])
+        
 
 def main():
 
