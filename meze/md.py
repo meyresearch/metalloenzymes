@@ -7,8 +7,6 @@ import BioSimSpace as bss
 import os
 
 
-
-
 def main():
     
     parser = argparse.ArgumentParser(description="MEZE: MetalloEnZymE FF-builder for alchemistry")
