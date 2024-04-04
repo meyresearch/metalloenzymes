@@ -2,9 +2,7 @@
 
 #SBATCH -o PATH_TO_LOGS/meze_%a.slurm.out
 #SBATCH -e PATH_TO_LOGS/meze_%a.slurm.err
-#SBATCH -n N_TASKS
-#SBATCH --gres=gpu:N_GPUS
-#SBATCH --cpus-per-gpu=N_CPUS
+
 
 
 export MEZEHOME=PATH_TO_MEZE

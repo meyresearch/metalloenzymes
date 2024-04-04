@@ -87,10 +87,45 @@ class coldMeze(meze.Meze):
         process.start()
         process.wait()
         if process.isError():
-            print(process.stdout())
-            print(process.stderr())
-            raise bss._Exceptions.ThirdPartyError("The process exited with an error!")
-        system = process.getSystem()
+
+            amberhome = os.environ["AMBERHOME"]
+            try:
+                sander_mpi = functions.file_exists(f"{amberhome}/bin/sander.MPI")
+
+                readme = working_directory + "/" + "README.txt"
+                with open(readme, "r") as file:
+                    all_lines = file.readlines()
+                    for line in all_lines:
+                        if "#" not in line:
+                            cuda_command = line
+                amber_command = " ".join(cuda_command.split()[1:])
+                sander_run_command = sander_mpi + " " + amber_command
+                code_dir = os.getcwd()
+                os.chdir(working_directory) 
+                os.system(f"mpirun -np 10 {sander_run_command}")
+                os.chdir(code_dir)
+                system = bss.IO.readMolecules([working_directory + "/" + name + ".prm7", working_directory + "/" + name + ".rst7"])
+
+            except argparse.ArgumentTypeError:
+
+                print("No sander.MPI detected, running with regular sander.")
+                sander_mpi = functions.file_exists(f"{amberhome}/bin/sander")
+                readme = working_directory + "README.txt"
+                with open(readme, "r") as file:
+                    all_lines = file.readlines()
+                    for line in all_lines:
+                        if "#" not in line:
+                            cuda_command = line
+                amber_command = " ".join(cuda_command.split()[1:])
+                sander_run_command = sander_mpi + " " + amber_command
+                code_dir = os.getcwd()
+                os.chdir(working_directory) 
+                os.system(sander_run_command)
+                os.chdir(code_dir)
+                system = bss.IO.readMolecules([working_directory + "/" + name + ".prm7", working_directory + "/" + name + ".rst7"])                    
+
+        else:
+            system = process.getSystem()
         return system
 
 

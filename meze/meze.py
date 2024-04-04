@@ -256,7 +256,7 @@ class Meze(sofra.Sofra):
         return final_system
 
 
-    def prepare_afe(self, ligand_a_name, ligand_b_name, extra_edges=None):
+    def prepare_afe(self, ligand_a_name, ligand_b_name, extra_edges=None, only_save_end_states=False):
         """
         Inherited method from sofra.Network; adds restraints to somd config files
 
@@ -271,18 +271,15 @@ class Meze(sofra.Sofra):
         -------
         """
         
-        super().prepare_afe(ligand_a_name, ligand_b_name, extra_edges=extra_edges)
+        super().prepare_afe(ligand_a_name, ligand_b_name, extra_edges=extra_edges, only_save_end_states=only_save_end_states)
         first_run_directory = self.output_directories[0]
         transformation_directory = first_run_directory + f"/{ligand_a_name}~{ligand_b_name}/"
         bound_directory = transformation_directory + "/bound/" # unbound doesn't have restraints
         lambda_directories = functions.get_files(bound_directory + "lambda_*/")
-        minimisation_directories = functions.get_files(bound_directory + "minimisation/*/")
-        # lambda_config_path = self.outputs + f"*/{ligand_a_name}~{ligand_b_name}/*/*/*.cfg"
-        # lambda_minimisation_config_path =  self.outputs + f"*/{ligand_a_name}~{ligand_b_name}/*/*/*/*.cfg"
+
         for i in range(len(lambda_directories)):
             self.add_somd_restraints(lambda_directories[i])
-            self.add_somd_restraints(minimisation_directories[i])   
-            
+
         _ = [os.system(f"cp -r {transformation_directory.rstrip('/')} {self.output_directories[i]}") for i in range(1, self.n_repeats)]
 
 
