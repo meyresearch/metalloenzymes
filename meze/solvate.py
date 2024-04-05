@@ -192,8 +192,6 @@ def solvate_bound(network, ligand_name):
             
     return Ligand.Ligand(file=solvated_files, parameterised=True)
 
-    
-
 
 def create_box(network, molecule):
     """
@@ -251,6 +249,7 @@ def main():
                           afe_input_path=protocol["afe input directory"],
                           equilibration_path=protocol["equilibration directory"],
                           outputs=protocol["outputs"],
+                          log_directory=protocol["log directory"],
                           ligand_path=protocol["ligand directory"],
                           group_name=protocol["group name"],
                           protein_file=protocol["prepared protein file"],

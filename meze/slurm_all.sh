@@ -21,7 +21,7 @@ heating_job_id=$(sbatch --dependency=afterok:${solvation_job_id} --parsable --ar
 echo "Heating meze with slurm job $heating_job_id"
 
 meze_job_id=$(sbatch --dependency=afterok:${heating_job_id} --parsable --array=0-$((${#transformations_array[@]}-1)) $AFE_INPUT_DIR/04_meze.sh)
-echo "Preparing AFE with slurm job $prepafe_job_id"
+echo "Preparing AFE with slurm job $meze_job_id"
 
 for i in "${!transformations_array[@]}"
 do

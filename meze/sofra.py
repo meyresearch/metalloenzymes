@@ -477,7 +477,7 @@ class Sofra(object):
         return system_1
 
 
-    def prepare_afe(self, ligand_a_name, ligand_b_name, extra_edges=None):
+    def prepare_afe(self, ligand_a_name, ligand_b_name, extra_edges=None, only_save_end_states=False):
         """
         Prepare minimisation and free energy lambda windows directory tree
 
@@ -496,6 +496,7 @@ class Sofra(object):
         dataframe = self.transformations.copy()
         condition_1 = dataframe["ligand_a"] == ligand_a_name
         condition_2 = dataframe["ligand_b"] == ligand_b_name
+
         row_index = dataframe[condition_1 & condition_2].index.tolist()[0]
 
         lambda_strings = dataframe.iloc[row_index]["lambdas"].split(" ")
@@ -513,8 +514,8 @@ class Sofra(object):
         unbound_directory = transformation_directory + "/unbound/"
         bound_directory = transformation_directory + "/bound/"
         
-        restart_interval = 200 #TODO add to config? or add function
-        report_interval = 200 #TODO add to config? or add function
+        restart_interval = 500 #TODO add to config? or add function
+        report_interval = 500 #TODO add to config? or add function
 
         free_energy_protocol = bss.Protocol.FreeEnergy(lam_vals=lambda_values, runtime=self.md_time, restart_interval=restart_interval, report_interval=report_interval)
 
@@ -522,19 +523,17 @@ class Sofra(object):
         n_moves = self.set_n_moves(number_of_cycles=n_cycles) # n_cycles * n_moves * timestep = runtime in ps
 
         n_frames = 250 #TODO add to config or add function
-        buffered_coordinates_frequency = max(int(n_moves / n_frames), 2000) # https://github.com/OpenBioSim/sire/issues/113#issuecomment-1834317501
+        buffered_coordinates_frequency = max(int(n_moves / n_frames), 10000) # https://github.com/OpenBioSim/sire/issues/113#issuecomment-1834317501
 
         cycles_per_saved_frame = max(1, restart_interval // n_moves) #Credit: Anna Herz https://github.com/michellab/BioSimSpace/blob/feature-amber-fep/python/BioSimSpace/_Config/_somd.py 
 
-        
-
         config_options = {"ncycles": n_cycles, 
                           "nmoves": n_moves, 
-                          "buffered coordinates frequency": buffered_coordinates_frequency, #CHANGE
+                          "buffered coordinates frequency": buffered_coordinates_frequency, 
                           "ncycles_per_snap": cycles_per_saved_frame,
-                        #   "minimal coordinate saving": True,
+                          "minimal coordinate saving": only_save_end_states,
                         #   "cutoff distance": "8 angstrom", # Make editable? 
-                          "minimise": False}
+                          "minimise": True}
 
         if self.cutoff_scheme == "pme":
             config_options["cutoff type"] = "PME"
@@ -547,20 +546,7 @@ class Sofra(object):
         fix_afe_configurations(unbound_configurations)
         fix_afe_configurations(bound_configurations)
 
-        # For SOMD only: create a minimisation directory manually and copy the AFE MD configuration files to the minimisation directory for the first repeat
-        unbound_lambda_minimisation_directory = functions.mkdir(unbound_directory + "/minimisation/")
-        bound_lambda_minimisation_directory = functions.mkdir(bound_directory + "/minimisation/")
-        os.system(f"cp -r  {unbound_directory}/lambda_* {unbound_lambda_minimisation_directory}")
-        os.system(f"cp -r {bound_directory}/lambda_* {bound_lambda_minimisation_directory}")
-
-        # For SOMD only: Open the AFE MD configuration files and convert to minimisation configurations for the first repeat
-        unbound_configurations = functions.get_files(unbound_lambda_minimisation_directory + "/*/*.cfg")
-        bound_configurations = functions.get_files(bound_lambda_minimisation_directory + "/*/*.cfg")
-        create_minimisation_configurations(unbound_configurations)
-        create_minimisation_configurations(bound_configurations)
-        print("\n")
-
-        # Copy lambda transformation directories (including minimisation) from first repeat directory to the rest of the repeat directories, e.g. SOMD_2, SOMD_3
+        # Copy lambda transformation directories from first repeat directory to the rest of the repeat directories, e.g. SOMD_2, SOMD_3
         _ = [os.system(f"cp -r {transformation_directory.rstrip('/')} {self.output_directories[i]}") for i in range(1, self.n_repeats)]
         
 
