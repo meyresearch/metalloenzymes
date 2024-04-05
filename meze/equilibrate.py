@@ -12,7 +12,7 @@ import meze
 
 class coldMeze(meze.Meze):
 
-    def __init__(self, group_name, ligand_name, equilibration_directory, input_protein_file, protein_directory, ligand_directory, 
+    def __init__(self, group_name, ligand_name, equilibration_directory, input_protein_file, afe_input_directory, outputs, protein_directory, ligand_directory, 
                  min_steps, short_nvt, nvt, npt, min_dt, min_tol, temperature, pressure, short_timestep=0.5, 
                  is_metal=True, prepared=True, 
                  force_constant_0=100, restraint_weight=10, restart_write_steps=100, coordinate_write_steps=500):
@@ -92,13 +92,13 @@ class coldMeze(meze.Meze):
             process = bss.Process.Gromacs(system, protocol, name=name, work_dir=working_directory, extra_options=configuration, checkpoint_file=checkpoint)
             process.setArg("-ntmpi", 1)
         
-        if "amber" in process.exe() and checkpoint:            
-            process.deleteArg("-r")
-            process.deleteArg("-ref")
-            process.addArgs({"-r": checkpoint})
-            process.addArgs({"-ref": checkpoint})
-            for key, value in process.getArgs().items():
-                print(f"{key}: {value}")
+        # if "amber" in process.exe() and checkpoint:            
+        #     process.deleteArg("-r")
+        #     process.deleteArg("-ref")
+        #     process.addArgs({"-r": checkpoint})
+        #     process.addArgs({"-ref": checkpoint})
+        #     for key, value in process.getArgs().items():
+        #         print(f"{key}: {value}")
 
         process.start()
         process.wait()

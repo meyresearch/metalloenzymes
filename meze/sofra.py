@@ -497,7 +497,6 @@ class Sofra(object):
         dataframe = self.transformations.copy()
         condition_1 = dataframe["ligand_a"] == ligand_a_name
         condition_2 = dataframe["ligand_b"] == ligand_b_name
-        print(dataframe)
         row_index = dataframe[condition_1 & condition_2].index.tolist()[0]
 
         lambda_strings = dataframe.iloc[row_index]["lambdas"].split(" ")
