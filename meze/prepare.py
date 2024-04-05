@@ -244,7 +244,9 @@ def main():
                                 repeats=arguments.repeats,
                                 n_normal=arguments.lambdas,
                                 n_difficult=arguments.n_difficult,
-                                cutoff_scheme=arguments.cutoff_scheme)
+                                cutoff_scheme=arguments.cutoff_scheme,
+                                solvation_method=arguments.solvation_method,
+                                solvent_closeness=arguments.solvent_closeness)
 
         
         elif not metal:
@@ -270,7 +272,9 @@ def main():
                                     min_tol=arguments.emtol,
                                     repeats=arguments.repeats,
                                     n_normal=arguments.lambdas,
-                                    n_difficult=arguments.n_difficult)
+                                    n_difficult=arguments.n_difficult,
+                                    solvation_method=arguments.solvation_method,
+                                    solvent_closeness=arguments.solvent_closeness)
 
         prepared_network = network.prepare_network()
 

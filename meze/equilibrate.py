@@ -12,18 +12,17 @@ import meze
 
 class coldMeze(meze.Meze):
 
-    def __init__(self, group_name, ligand_name, equilibration_directory, input_protein_file, afe_input_directory, outputs, protein_directory, ligand_directory, 
-                 min_steps, short_nvt, nvt, npt, min_dt, min_tol, temperature, pressure, short_timestep=0.5, 
-                 is_metal=True, prepared=True, 
-                 force_constant_0=100, restraint_weight=10, restart_write_steps=100, coordinate_write_steps=500):
-
-        
+    def __init__(self, group_name, ligand_name, outputs, input_protein_file, 
+                 protein_directory, ligand_directory, log_directory, equilibration_directory, afe_input_directory, 
+                 min_steps, short_nvt, nvt, npt, min_dt, min_tol, temperature, pressure, short_timestep=0.5, is_metal=True, prepared=True, 
+                 force_constant_0=100, restraint_weight=10, restart_write_steps=100, coordinate_write_steps=500)
         self.is_metal = is_metal
         self.prepared = prepared
         if self.is_metal:
             super().__init__(protein_file=input_protein_file, prepared=prepared, group_name=group_name, 
                              equilibration_path=equilibration_directory, afe_input_path=afe_input_directory, outputs=outputs,
                              protein_path=protein_directory, ligand_path=ligand_directory, force_constant_0=force_constant_0)
+
 
         #TODO what happens with init if not metal?
         self.ligand_name = ligand_name
@@ -103,10 +102,45 @@ class coldMeze(meze.Meze):
         process.start()
         process.wait()
         if process.isError():
-            print(process.stdout())
-            print(process.stderr())
-            raise bss._Exceptions.ThirdPartyError("The process exited with an error!")
-        system = process.getSystem()
+
+            amberhome = os.environ["AMBERHOME"]
+            try:
+                sander_mpi = functions.file_exists(f"{amberhome}/bin/sander.MPI")
+
+                readme = working_directory + "/" + "README.txt"
+                with open(readme, "r") as file:
+                    all_lines = file.readlines()
+                    for line in all_lines:
+                        if "#" not in line:
+                            cuda_command = line
+                amber_command = " ".join(cuda_command.split()[1:])
+                sander_run_command = sander_mpi + " " + amber_command
+                code_dir = os.getcwd()
+                os.chdir(working_directory) 
+                os.system(f"mpirun -np 10 {sander_run_command}")
+                os.chdir(code_dir)
+                system = bss.IO.readMolecules([working_directory + "/" + name + ".prm7", working_directory + "/" + name + ".rst7"])
+
+            except argparse.ArgumentTypeError:
+
+                print("No sander.MPI detected, running with regular sander.")
+                sander_mpi = functions.file_exists(f"{amberhome}/bin/sander")
+                readme = working_directory + "README.txt"
+                with open(readme, "r") as file:
+                    all_lines = file.readlines()
+                    for line in all_lines:
+                        if "#" not in line:
+                            cuda_command = line
+                amber_command = " ".join(cuda_command.split()[1:])
+                sander_run_command = sander_mpi + " " + amber_command
+                code_dir = os.getcwd()
+                os.chdir(working_directory) 
+                os.system(sander_run_command)
+                os.chdir(code_dir)
+                system = bss.IO.readMolecules([working_directory + "/" + name + ".prm7", working_directory + "/" + name + ".rst7"])                    
+
+        else:
+            system = process.getSystem()
         return system
 
 
@@ -469,6 +503,7 @@ def main():
                          ligand_name=arguments.ligand_name,
                          afe_input_directory=protocol["afe input directory"],
                          outputs=protocol["outputs"],
+                         log_directory=protocol["log directory"],
                          equilibration_directory=protocol["equilibration directory"],
                          input_protein_file=protocol["protein input file"],
                          protein_directory=protocol["protein directory"],
