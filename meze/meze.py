@@ -401,7 +401,7 @@ class Meze(sofra.Sofra):
         for i in range(len(self.metal_atomids)):
             metal_id = self.metal_atomids[i]
             for ligating_atom in metal_ligands[metal_id]:
-                if ligating_atom in protein or ligating_atom.resname == "WAT" and ligating_atom.resname != "MOL": # don't restrain ligand
+                if ligating_atom in protein or ligating_atom.resname != "WAT" and ligating_atom.resname != "MOL": # don't restrain ligand or water!
                     key = (metal_id, ligating_atom.id)
                     atom_group_1 = self.universe.select_atoms(f"resid {self.metal_resids[i]}")
                     atom_group_2 = self.universe.select_atoms(f"resid {ligating_atom.resid} and name {ligating_atom.name}")
