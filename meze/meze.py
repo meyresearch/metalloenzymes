@@ -88,16 +88,16 @@ class Meze(sofra.Sofra):
                  group_name=None, protein_path=os.getcwd()+"/inputs/protein/", water_model="tip3p", protein_ff="ff14SB", 
                  engine="SOMD", sampling_time=4, box_edges=20, box_shape="cubic", min_steps=5000, short_nvt=50, nvt=1, npt=200, 
                  min_dt=0.01, min_tol=1000, repeats=3, temperature=300, pressure=1, threshold=0.4, n_normal=11, n_difficult=17,
-                 cutoff_scheme="rf", solvation_method="gromacs", solvent_closeness=1.0):
+                 cutoff_scheme="rf", solvation_method="gromacs", solvent_closeness=1.0, only_save_end_states=False):
         
         self.protein_file = protein_file
 
-        super().__init__(prepared=prepared, workdir=workdir, ligand_path=ligand_path, group_name=group_name, protein_file=protein_file, protein_path=protein_path, log_directory=logs,
+        super().__init__(prepared=prepared, workdir=workdir, ligand_path=ligand_path, group_name=group_name, protein_file=protein_file, protein_path=protein_path, 
                          water_model=water_model, ligand_ff=ligand_ff, protein_ff=protein_ff, ligand_charge=ligand_charge, 
                          afe_input_path=afe_input_path, equilibration_path=equilibration_path, outputs=outputs, log_directory=log_directory,
                          engine=engine, sampling_time=sampling_time, box_edges=box_edges, box_shape=box_shape, min_steps=min_steps, short_nvt=short_nvt, nvt=nvt, npt=npt, 
                          min_dt=min_dt, min_tol=min_tol, repeats=repeats, temperature=temperature, pressure=pressure, threshold=threshold, n_normal=n_normal, n_difficult=n_difficult,
-                         cutoff_scheme=cutoff_scheme, solvation_method=solvation_method, solvent_closeness=solvent_closeness)
+                         cutoff_scheme=cutoff_scheme, solvation_method=solvation_method, solvent_closeness=solvent_closeness, only_save_end_states=only_save_end_states)
         
         self.universe = mda.Universe(self.protein_file, format="pdb")
         self.force_constant_0 = functions.check_float(force_constant_0)
@@ -405,7 +405,7 @@ class Meze(sofra.Sofra):
         for i in range(len(self.metal_atomids)):
             metal_id = self.metal_atomids[i]
             for ligating_atom in metal_ligands[metal_id]:
-                if ligating_atom in protein or ligating_atom.resname == "WAT" and ligating_atom.resname != "MOL": # don't restrain ligand
+                if ligating_atom in protein or ligating_atom.resname != "WAT" and ligating_atom.resname != "MOL": # don't restrain ligand or water!
                     key = (metal_id, ligating_atom.id)
                     atom_group_1 = self.universe.select_atoms(f"resid {self.metal_resids[i]}")
                     atom_group_2 = self.universe.select_atoms(f"resid {ligating_atom.resid} and name {ligating_atom.name}")
@@ -520,11 +520,7 @@ def main():
                         default="~",
                         type=character)
     
-    parser.add_argument("-o",
-                        "--only-save-end-states",
-                        help="tell somd to only save trajectories for lambda 0 and lambda 1",
-                        action=argparse.BooleanOptionalAction,
-                        dest="only_save_end_states")
+
     
     arguments = parser.parse_args()
     
@@ -543,7 +539,6 @@ def main():
                     force_constant_0=protocol["force constant"],
                     workdir=protocol["project directory"],
                     equilibration_path=protocol["equilibration directory"],
-                    logs=protocol["log directory"],
                     afe_input_path=protocol["afe input directory"],
                     log_directory=protocol["log directory"],
                     outputs=protocol["outputs"],
@@ -566,7 +561,8 @@ def main():
                     min_tol=protocol["minimisation tolerance"],
                     repeats=protocol["repeats"],
                     temperature=protocol["temperature"],
-                    pressure=protocol["pressure"])
+                    pressure=protocol["pressure"],
+                    only_save_end_states=protocol["only save end states"])
         
     elif not metal:
 
@@ -596,13 +592,14 @@ def main():
                            min_tol=protocol["minimisation tolerance"],
                            repeats=protocol["repeats"],
                            temperature=protocol["temperature"],
-                           pressure=protocol["pressure"])
+                           pressure=protocol["pressure"],
+                           only_save_end_states=protocol["only save end states"])
           
     ligand_a, ligand_b = functions.separate(arguments.transformation)
 
     equilibrated_network = meze.get_equilibrated(ligand_a, ligand_b)
 
-    equilibrated_network.prepare_afe(ligand_a, ligand_b, extra_edges=arguments.extra_transformations_file, only_save_end_states=arguments.only_save_end_states) 
+    equilibrated_network.prepare_afe(ligand_a, ligand_b, extra_edges=arguments.extra_transformations_file, only_save_end_states=meze.only_save_end_states) 
 
 if __name__ == "__main__":
     main()
