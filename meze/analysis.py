@@ -157,14 +157,6 @@ def fix_simfile(protocol, transformation):
                 continue
 
 
-
-
-
-
-
-
-
-
 def save_results(protocol, transformation):
     """
     Using the protocol, get results from each repeat and write to file.
@@ -250,7 +242,9 @@ def save_results(protocol, transformation):
         data = [transformation, relative_binding_free_energy, error]
         data_line = ",".join(str(item) for item in data) + "\n"
 
+
         data_file = outputs + "/" + engine + f"_{i}_raw.csv"
+        
         input_lines = []
         if os.path.isfile(data_file): 
             with open(data_file, "r") as output_file:
@@ -526,7 +520,7 @@ def main():
     parser.add_argument("experimental_file",
                         default=os.getcwd() + "/afe/experimental_K_i.csv",
                         help="file containing experimental inhibition constants and errors")
-    
+ 
     parser.add_argument("-s",
                         "--separator",
                         help="character separating the two ligand names",

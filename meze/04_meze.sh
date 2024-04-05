@@ -3,8 +3,6 @@
 #SBATCH -o PATH_TO_LOGS/meze_%a.slurm.out
 #SBATCH -e PATH_TO_LOGS/meze_%a.slurm.err
 
-
-
 export MEZEHOME=PATH_TO_MEZE
 
 start=`date +%s`

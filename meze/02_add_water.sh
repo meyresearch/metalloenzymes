@@ -2,7 +2,6 @@
 
 #SBATCH -o PATH_TO_LOGS/add_water_%a.slurm.out
 #SBATCH -e PATH_TO_LOGS/add_water_%a.slurm.err
-#SBATCH -n N_TASKS
 
 export ligands_dat_file=LIGANDS_DATA_FILE
 export transformations_file=TRANSFORMATIONS_DATA_FILE

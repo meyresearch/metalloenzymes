@@ -263,7 +263,6 @@ class Sofra(object):
 
 
         self.protein_forcefield = protein_ff
-
         self.protein_path = functions.path_exists(protein_path)
         self.group_name = self.get_name(group_name)
         self.protein = Protein.Protein(name=self.group_name,
@@ -272,7 +271,7 @@ class Sofra(object):
                                        forcefield=self.protein_forcefield,
                                        water_model=self.water_model,
                                        parameterised=self.prepared)
-
+        
         self.cutoff_scheme = cutoff_scheme.lower()
         self.threshold = threshold
         self.n_normal = n_normal
