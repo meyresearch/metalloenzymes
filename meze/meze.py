@@ -82,7 +82,7 @@ class Meze(sofra.Sofra):
     # it's annoying to have to put this in as an argument to the constructor everytime
 
     def __init__(self, protein_file, prepared=False, metal="ZN", cut_off=2.6, force_constant_0=100, water_file=None, 
-                 workdir=os.getcwd(), afe_input_path=os.getcwd()+"/afe/", equilibration_path=os.getcwd()+"/equilibration/", outputs=os.getcwd()+"/outputs/",
+                 workdir=os.getcwd(), afe_input_path=os.getcwd()+"/afe/", equilibration_path=os.getcwd()+"/equilibration/", outputs=os.getcwd()+"/outputs/", logs=os.getcwd()+"/logs/",
                  ligand_path=os.getcwd()+"/inputs/ligands/", ligand_charge=0, ligand_ff="gaff2", 
                  group_name=None, protein_path=os.getcwd()+"/inputs/protein/", water_model="tip3p", protein_ff="ff14SB", 
                  engine="SOMD", sampling_time=4, box_edges=20, box_shape="cubic", min_steps=5000, short_nvt=50, nvt=1, npt=200, 
@@ -91,7 +91,7 @@ class Meze(sofra.Sofra):
         
         self.protein_file = protein_file
 
-        super().__init__(prepared=prepared, workdir=workdir, ligand_path=ligand_path, group_name=group_name, protein_file=protein_file, protein_path=protein_path, 
+        super().__init__(prepared=prepared, workdir=workdir, ligand_path=ligand_path, group_name=group_name, protein_file=protein_file, protein_path=protein_path, log_directory=logs,
                          water_model=water_model, ligand_ff=ligand_ff, protein_ff=protein_ff, ligand_charge=ligand_charge, 
                          afe_input_path=afe_input_path, equilibration_path=equilibration_path, outputs=outputs,
                          engine=engine, sampling_time=sampling_time, box_edges=box_edges, box_shape=box_shape, min_steps=min_steps, short_nvt=short_nvt, nvt=nvt, npt=npt, 
@@ -533,6 +533,7 @@ def main():
                     force_constant_0=protocol["force constant"],
                     workdir=protocol["project directory"],
                     equilibration_path=protocol["equilibration directory"],
+                    logs=protocol["log directory"],
                     afe_input_path=protocol["afe input directory"],
                     outputs=protocol["outputs"],
                     ligand_path=protocol["ligand directory"],
