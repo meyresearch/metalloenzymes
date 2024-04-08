@@ -178,7 +178,7 @@ def main():
                         dest="solvation_method",
                         help="MD engine used for solvation; default is BioSimSpace (GROMACS)",
                         choices=["amber", "gromacs"],
-                        default="gromacs",
+                        default="amber",
                         type=str)
     
     parser.add_argument("-sc",
@@ -244,7 +244,9 @@ def main():
                                 repeats=arguments.repeats,
                                 n_normal=arguments.lambdas,
                                 n_difficult=arguments.n_difficult,
-                                cutoff_scheme=arguments.cutoff_scheme)
+                                cutoff_scheme=arguments.cutoff_scheme,
+                                solvation_method=arguments.solvation_method,
+                                solvent_closeness=arguments.solvent_closeness)
 
         
         elif not metal:
@@ -270,7 +272,9 @@ def main():
                                     min_tol=arguments.emtol,
                                     repeats=arguments.repeats,
                                     n_normal=arguments.lambdas,
-                                    n_difficult=arguments.n_difficult)
+                                    n_difficult=arguments.n_difficult,
+                                    solvation_method=arguments.solvation_method,
+                                    solvent_closeness=arguments.solvent_closeness)
 
         prepared_network = network.prepare_network()
 
@@ -337,7 +341,9 @@ def main():
                                          temperature=protocol["temperature"],
                                          pressure=protocol["pressure"],
                                          n_normal=arguments.lambdas,
-                                         n_difficult=arguments.n_difficult)
+                                         n_difficult=arguments.n_difficult,
+                                         solvation_method=protocol["solvation_method"],
+                                         solvent_closeness=protocol["solvent_closeness"])
             
         elif not metal:
             prepared_network = sofra.Sofra(prepared=True,
@@ -366,7 +372,9 @@ def main():
                                            temperature=protocol["temperature"],
                                            pressure=protocol["pressure"],
                                            n_normal=arguments.lambdas,
-                                           n_difficult=arguments.n_difficult)
+                                           n_difficult=arguments.n_difficult,
+                                           solvation_method=protocol["solvation_method"],
+                                           solvent_closeness=protocol["solvent_closeness"])
 
         links_file = functions.file_exists(arguments.extra_transformations_file)
 

@@ -12,33 +12,41 @@ import meze
 
 class coldMeze(meze.Meze):
 
-    def __init__(self, group_name, ligand_name, equilibration_directory, input_protein_file, protein_directory, ligand_directory, 
+    def __init__(self, group_name, ligand_name, 
+                 equilibration_directory, input_protein_file, protein_directory, ligand_directory, afe_input_directory, outputs, log_directory,
                  min_steps, short_nvt, nvt, npt, min_dt, min_tol, temperature, pressure, short_timestep=0.5, 
-                 is_metal=True, prepared=True, 
+                 is_metal=True, prepared=True, is_md=False,
                  force_constant_0=100, restraint_weight=10, restart_write_steps=100, coordinate_write_steps=500):
 
         
         self.is_metal = is_metal
         self.prepared = prepared
         if self.is_metal:
-            super().__init__(protein_file=input_protein_file, prepared=prepared, group_name=group_name, 
-                             equilibration_path=equilibration_directory, afe_input_path=afe_input_directory, outputs=outputs,
+            super().__init__(protein_file=input_protein_file, prepared=prepared, group_name=group_name, is_md=is_md,
+                             equilibration_path=equilibration_directory, afe_input_path=afe_input_directory, outputs=outputs, log_directory=log_directory,
                              protein_path=protein_directory, ligand_path=ligand_directory, force_constant_0=force_constant_0)
 
         #TODO what happens with init if not metal?
+            
         self.ligand_name = ligand_name
-        # self.equilibration_directory = equilibration_directory
-        # self.ligand_path = functions.path_exists(ligand_directory)
-        # self.protein_path = functions.path_exists(protein_directory)
-        self.short_nvt = functions.convert_to_units(short_nvt, PICOSECOND)
-        self.nvt = functions.convert_to_units(nvt, PICOSECOND)
-        self.npt = functions.convert_to_units(npt, PICOSECOND)
-        self.short_timestep = functions.convert_to_units(short_timestep, FEMTOSECOND)
+
         self.min_steps = min_steps
         self.min_dt = min_dt
         self.min_tol = min_tol
-        self.temperature = functions.convert_to_units(temperature, KELVIN)
-        self.pressure = functions.convert_to_units(pressure, ATM)
+        if not prepared:
+            self.temperature = functions.convert_to_units(temperature, KELVIN)
+            self.pressure = functions.convert_to_units(pressure, ATM)
+            self.short_nvt = functions.convert_to_units(short_nvt, PICOSECOND)
+            self.nvt = functions.convert_to_units(nvt, PICOSECOND)
+            self.npt = functions.convert_to_units(npt, PICOSECOND)
+            self.short_timestep = functions.convert_to_units(short_timestep, FEMTOSECOND)
+        else:
+            self.temperature = temperature
+            self.pressure = pressure
+            self.short_nvt = short_nvt
+            self.nvt = nvt
+            self.npt = npt
+            self.short_timestep = short_timestep       
         self.restraint_weight = functions.check_float(restraint_weight)
         self.restart_write_steps = functions.check_positive(functions.check_int(restart_write_steps))
         self.coordinate_write_steps = functions.check_positive(functions.check_int(coordinate_write_steps))
@@ -78,7 +86,7 @@ class coldMeze(meze.Meze):
                 configuration["irest"] = 1
                 configuration["ntx"] = 5 
 
-            process = bss.Process.Amber(system=system, protocol=protocol, name=name, work_dir=working_directory, extra_options=configuration, extra_lines=namelist, exe=amber_path)
+            process = bss.Process.Amber(system=system, protocol=protocol, name=name, work_dir=working_directory, extra_options=configuration, extra_lines=namelist, exe=amber_path)             
             config = working_directory + "/*.cfg"
             config_file = functions.get_files(config)[0]
             with open(config_file, "a") as file:
@@ -92,19 +100,17 @@ class coldMeze(meze.Meze):
             process = bss.Process.Gromacs(system, protocol, name=name, work_dir=working_directory, extra_options=configuration, checkpoint_file=checkpoint)
             process.setArg("-ntmpi", 1)
         
-        if "amber" in process.exe() and checkpoint:            
-            process.deleteArg("-r")
-            process.deleteArg("-ref")
-            process.addArgs({"-r": checkpoint})
-            process.addArgs({"-ref": checkpoint})
-            for key, value in process.getArgs().items():
-                print(f"{key}: {value}")
+        # if "amber" in process.exe() and checkpoint:            
+        #     process.deleteArg("-r")
+        #     process.deleteArg("-ref")
+        #     process.addArgs({"-r": checkpoint})
+        #     process.addArgs({"-ref": checkpoint})
+        #     for key, value in process.getArgs().items():
+        #         print(f"{key}: {value}")
 
         process.start()
         process.wait()
         if process.isError():
-            print(process.stdout())
-            print(process.stderr())
             raise bss._Exceptions.ThirdPartyError("The process exited with an error!")
         system = process.getSystem()
         return system
@@ -440,6 +446,7 @@ class coldMeze(meze.Meze):
         
         savename = relax_09_dir + f"bound_{self.ligand_name}"
         bss.IO.saveMolecules(filebase=savename, system=relax_09_system, fileformat=["PRM7", "RST7"])
+        return relax_09_system
         
 
 def main():

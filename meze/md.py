@@ -5,6 +5,8 @@ import shutil
 from definitions import NANOSECOND, PICOSECOND, KELVIN
 import BioSimSpace as bss
 import os
+import meze
+import solvate
 
 
 def main():
@@ -13,7 +15,7 @@ def main():
 
     parser.add_argument("ligand_name",
                         help="name of ligand",
-                        type=SyntaxWarning)
+                        type=str)
 
     parser.add_argument("-co",
                         "--cut-off",
@@ -108,14 +110,7 @@ def main():
                         dest="sampling_time",
                         help="sampling time in nanoseconds",
                         type=float,
-                        default=4) 
-    
-    parser.add_argument("-r",
-                        "--repeats",
-                        dest="repeats",
-                        help="number of AFE repeat runs",
-                        type=int, 
-                        default=3)
+                        default=50.0) 
 
     parser.add_argument("-min",
                         "--minimisation-steps",
@@ -184,29 +179,89 @@ def main():
                         help="kJ mol-1 nm-1, Maximum force tolerance for energy minimisation",
                         type=float,
                         default=1000)
+    
+    parser.add_argument("-sm",
+                        "--solvation-method",
+                        dest="solvation_method",
+                        help="MD engine used for solvation; default is BioSimSpace (GROMACS)",
+                        choices=["amber", "gromacs"],
+                        default="amber",
+                        type=str)
+    
+    parser.add_argument("-sc",
+                        "--solvent-closeness",
+                        dest="solvent_closeness",
+                        help="control how close, in \AA, solvent atoms can come to solute atoms, default 1.0",
+                        type=float, 
+                        default=1.0)    
+    
+    parser.add_argument("-cs",
+                        "--cutoff-scheme",
+                        dest="cutoff_scheme",
+                        help="PME or Reaction Field",
+                        default="rf",
+                        choices=["pme", "rf"],
+                        type=str)
+    
+
+    
 
     arguments = parser.parse_args()
 
-    cold_meze = equilibrate.coldMeze(group_name=arguments.group_name,
+    network = meze.Meze(protein_file=arguments.protein,
+                        cut_off=arguments.cut_off,
+                        is_md=True,
+                        md_input_directory=arguments.working_directory + "md_input_files/",
+                        workdir=arguments.working_directory,
+                        ligand_path=arguments.ligand_directory,
+                        ligand_charge=arguments.ligand_charge,
+                        ligand_ff=arguments.ligand_forcefield,
+                        group_name=arguments.group_name,        
+                        protein_path=arguments.protein_directory,
+                        water_model=arguments.water_model,
+                        protein_ff=arguments.forcefield,
+                        engine=arguments.engine,
+                        sampling_time=arguments.sampling_time,
+                        box_edges=arguments.box_edges,
+                        box_shape=arguments.box_shape,
+                        cutoff_scheme=arguments.cutoff_scheme,
+                        solvation_method=arguments.solvation_method,
+                        solvent_closeness=arguments.solvent_closeness,
+                        short_nvt=arguments.equilibration_runtime,
+                        nvt=arguments.equilibration_runtime,
+                        npt=arguments.equilibration_runtime)
+    
+    network.protein_water_complex = network.protein.create_complex()
+    network.prepared_protein = network.protein.tleap(network.protein_water_complex)
+    network.log_directory = network.create_directory(f"{network.working_directory}/logs/")
+    network.protocol_file = network.create_protocol_file()
+
+    # solvation
+    solvate.solvate_bound(network, arguments.ligand_name)
+
+    cold_meze = equilibrate.coldMeze(group_name=network.group_name,
                                      ligand_name=arguments.ligand_name,
-                                     equilibration_directory=arguments.working_directory + "/equilibration/",
-                                     input_protein_file=arguments.protein,
-                                     protein_directory=arguments.protein_directory,
-                                     ligand_directory=arguments.ligand_directory,
-                                     min_steps=arguments.min_steps,
-                                     short_nvt=arguments.equilibration_runtime,
+                                     prepared=True,
+                                     equilibration_directory=network.equilibration_directory,
+                                     input_protein_file=network.protein_file,
+                                     protein_directory=network.protein_path,
+                                     ligand_directory=network.ligand_path,
+                                     min_steps=network.min_steps,
                                      short_timestep=arguments.equilibration_timestep,
-                                     nvt=arguments.equilibration_runtime,
-                                     npt=arguments.equilibration_runtime,
-                                     min_dt=arguments.emstep,
-                                     min_tol=arguments.emtol,
-                                     temperature=arguments.temperature,
-                                     pressure=arguments.pressure,
+                                     min_dt=network.min_dt,
+                                     min_tol=network.min_tol,
+                                     temperature=network.temperature,
+                                     pressure=network.pressure,
                                      restraint_weight=arguments.restraint_weight,
                                      restart_write_steps=arguments.restart_write_steps,
-                                     coordinate_write_steps=arguments.coordinate_write_steps)
+                                     coordinate_write_steps=arguments.coordinate_write_steps,
+                                     afe_input_directory="",
+                                     is_md=True,
+                                     outputs=network.outputs,
+                                     log_directory=network.log_directory,
+                                     short_nvt=network.short_nvt, nvt=network.nvt, npt=network.npt)
 
-    cold_meze.heat_md() 
+    hot_meze = cold_meze.heat_md() 
 
 
 if __name__ == "__main__":
