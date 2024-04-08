@@ -92,7 +92,7 @@ class Meze(sofra.Sofra):
         
         self.protein_file = protein_file
 
-        super().__init__(prepared=prepared, workdir=workdir, ligand_path=ligand_path, group_name=group_name, protein_file=protein_file, protein_path=protein_path, log_directory=logs,
+        super().__init__(prepared=prepared, workdir=workdir, ligand_path=ligand_path, group_name=group_name, protein_file=protein_file, protein_path=protein_path, 
                          water_model=water_model, ligand_ff=ligand_ff, protein_ff=protein_ff, ligand_charge=ligand_charge, 
                          afe_input_path=afe_input_path, equilibration_path=equilibration_path, outputs=outputs, log_directory=log_directory,
                          engine=engine, sampling_time=sampling_time, box_edges=box_edges, box_shape=box_shape, min_steps=min_steps, short_nvt=short_nvt, nvt=nvt, npt=npt, 

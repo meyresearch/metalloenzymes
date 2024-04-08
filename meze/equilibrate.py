@@ -15,7 +15,7 @@ class coldMeze(meze.Meze):
     def __init__(self, group_name, ligand_name, outputs, input_protein_file, 
                  protein_directory, ligand_directory, log_directory, equilibration_directory, afe_input_directory, 
                  min_steps, short_nvt, nvt, npt, min_dt, min_tol, temperature, pressure, short_timestep=0.5, is_metal=True, prepared=True, 
-                 force_constant_0=100, restraint_weight=10, restart_write_steps=100, coordinate_write_steps=500)
+                 force_constant_0=100, restraint_weight=10, restart_write_steps=100, coordinate_write_steps=500):
         self.is_metal = is_metal
         self.prepared = prepared
         if self.is_metal:
