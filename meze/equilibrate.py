@@ -119,6 +119,9 @@ class coldMeze(meze.Meze):
                 os.chdir(working_directory) 
                 os.system(f"mpirun -np 10 {sander_run_command}")
                 os.chdir(code_dir)
+                with open(readme, "a") as file:
+                    file.write(f"# Process {name} was run with the below command for {working_directory}:\n")
+                    file.write(sander_run_command + "\n")
                 system = bss.IO.readMolecules([working_directory + "/" + name + ".prm7", working_directory + "/" + name + ".rst7"])
 
             except argparse.ArgumentTypeError:
