@@ -19,7 +19,7 @@ class coldMeze(meze.Meze):
         self.is_metal = is_metal
         self.prepared = prepared
         if self.is_metal:
-            super().__init__(protein_file=input_protein_file, prepared=prepared, group_name=group_name, 
+            super().__init__(protein_file=input_protein_file, prepared=prepared, group_name=group_name, log_directory=log_directory,
                              equilibration_path=equilibration_directory, afe_input_path=afe_input_directory, outputs=outputs,
                              protein_path=protein_directory, ligand_path=ligand_directory, force_constant_0=force_constant_0)
 
