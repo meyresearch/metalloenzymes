@@ -117,7 +117,7 @@ class coldMeze(meze.Meze):
                 sander_run_command = sander_mpi + " " + amber_command
                 code_dir = os.getcwd()
                 os.chdir(working_directory) 
-                os.system(f"mpirun -np 10 {sander_run_command}")
+                os.system(f"mpirun {sander_run_command}")
                 os.chdir(code_dir)
                 with open(readme, "a") as file:
                     file.write(f"# Process {name} was run with the below command for {working_directory}:\n")
