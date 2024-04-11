@@ -254,7 +254,7 @@ class Meze(sofra.Sofra):
         return final_system
 
 
-    def prepare_afe(self, ligand_a_name, ligand_b_name, extra_edges=None, only_save_end_states=False):
+    def prepare_afe(self, ligand_a_name, ligand_b_name, extra_edges=None, only_save_end_states=False, flexible_align=False):
         """
         Inherited method from sofra.Network; adds restraints to somd config files
 
@@ -269,7 +269,7 @@ class Meze(sofra.Sofra):
         -------
         """
         
-        super().prepare_afe(ligand_a_name, ligand_b_name, extra_edges=extra_edges, only_save_end_states=only_save_end_states)
+        super().prepare_afe(ligand_a_name, ligand_b_name, extra_edges=extra_edges, only_save_end_states=only_save_end_states, flexible_align=flexible_align)
         first_run_directory = self.output_directories[0]
         transformation_directory = first_run_directory + f"/{ligand_a_name}~{ligand_b_name}/"
         bound_directory = transformation_directory + "/bound/" # unbound doesn't have restraints
@@ -508,6 +508,12 @@ def main():
                         help="the pair of ligands undergoing AFE transformation, e.g. ligand_1~ligand_2",
                         type=str)
     
+    parser.add_argument("-f",
+                        "--flexible-align",
+                        dest="flexible_align",
+                        help="use bss.Align.flexAlign to merge ligands",
+                        action=argparse.BooleanOptionalAction)
+
     parser.add_argument("-et",
                         "--extra-transformations",
                         dest="extra_transformations_file",
@@ -599,7 +605,7 @@ def main():
 
     equilibrated_network = meze.get_equilibrated(ligand_a, ligand_b)
 
-    equilibrated_network.prepare_afe(ligand_a, ligand_b, extra_edges=arguments.extra_transformations_file, only_save_end_states=meze.only_save_end_states) 
+    equilibrated_network.prepare_afe(ligand_a, ligand_b, extra_edges=arguments.extra_transformations_file, only_save_end_states=meze.only_save_end_states, flexible_align=arguments.flexible_align) 
 
 if __name__ == "__main__":
     main()
