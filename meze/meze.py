@@ -191,7 +191,7 @@ class Meze(sofra.Sofra):
             file.writelines(restraints)
 
 
-    def combine_bound_ligands(self):
+    def combine_bound_ligands(self, flexible_align=False):
         """
         Take two bound bss.Systems and combine the ligands' systems
 
@@ -212,11 +212,6 @@ class Meze(sofra.Sofra):
         n_residues = [molecule.nResidues() for molecule in system_1]
         n_atoms = [molecule.nAtoms() for molecule in system_1]
 
-        # Debugging: 
-        # residues = system_1.getResidues()
-        bss.IO.saveMolecules(os.getcwd()+"/test.pdb", system_1, "pdb")
-
-
         for j, (n_residues, n_atoms) in enumerate(zip(n_residues[:20], n_atoms[:20])):
             if n_residues == 1 and n_atoms > 5:  
                 ligand_1 = system_1.getMolecule(j)
@@ -232,11 +227,10 @@ class Meze(sofra.Sofra):
             pass
         else:
             raise _Exceptions.AlignmentError("Could not extract ligands or protein from input systems.")
-        merged_ligands = sofra.merge_ligands(ligand_1, ligand_2)
+        merged_ligands = sofra.merge_ligands(ligand_1, ligand_2, flexible_align=flexible_align)
 
         removal_system = system_1.copy()
         removal_system.removeWaterMolecules()
-        # protein = removal_system.getMolecules()[0]
         removal_system.removeMolecules(ligand_1)
         zn_and_salts = removal_system - protein
 
