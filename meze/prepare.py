@@ -208,7 +208,12 @@ def main():
                         default="rf",
                         choices=["pme", "rf"],
                         type=str)
-
+    
+    parser.add_argument("-os",
+                        "--only-save-end-states",
+                        help="tell somd to only save trajectories for lambda 0 and lambda 1",
+                        action=argparse.BooleanOptionalAction,
+                        dest="only_save_end_states")
     
 
     arguments = parser.parse_args()
@@ -246,7 +251,8 @@ def main():
                                 n_difficult=arguments.n_difficult,
                                 cutoff_scheme=arguments.cutoff_scheme,
                                 solvation_method=arguments.solvation_method,
-                                solvent_closeness=arguments.solvent_closeness)
+                                solvent_closeness=arguments.solvent_closeness, 
+                                only_save_end_states=arguments.only_save_end_states)
 
         
         elif not metal:
@@ -274,19 +280,24 @@ def main():
                                     n_normal=arguments.lambdas,
                                     n_difficult=arguments.n_difficult,
                                     solvation_method=arguments.solvation_method,
-                                    solvent_closeness=arguments.solvent_closeness)
+                                    solvent_closeness=arguments.solvent_closeness, 
+                                    only_save_end_states=arguments.only_save_end_states)
 
         prepared_network = network.prepare_network()
 
         functions.write_slurm_script(template_file="02_add_water.sh", 
                                      path=prepared_network.afe_input_directory, 
                                      log_dir=prepared_network.log_directory,
-                                     protocol_file=prepared_network.protocol_file)
+                                     protocol_file=prepared_network.protocol_file,
+                                     extra_lines={"LIGANDS_DATA_FILE": prepared_network.ligands_dat_file,
+                                                  "TRANSFORMATIONS_DATA_FILE": prepared_network.network_file})
         
         functions.write_slurm_script(template_file="03_heat_meze.sh", 
                                     path=prepared_network.afe_input_directory, 
                                     log_dir=prepared_network.log_directory,
-                                    protocol_file=prepared_network.protocol_file)
+                                    protocol_file=prepared_network.protocol_file,
+                                    extra_lines={"LIGANDS_DATA_FILE": prepared_network.ligands_dat_file,
+                                                 "TRANSFORMATIONS_DATA_FILE": prepared_network.network_file})
         
         functions.write_slurm_script(template_file="04_meze.sh",
                                     path=prepared_network.afe_input_directory, 
@@ -341,9 +352,8 @@ def main():
                                          temperature=protocol["temperature"],
                                          pressure=protocol["pressure"],
                                          n_normal=arguments.lambdas,
-                                         n_difficult=arguments.n_difficult,
-                                         solvation_method=protocol["solvation_method"],
-                                         solvent_closeness=protocol["solvent_closeness"])
+                                         n_difficult=arguments.n_difficult, 
+                                         only_save_end_states=arguments.only_save_end_states)
             
         elif not metal:
             prepared_network = sofra.Sofra(prepared=True,
@@ -374,7 +384,9 @@ def main():
                                            n_normal=arguments.lambdas,
                                            n_difficult=arguments.n_difficult,
                                            solvation_method=protocol["solvation_method"],
-                                           solvent_closeness=protocol["solvent_closeness"])
+                                           solvent_closeness=protocol["solvent_closeness"],
+                                           n_difficult=arguments.n_difficult, 
+                                           only_save_end_states=arguments.only_save_end_states)
 
         links_file = functions.file_exists(arguments.extra_transformations_file)
 

@@ -170,7 +170,7 @@ def solvate_bound(network, ligand_name):
                 tleap_in.write("\n")
                 tleap_in.write(f"protein = loadpdb {protein_pdb}\n")
 
-                tleap_in.write("complex = combine {lig protein}\n")
+                tleap_in.write("complex = combine {protein lig}\n")
                 tleap_in.write(f"savepdb complex {ligand_name}_complex_dry.pdb\n")
                 tleap_in.write("check complex\n")
 
@@ -191,8 +191,6 @@ def solvate_bound(network, ligand_name):
         solvated_files = functions.get_files(system_savename + ".*")
             
     return Ligand.Ligand(file=solvated_files, parameterised=True)
-
-    
 
 
 def create_box(network, molecule):
@@ -251,6 +249,7 @@ def main():
                           afe_input_path=protocol["afe input directory"],
                           equilibration_path=protocol["equilibration directory"],
                           outputs=protocol["outputs"],
+                          log_directory=protocol["log directory"],
                           ligand_path=protocol["ligand directory"],
                           group_name=protocol["group name"],
                           protein_file=protocol["prepared protein file"],

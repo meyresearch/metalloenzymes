@@ -79,7 +79,7 @@ def remove_lomap_directories(paths):
 
 
 
-def combine_unbound_ligands(system_a, system_b):
+def combine_unbound_ligands(system_a, system_b, flexible_align=False):
     """
     Take two unbound bss.Systems and combine the ligands' systems
 
@@ -94,13 +94,13 @@ def combine_unbound_ligands(system_a, system_b):
         system with combined ligand topologies
     """
     ligand_1, ligand_2 = system_a.getMolecule(0), system_b.getMolecule(0)
-    merged_ligands = merge_ligands(ligand_1, ligand_2)
+    merged_ligands = merge_ligands(ligand_1, ligand_2, flexible_align=flexible_align)
     system_a.removeMolecules(ligand_1)
     system_a.addMolecules(merged_ligands)
     return system_a
 
 
-def merge_ligands(ligand_1, ligand_2):
+def merge_ligands(ligand_1, ligand_2, flexible_align=False):
     """
     Take two ligands and merge their topologies
 
@@ -115,7 +115,10 @@ def merge_ligands(ligand_1, ligand_2):
     """
     mapping = bss.Align.matchAtoms(ligand_1, ligand_2, complete_rings_only=True)
     inverse_mapping = {value:key for key, value in mapping.items()}
-    aligned_ligand_2 = bss.Align.rmsdAlign(ligand_2, ligand_1, inverse_mapping)
+    if flexible_align:
+        aligned_ligand_2 = bss.Align.flexAlign(ligand_2, ligand_1, inverse_mapping)
+    else:
+        aligned_ligand_2 = bss.Align.rmsdAlign(ligand_2, ligand_1, inverse_mapping)
     return bss.Align.merge(ligand_1, aligned_ligand_2, mapping, allow_ring_breaking=True, allow_ring_size_change=True)
 
 
@@ -219,11 +222,16 @@ class Sofra(object):
                  group_name=None, protein_path=os.getcwd()+"/inputs/protein/", water_model="tip3p", protein_ff="ff14SB", 
                  engine="SOMD", sampling_time=4, box_edges=20, box_shape="cubic", min_steps=5000, short_nvt=5, nvt=50, npt=200, 
                  min_dt=0.01, min_tol=1000, repeats=3, temperature=300, pressure=1, threshold=0.4, n_normal=11, n_difficult=17,
+<<<<<<< HEAD
                  cutoff_scheme="rf", solvation_method="amber", solvent_closeness=1.0):
+=======
+                 cutoff_scheme="rf", solvation_method="gromacs", solvent_closeness=1.0, only_save_end_states=False):
+>>>>>>> 5b02c3fb44eed213c6e8dac7355f8e16a64c2019
         """
         Class constructor
         """
         self.working_directory = functions.path_exists(workdir)
+        self.only_save_end_states = only_save_end_states
         self.md_engine = engine
         self.md_time = functions.convert_to_units(sampling_time, NANOSECOND)
         self.is_md = is_md
@@ -280,7 +288,7 @@ class Sofra(object):
                                        forcefield=self.protein_forcefield,
                                        water_model=self.water_model,
                                        parameterised=self.prepared)
-
+        
         self.cutoff_scheme = cutoff_scheme.lower()
         if not is_md:
             self.threshold = threshold
@@ -446,7 +454,7 @@ class Sofra(object):
         return self
 
 
-    def combine_bound_ligands(self):
+    def combine_bound_ligands(self, flexible_align=False):
         """
         Take two bound bss.Systems and combine the ligands' systems
 
@@ -481,13 +489,13 @@ class Sofra(object):
             pass
         else:
             raise _Exceptions.AlignmentError("Could not extract ligands or protein from input systems.")
-        merged_ligands = merge_ligands(ligand_1, ligand_2)
+        merged_ligands = merge_ligands(ligand_1, ligand_2, flexible_align=flexible_align)
         system_1.removeMolecules(ligand_1)
         system_1.addMolecules(merged_ligands)
         return system_1
 
 
-    def prepare_afe(self, ligand_a_name, ligand_b_name, extra_edges=None):
+    def prepare_afe(self, ligand_a_name, ligand_b_name, extra_edges=None, only_save_end_states=False, flexible_align=False):
         """
         Prepare minimisation and free energy lambda windows directory tree
 
@@ -506,7 +514,7 @@ class Sofra(object):
         dataframe = self.transformations.copy()
         condition_1 = dataframe["ligand_a"] == ligand_a_name
         condition_2 = dataframe["ligand_b"] == ligand_b_name
-        print(dataframe)
+
         row_index = dataframe[condition_1 & condition_2].index.tolist()[0]
 
         lambda_strings = dataframe.iloc[row_index]["lambdas"].split(" ")
@@ -514,8 +522,8 @@ class Sofra(object):
    
         ligand_a = self.ligand_molecules[0]
         ligand_b = self.ligand_molecules[1]
-        unbound = combine_unbound_ligands(ligand_a, ligand_b)
-        bound = self.combine_bound_ligands()
+        unbound = combine_unbound_ligands(ligand_a, ligand_b, flexible_align=flexible_align)
+        bound = self.combine_bound_ligands(flexible_align=flexible_align)
 
         # Create ligand transformation directory tree in the first repeat directory, e.g. SOMD_1/lig_a~lig_b/ for bound/unbound
         # Only construct the BioSimSpace Relative AFE objects in the first repeat directory, to save on computation
@@ -524,8 +532,8 @@ class Sofra(object):
         unbound_directory = transformation_directory + "/unbound/"
         bound_directory = transformation_directory + "/bound/"
         
-        restart_interval = 200 #TODO add to config? or add function
-        report_interval = 200 #TODO add to config? or add function
+        restart_interval = 500 #TODO add to config? or add function
+        report_interval = 500 #TODO add to config? or add function
 
         free_energy_protocol = bss.Protocol.FreeEnergy(lam_vals=lambda_values, runtime=self.md_time, restart_interval=restart_interval, report_interval=report_interval)
 
@@ -533,19 +541,17 @@ class Sofra(object):
         n_moves = self.set_n_moves(number_of_cycles=n_cycles) # n_cycles * n_moves * timestep = runtime in ps
 
         n_frames = 250 #TODO add to config or add function
-        buffered_coordinates_frequency = max(int(n_moves / n_frames), 2000) # https://github.com/OpenBioSim/sire/issues/113#issuecomment-1834317501
+        buffered_coordinates_frequency = max(int(n_moves / n_frames), 10000) # https://github.com/OpenBioSim/sire/issues/113#issuecomment-1834317501
 
         cycles_per_saved_frame = max(1, restart_interval // n_moves) #Credit: Anna Herz https://github.com/michellab/BioSimSpace/blob/feature-amber-fep/python/BioSimSpace/_Config/_somd.py 
 
-        
-
         config_options = {"ncycles": n_cycles, 
                           "nmoves": n_moves, 
-                          "buffered coordinates frequency": buffered_coordinates_frequency, #CHANGE
+                          "buffered coordinates frequency": buffered_coordinates_frequency, 
                           "ncycles_per_snap": cycles_per_saved_frame,
-                        #   "minimal coordinate saving": True,
+                          "minimal coordinate saving": only_save_end_states,
                         #   "cutoff distance": "8 angstrom", # Make editable? 
-                          "minimise": False}
+                          "minimise": True}
 
         if self.cutoff_scheme == "pme":
             config_options["cutoff type"] = "PME"
@@ -558,20 +564,7 @@ class Sofra(object):
         fix_afe_configurations(unbound_configurations)
         fix_afe_configurations(bound_configurations)
 
-        # For SOMD only: create a minimisation directory manually and copy the AFE MD configuration files to the minimisation directory for the first repeat
-        unbound_lambda_minimisation_directory = functions.mkdir(unbound_directory + "/minimisation/")
-        bound_lambda_minimisation_directory = functions.mkdir(bound_directory + "/minimisation/")
-        os.system(f"cp -r  {unbound_directory}/lambda_* {unbound_lambda_minimisation_directory}")
-        os.system(f"cp -r {bound_directory}/lambda_* {bound_lambda_minimisation_directory}")
-
-        # For SOMD only: Open the AFE MD configuration files and convert to minimisation configurations for the first repeat
-        unbound_configurations = functions.get_files(unbound_lambda_minimisation_directory + "/*/*.cfg")
-        bound_configurations = functions.get_files(bound_lambda_minimisation_directory + "/*/*.cfg")
-        create_minimisation_configurations(unbound_configurations)
-        create_minimisation_configurations(bound_configurations)
-        print("\n")
-
-        # Copy lambda transformation directories (including minimisation) from first repeat directory to the rest of the repeat directories, e.g. SOMD_2, SOMD_3
+        # Copy lambda transformation directories from first repeat directory to the rest of the repeat directories, e.g. SOMD_2, SOMD_3
         _ = [os.system(f"cp -r {transformation_directory.rstrip('/')} {self.output_directories[i]}") for i in range(1, self.n_repeats)]
         
 
@@ -858,6 +851,7 @@ class Sofra(object):
                     f"pressure = {self.pressure._value}",
                     f"sampling time = {self.md_time._value}",
                     f"engine = {self.md_engine}",
+                    f"only save end states = {self.only_save_end_states}",
                     f"outputs = {path_to_outputs}",
                     f"repeats = {self.n_repeats}",
 

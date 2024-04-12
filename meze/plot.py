@@ -626,17 +626,22 @@ def plot_correlation(plots_directory, results, experimental_free_energies_with_n
         labels[i] = np.nan
     for i in calculated_nan_indices:
         labels[i] = np.nan
-    
-    labels = [value for value in labels if str(value).lower() != "nan"]
-    for i in range(len(labels)):
-        ax.annotate(labels[i], (experimental_free_energies[i] + 0.07, calculated_free_energies[i] + 0.07), fontsize=9)
-    
+
     ax.set_xlim(-max_y, max_y)
     ax.set_ylim(-max_y, max_y)
     ax.set_xlabel("$\Delta \Delta$ G$_\mathrm{EXP}$ (kcal mol \u207B \u00B9)")
     ax.set_ylabel("$\Delta \Delta$ G$_\mathrm{AFE}$ (kcal mol \u207B \u00B9)")
     fig.tight_layout()
     fig.savefig(f"{plots_directory}/meze_AFE_correlation.png", dpi=1000)
+
+    labels = [value for value in labels if str(value).lower() != "nan"]
+    for i in range(len(labels)):
+        ax.annotate(labels[i], (experimental_free_energies[i] + 0.07, calculated_free_energies[i] + 0.07), fontsize=9)
+
+    ax.set_xlabel("$\Delta \Delta$ G$_\mathrm{EXP}$ (kcal mol \u207B \u00B9)")
+    ax.set_ylabel("$\Delta \Delta$ G$_\mathrm{AFE}$ (kcal mol \u207B \u00B9)")
+    fig.tight_layout()
+    fig.savefig(f"{plots_directory}/meze_AFE_correlation_labeled.png", dpi=1000)
     
 
 def plot_bar(plots_directory, afe_df, exp_free_energy, exp_error):
