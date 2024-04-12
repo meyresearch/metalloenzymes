@@ -1131,6 +1131,14 @@ def main():
                         default="~",
                         type=meze.character)
     
+    parser.add_argument("-u",
+                    "--experimental-units",
+                    help="unit of experimental values",
+                    default="ki",
+                    choices=["ki", "ic50"],
+                    type=str)
+    
+    
     arguments = parser.parse_args()
     protocol_file = functions.file_exists(arguments.protocol_file)
     protocol = functions.read_protocol(protocol_file)

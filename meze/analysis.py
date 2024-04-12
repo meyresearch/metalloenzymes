@@ -183,22 +183,6 @@ def save_results(protocol, transformation):
         unbound = path + "unbound/"
         bound = path + "bound/"
 
-        # Move minimisation directory out of transformation directory to avoid BioSimSpace error
-        try:
-            unbound_minimisation_directory = f"{outputs}/{engine}_{i}/" + "unbound_minimisations"
-            bound_minimisation_directory =  f"{outputs}/{engine}_{i}/" + "bound_minimisations"
-            functions.mkdir(unbound_minimisation_directory)
-            functions.mkdir(bound_minimisation_directory)
-            target_path = unbound_minimisation_directory + "/" + transformation + "/"
-            source_path = unbound + "minimisation"
-            shutil.move(source_path, target_path)
-            target_path = bound_minimisation_directory + "/" + transformation + "/"
-            source_path = bound + "minimisation"
-            shutil.move(source_path, target_path)
-
-        except FileNotFoundError as error_message:
-            print(f"{error_message}: Files have already been moved")
-        
         analyser_path = os.environ["BSS_HOME"] + "analyse_freenrg"
         if not os.path.isfile(f"{unbound}/mbar.txt"):
             try:
@@ -516,10 +500,7 @@ def main():
     parser.add_argument("transformation",
                         help="the pair of ligands undergoing AFE transformation, e.g. ligand_1~ligand_2",
                         type=str)
-    
-    parser.add_argument("experimental_file",
-                        default=os.getcwd() + "/afe/experimental_K_i.csv",
-                        help="file containing experimental inhibition constants and errors")
+
  
     parser.add_argument("-s",
                         "--separator",
@@ -532,7 +513,6 @@ def main():
     protocol = functions.read_protocol(protocol_file)
     transformation = arguments.transformation
 
-    fix_simfile(protocol, transformation)
     save_results(protocol, transformation)
     save_rmsds(protocol, transformation)    
     save_overlap_matrix(protocol, transformation)
