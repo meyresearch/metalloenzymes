@@ -79,7 +79,7 @@ def remove_lomap_directories(paths):
 
 
 
-def combine_unbound_ligands(system_a, system_b):
+def combine_unbound_ligands(system_a, system_b, flexible_align=False):
     """
     Take two unbound bss.Systems and combine the ligands' systems
 
@@ -94,13 +94,13 @@ def combine_unbound_ligands(system_a, system_b):
         system with combined ligand topologies
     """
     ligand_1, ligand_2 = system_a.getMolecule(0), system_b.getMolecule(0)
-    merged_ligands = merge_ligands(ligand_1, ligand_2)
+    merged_ligands = merge_ligands(ligand_1, ligand_2, flexible_align=flexible_align)
     system_a.removeMolecules(ligand_1)
     system_a.addMolecules(merged_ligands)
     return system_a
 
 
-def merge_ligands(ligand_1, ligand_2):
+def merge_ligands(ligand_1, ligand_2, flexible_align=False):
     """
     Take two ligands and merge their topologies
 
@@ -115,7 +115,10 @@ def merge_ligands(ligand_1, ligand_2):
     """
     mapping = bss.Align.matchAtoms(ligand_1, ligand_2, complete_rings_only=True)
     inverse_mapping = {value:key for key, value in mapping.items()}
-    aligned_ligand_2 = bss.Align.rmsdAlign(ligand_2, ligand_1, inverse_mapping)
+    if flexible_align:
+        aligned_ligand_2 = bss.Align.flexAlign(ligand_2, ligand_1, inverse_mapping)
+    else:
+        aligned_ligand_2 = bss.Align.rmsdAlign(ligand_2, ligand_1, inverse_mapping)
     return bss.Align.merge(ligand_1, aligned_ligand_2, mapping, allow_ring_breaking=True, allow_ring_size_change=True)
 
 
@@ -437,7 +440,7 @@ class Sofra(object):
         return self
 
 
-    def combine_bound_ligands(self):
+    def combine_bound_ligands(self, flexible_align=False):
         """
         Take two bound bss.Systems and combine the ligands' systems
 
@@ -472,13 +475,13 @@ class Sofra(object):
             pass
         else:
             raise _Exceptions.AlignmentError("Could not extract ligands or protein from input systems.")
-        merged_ligands = merge_ligands(ligand_1, ligand_2)
+        merged_ligands = merge_ligands(ligand_1, ligand_2, flexible_align=flexible_align)
         system_1.removeMolecules(ligand_1)
         system_1.addMolecules(merged_ligands)
         return system_1
 
 
-    def prepare_afe(self, ligand_a_name, ligand_b_name, extra_edges=None, only_save_end_states=False):
+    def prepare_afe(self, ligand_a_name, ligand_b_name, extra_edges=None, only_save_end_states=False, flexible_align=False):
         """
         Prepare minimisation and free energy lambda windows directory tree
 
@@ -505,8 +508,8 @@ class Sofra(object):
    
         ligand_a = self.ligand_molecules[0]
         ligand_b = self.ligand_molecules[1]
-        unbound = combine_unbound_ligands(ligand_a, ligand_b)
-        bound = self.combine_bound_ligands()
+        unbound = combine_unbound_ligands(ligand_a, ligand_b, flexible_align=flexible_align)
+        bound = self.combine_bound_ligands(flexible_align=flexible_align)
 
         # Create ligand transformation directory tree in the first repeat directory, e.g. SOMD_1/lig_a~lig_b/ for bound/unbound
         # Only construct the BioSimSpace Relative AFE objects in the first repeat directory, to save on computation

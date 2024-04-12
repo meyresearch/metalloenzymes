@@ -141,7 +141,10 @@ class coldMeze(meze.Meze):
                 os.system(sander_run_command)
                 os.chdir(code_dir)
                 system = bss.IO.readMolecules([working_directory + "/" + name + ".prm7", working_directory + "/" + name + ".rst7"])                    
-
+                with open(readme, "a") as file:
+                    file.write("\n")
+                    file.write(f"# Step {name} was rerun using sander.MPI for {working_directory}:\n")
+                    file.write(f"{sander_run_command}\n")
         else:
             system = process.getSystem()
         return system

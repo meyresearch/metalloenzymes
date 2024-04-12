@@ -170,7 +170,7 @@ def solvate_bound(network, ligand_name):
                 tleap_in.write("\n")
                 tleap_in.write(f"protein = loadpdb {protein_pdb}\n")
 
-                tleap_in.write("complex = combine {lig protein}\n")
+                tleap_in.write("complex = combine {protein lig}\n")
                 tleap_in.write(f"savepdb complex {ligand_name}_complex_dry.pdb\n")
                 tleap_in.write("check complex\n")
 

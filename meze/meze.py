@@ -191,7 +191,7 @@ class Meze(sofra.Sofra):
             file.writelines(restraints)
 
 
-    def combine_bound_ligands(self):
+    def combine_bound_ligands(self, flexible_align=False):
         """
         Take two bound bss.Systems and combine the ligands' systems
 
@@ -212,11 +212,6 @@ class Meze(sofra.Sofra):
         n_residues = [molecule.nResidues() for molecule in system_1]
         n_atoms = [molecule.nAtoms() for molecule in system_1]
 
-        # Debugging: 
-        # residues = system_1.getResidues()
-        bss.IO.saveMolecules(os.getcwd()+"/test.pdb", system_1, "pdb")
-
-
         for j, (n_residues, n_atoms) in enumerate(zip(n_residues[:20], n_atoms[:20])):
             if n_residues == 1 and n_atoms > 5:  
                 ligand_1 = system_1.getMolecule(j)
@@ -232,11 +227,10 @@ class Meze(sofra.Sofra):
             pass
         else:
             raise _Exceptions.AlignmentError("Could not extract ligands or protein from input systems.")
-        merged_ligands = sofra.merge_ligands(ligand_1, ligand_2)
+        merged_ligands = sofra.merge_ligands(ligand_1, ligand_2, flexible_align=flexible_align)
 
         removal_system = system_1.copy()
         removal_system.removeWaterMolecules()
-        # protein = removal_system.getMolecules()[0]
         removal_system.removeMolecules(ligand_1)
         zn_and_salts = removal_system - protein
 
@@ -254,7 +248,7 @@ class Meze(sofra.Sofra):
         return final_system
 
 
-    def prepare_afe(self, ligand_a_name, ligand_b_name, extra_edges=None, only_save_end_states=False):
+    def prepare_afe(self, ligand_a_name, ligand_b_name, extra_edges=None, only_save_end_states=False, flexible_align=False):
         """
         Inherited method from sofra.Network; adds restraints to somd config files
 
@@ -269,7 +263,7 @@ class Meze(sofra.Sofra):
         -------
         """
         
-        super().prepare_afe(ligand_a_name, ligand_b_name, extra_edges=extra_edges, only_save_end_states=only_save_end_states)
+        super().prepare_afe(ligand_a_name, ligand_b_name, extra_edges=extra_edges, only_save_end_states=only_save_end_states, flexible_align=flexible_align)
         first_run_directory = self.output_directories[0]
         transformation_directory = first_run_directory + f"/{ligand_a_name}~{ligand_b_name}/"
         bound_directory = transformation_directory + "/bound/" # unbound doesn't have restraints
@@ -508,6 +502,12 @@ def main():
                         help="the pair of ligands undergoing AFE transformation, e.g. ligand_1~ligand_2",
                         type=str)
     
+    parser.add_argument("-f",
+                        "--flexible-align",
+                        dest="flexible_align",
+                        help="use bss.Align.flexAlign to merge ligands",
+                        action=argparse.BooleanOptionalAction)
+
     parser.add_argument("-et",
                         "--extra-transformations",
                         dest="extra_transformations_file",
@@ -599,7 +599,7 @@ def main():
 
     equilibrated_network = meze.get_equilibrated(ligand_a, ligand_b)
 
-    equilibrated_network.prepare_afe(ligand_a, ligand_b, extra_edges=arguments.extra_transformations_file, only_save_end_states=meze.only_save_end_states) 
+    equilibrated_network.prepare_afe(ligand_a, ligand_b, extra_edges=arguments.extra_transformations_file, only_save_end_states=meze.only_save_end_states, flexible_align=arguments.flexible_align) 
 
 if __name__ == "__main__":
     main()
