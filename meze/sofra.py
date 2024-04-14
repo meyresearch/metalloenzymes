@@ -222,11 +222,7 @@ class Sofra(object):
                  group_name=None, protein_path=os.getcwd()+"/inputs/protein/", water_model="tip3p", protein_ff="ff14SB", 
                  engine="SOMD", sampling_time=4, box_edges=20, box_shape="cubic", min_steps=5000, short_nvt=5, nvt=50, npt=200, 
                  min_dt=0.01, min_tol=1000, repeats=3, temperature=300, pressure=1, threshold=0.4, n_normal=11, n_difficult=17,
-<<<<<<< HEAD
-                 cutoff_scheme="rf", solvation_method="amber", solvent_closeness=1.0):
-=======
                  cutoff_scheme="rf", solvation_method="gromacs", solvent_closeness=1.0, only_save_end_states=False):
->>>>>>> 5b02c3fb44eed213c6e8dac7355f8e16a64c2019
         """
         Class constructor
         """
