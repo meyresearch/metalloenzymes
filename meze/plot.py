@@ -897,16 +897,25 @@ def plot_absolute_dGs(absolute_dG_dataframe, plots_directory, text_box, region=T
     calculated_free_energies = absolute_dG_dataframe.iloc[:, 3].to_numpy()
     calculated_errors = absolute_dG_dataframe.iloc[:, 4].to_numpy()
     ligand_names = absolute_dG_dataframe.iloc[:, 0].tolist()
+
+    shift = np.min(experimental_free_energies)
+    # centralising
+    # this should be replaced by providing one experimental result
+    # from https://github.com/OpenFreeEnergy/cinnabar/blob/c140fea77d4019119ed40acd1a699b92ed6bbf10/cinnabar/plotting.py#L377
+    x_data = experimental_free_energies - np.mean(experimental_free_energies) + shift
+    y_data = calculated_free_energies - np.mean(calculated_free_energies) + shift
+
+
     fig, ax = plt.subplots(1, 1, figsize=(10,10))
     sns.set_theme(context="notebook", palette="colorblind", style="ticks", font_scale=2)
 
-    ax.scatter(experimental_free_energies, 
-               calculated_free_energies, 
+    ax.scatter(x_data, 
+               y_data, 
                s=50, 
                color=COLOURS["PINK"])
 
-    ax.errorbar(experimental_free_energies,
-                calculated_free_energies,
+    ax.errorbar(x_data,
+                y_data,
                 color=COLOURS["PINK"],
                 yerr=calculated_errors,
                 xerr=experimental_errors,
@@ -914,8 +923,8 @@ def plot_absolute_dGs(absolute_dG_dataframe, plots_directory, text_box, region=T
                 linestyle="",
                 zorder=-1)
 
-    max_calculated = max(np.absolute(calculated_free_energies)) + 1 
-    max_experimental = max(np.absolute(experimental_free_energies)) + 1
+    max_calculated = max(np.absolute(y_data)) + 1 
+    max_experimental = max(np.absolute(x_data)) + 1
     max_y = max(max_calculated, max_experimental)
 
     ax.plot([-max_y, max_y], [-max_y, max_y], color=COLOURS["BLUE"], linestyle=":", zorder=-1)
@@ -933,7 +942,7 @@ def plot_absolute_dGs(absolute_dG_dataframe, plots_directory, text_box, region=T
     
     labels = [name.replace("ligand_", "") for name in ligand_names]
     for i in range(len(labels)):
-        ax.annotate(labels[i], (experimental_free_energies[i] + 0.07, calculated_free_energies[i]), fontsize=14)
+        ax.annotate(labels[i], (x_data[i] + 0.07, y_data[i]), fontsize=14)
     
     ax.set_xlim(-max_y, max_y)
     ax.set_ylim(-max_y, max_y)
@@ -1140,9 +1149,9 @@ def main():
     protocol_file = functions.file_exists(arguments.protocol_file)
     protocol = functions.read_protocol(protocol_file)
 
-    plot_rmsd_box_plot(protocol)
-    plot_pairwise_lambda_rmsd(protocol)
-    plot_overlap_matrix(protocol)
+    # plot_rmsd_box_plot(protocol)
+    # plot_pairwise_lambda_rmsd(protocol)
+    # plot_overlap_matrix(protocol)
 
     transformations, free_energies, errors = read_results(protocol) 
     results = combine_results(protocol, transformations, free_energies, errors)
