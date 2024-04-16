@@ -99,7 +99,22 @@ class Meze(sofra.Sofra):
                          min_dt=min_dt, min_tol=min_tol, repeats=repeats, temperature=temperature, pressure=pressure, threshold=threshold, n_normal=n_normal, n_difficult=n_difficult,
                          cutoff_scheme=cutoff_scheme, solvation_method=solvation_method, solvent_closeness=solvent_closeness, only_save_end_states=only_save_end_states)
         
-        self.universe = mda.Universe(self.protein_file, format="pdb")
+        if self.prepared:
+            for file in self.protein_file:
+                extension = functions.get_file_extension(file)
+                if extension.lower() in ["prm7", "top"]:
+                #     topology_format = extension
+                #     topology_file = file
+                    pass
+                elif extension.lower() in ["rst7", "gro"]:
+                    coordinate_format = extension
+                    coordinate_file = file
+                else:
+                    raise ValueError
+                
+            self.universe = mda.Universe(topology=coordinate_file, topology_format=coordinate_format)
+        else:
+            self.universe = mda.Universe(self.protein_file, format="pdb")
         self.force_constant_0 = functions.check_float(force_constant_0)
         self.cut_off = functions.check_positive(functions.check_float(cut_off))
         

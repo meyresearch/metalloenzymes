@@ -235,9 +235,6 @@ class Sofra(object):
         self.prepared = prepared 
         if self.prepared: 
             self.prepared_protein = functions.get_files(protein_file + ".*")
-            # with vim2 + equilibrate.py this returns None 
-            if not self.prepared_protein:
-                self.prepared_protein = self.protein_file
             self.protein_file = self.prepared_protein
             self.afe_input_directory = functions.path_exists(afe_input_path)
             self.equilibration_directory = functions.path_exists(equilibration_path)  
