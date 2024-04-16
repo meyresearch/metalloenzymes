@@ -511,7 +511,7 @@ def main():
                          outputs=protocol["outputs"],
                          log_directory=protocol["log directory"],
                          equilibration_directory=protocol["equilibration directory"],
-                         input_protein_file=protocol["protein input file"],
+                         input_protein_file=protocol["prepared protein file"],
                          protein_directory=protocol["protein directory"],
                          ligand_directory=protocol["ligand directory"],
                          min_steps=protocol["minimisation steps"],
