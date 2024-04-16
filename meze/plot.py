@@ -105,7 +105,7 @@ def output_statistics(experimental_free_energy, computational, absolute=False):
         spearman_text = r"$\rho$:"
         spearman_value = f"{spearman}" + r"$^{{{upper:.2f}}}_{{{lower:.2f}}}$".format(upper = stats["spearman_rho"]["upper_bound"],
                                                                                       lower = stats["spearman_rho"]["lower_bound"])
-        spearman_formatted = spearman_text + 31 * " " + spearman_value
+        spearman_formatted = spearman_text + 32 * " " + spearman_value
         
         text_string = "\n".join((text_string, pearson_formatted, spearman_formatted))
     
@@ -899,8 +899,6 @@ def plot_absolute_dGs(absolute_dG_dataframe, plots_directory, text_box, region=T
     ligand_names = absolute_dG_dataframe.iloc[:, 0].tolist()
 
     shift = np.min(experimental_free_energies)
-    # centralising
-    # this should be replaced by providing one experimental result
     # from https://github.com/OpenFreeEnergy/cinnabar/blob/c140fea77d4019119ed40acd1a699b92ed6bbf10/cinnabar/plotting.py#L377
     x_data = experimental_free_energies - np.mean(experimental_free_energies) + shift
     y_data = calculated_free_energies - np.mean(calculated_free_energies) + shift
@@ -940,6 +938,13 @@ def plot_absolute_dGs(absolute_dG_dataframe, plots_directory, text_box, region=T
     box_properties = dict(boxstyle="square", facecolor="white")
     ax.text(0.05, 0.95, text_box, transform=ax.transAxes, fontsize=16, verticalalignment="top", bbox=box_properties)
     
+    ax.set_xlim(-max_y, max_y)
+    ax.set_ylim(-max_y, max_y)
+    ax.set_xlabel("$\Delta$ G$_\mathrm{EXP}$ (kcal mol \u207B \u00B9)")
+    ax.set_ylabel("$\Delta$ G$_\mathrm{AFE}$ (kcal mol \u207B \u00B9)")
+    fig.tight_layout()
+    fig.savefig(f"{plots_directory}/meze_absolute_dG_correlation.png", dpi=1000)     
+    
     labels = [name.replace("ligand_", "") for name in ligand_names]
     for i in range(len(labels)):
         ax.annotate(labels[i], (x_data[i] + 0.07, y_data[i]), fontsize=14)
@@ -949,7 +954,7 @@ def plot_absolute_dGs(absolute_dG_dataframe, plots_directory, text_box, region=T
     ax.set_xlabel("$\Delta$ G$_\mathrm{EXP}$ (kcal mol \u207B \u00B9)")
     ax.set_ylabel("$\Delta$ G$_\mathrm{AFE}$ (kcal mol \u207B \u00B9)")
     fig.tight_layout()
-    fig.savefig(f"{plots_directory}/meze_absolute_dG_correlation.png", dpi=1000)    
+    fig.savefig(f"{plots_directory}/meze_absolute_dG_correlation_labeled.png", dpi=1000)    
 
 
 def get_absolute_dGs(experimental_file, calculated_dataframe, protocol):
@@ -1149,7 +1154,7 @@ def main():
     protocol_file = functions.file_exists(arguments.protocol_file)
     protocol = functions.read_protocol(protocol_file)
 
-    # plot_rmsd_box_plot(protocol)
+    plot_rmsd_box_plot(protocol)
     # plot_pairwise_lambda_rmsd(protocol)
     # plot_overlap_matrix(protocol)
 
