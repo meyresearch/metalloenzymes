@@ -6,3 +6,4 @@
 *.ipynb
 lib/*
 *.csv
+meze/solvate_unbound.py
