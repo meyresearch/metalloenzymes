@@ -14,7 +14,8 @@ class coldMeze(meze.Meze):
 
     def __init__(self, group_name, ligand_name, outputs, input_protein_file, 
                  protein_directory, ligand_directory, log_directory, equilibration_directory, afe_input_directory, 
-                 min_steps, short_nvt, nvt, npt, min_dt, min_tol, temperature, pressure, short_timestep=0.5, is_metal=True, prepared=True, 
+                 min_steps, short_nvt, nvt, npt, min_dt, min_tol, temperature, pressure, short_timestep=0.5, 
+                 is_metal=True, restraints=True, prepared=True, 
                  force_constant_0=100, restraint_weight=10, restart_write_steps=100, coordinate_write_steps=500):
         self.is_metal = is_metal
         self.prepared = prepared
@@ -22,8 +23,10 @@ class coldMeze(meze.Meze):
             super().__init__(protein_file=input_protein_file, prepared=prepared, group_name=group_name, log_directory=log_directory,
                              equilibration_path=equilibration_directory, afe_input_path=afe_input_directory, outputs=outputs,
                              protein_path=protein_directory, ligand_path=ligand_directory, force_constant_0=force_constant_0)
+        else:
+            restraints = False
 
-
+        self.restraints = restraints
         #TODO what happens with init if not metal?
         self.ligand_name = ligand_name
         # self.equilibration_directory = equilibration_directory
@@ -295,11 +298,12 @@ class coldMeze(meze.Meze):
         npt_dir = directories("npt")     
         start_temp = functions.convert_to_units(0, KELVIN)
         print(f"Equilibrating bound ligand {self.ligand_name}")
-        if self.is_metal:
+        restraints_file = None
+        configuration = {}
+        if self.is_metal and self.restraints:
             configuration = {"nmropt": 1}
             restraints_file = self.write_restraints_file_0(workdir=directory)
-
-        else:
+        elif not self.is_metal:
             configuration = {"emstep": self.min_dt, "emtol": self.min_tol}
         minimised_system = self.minimise(system=solvated_system, working_directory=min_dir, configuration=configuration, restraints_file=restraints_file)
 
@@ -494,6 +498,11 @@ def main():
                         help="protocol file containing equilibration options",
                         type=str,
                         default=os.getcwd() + "/afe/protocol.dat")
+
+    parser.add_argument("--no-restraints",
+                        dest="no_restraints",
+                        help="do not apply harmonic restraints on metal-coordinating residues",
+                        action="store_true")
     
     arguments = parser.parse_args()
     protocol = functions.input_to_dict(file=arguments.protocol_file)
@@ -504,7 +513,13 @@ def main():
     else:
         metal = False
 
+    if arguments.no_restraints:
+        apply_restraints = False
+    else:
+        apply_restraints = True
+
     cold_meze = coldMeze(is_metal=metal,
+                         restraints=apply_restraints,
                          group_name=protocol["group name"],
                          ligand_name=arguments.ligand_name,
                          afe_input_directory=protocol["afe input directory"],
