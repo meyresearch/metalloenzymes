@@ -406,7 +406,7 @@ class Sofra(object):
             self.box, self.box_angles = bss.Box.rhombicDodecahedronHexagon(max(box_area))
         elif self.box_shape == "rhombicDodecahedronSquare":
             self.box, self.box_angles = bss.Box.rhombicDodecahedronSquare(max(box_area))
-        elif self.box_shape == "truncatedOctahedron":
+        elif self.box_shape == "truncatedOctahedron" or "octahedron" in self.box_shape:
             self.box, self.box_angles = bss.Box.truncatedOctahedron(max(box_area))
         else:
             print(f"Box shape {self.box_shape} not supported.")
