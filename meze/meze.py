@@ -82,7 +82,7 @@ class Meze(sofra.Sofra):
     # it's annoying to have to put this in as an argument to the constructor everytime
 
     def __init__(self, protein_file, prepared=False, metal="ZN", cut_off=2.6, force_constant_0=100, water_file=None, 
-                 workdir=os.getcwd(), 
+                 workdir=os.getcwd(), restraints=True,
                  afe_input_path=os.getcwd()+"/afe/", equilibration_path=os.getcwd()+"/equilibration/", outputs=os.getcwd()+"/outputs/", log_directory=os.getcwd()+"/logs/",
                  ligand_path=os.getcwd()+"/inputs/ligands/", ligand_charge=0, ligand_ff="gaff2", 
                  group_name=None, protein_path=os.getcwd()+"/inputs/protein/", water_model="tip3p", protein_ff="ff14SB", 
@@ -98,6 +98,8 @@ class Meze(sofra.Sofra):
                          engine=engine, sampling_time=sampling_time, box_edges=box_edges, box_shape=box_shape, min_steps=min_steps, short_nvt=short_nvt, nvt=nvt, npt=npt, 
                          min_dt=min_dt, min_tol=min_tol, repeats=repeats, temperature=temperature, pressure=pressure, threshold=threshold, n_normal=n_normal, n_difficult=n_difficult,
                          cutoff_scheme=cutoff_scheme, solvation_method=solvation_method, solvent_closeness=solvent_closeness, only_save_end_states=only_save_end_states)
+        
+        self.restraints = restraints
         
         if self.prepared:
             for file in self.protein_file:
@@ -279,13 +281,15 @@ class Meze(sofra.Sofra):
         """
         
         super().prepare_afe(ligand_a_name, ligand_b_name, extra_edges=extra_edges, only_save_end_states=only_save_end_states, flexible_align=flexible_align)
-        first_run_directory = self.output_directories[0]
-        transformation_directory = first_run_directory + f"/{ligand_a_name}~{ligand_b_name}/"
-        bound_directory = transformation_directory + "/bound/" # unbound doesn't have restraints
-        lambda_directories = functions.get_files(bound_directory + "lambda_*/")
-        for i in range(len(lambda_directories)):
-            self.add_somd_restraints(lambda_directories[i])
-        _ = [os.system(f"cp -r {transformation_directory.rstrip('/')} {self.output_directories[i]}") for i in range(1, self.n_repeats)]
+        
+        if self.restraints:
+            first_run_directory = self.output_directories[0]
+            transformation_directory = first_run_directory + f"/{ligand_a_name}~{ligand_b_name}/"
+            bound_directory = transformation_directory + "/bound/" # unbound doesn't have restraints
+            lambda_directories = functions.get_files(bound_directory + "lambda_*/")
+            for i in range(len(lambda_directories)):
+                self.add_somd_restraints(lambda_directories[i])
+            _ = [os.system(f"cp -r {transformation_directory.rstrip('/')} {self.output_directories[i]}") for i in range(1, self.n_repeats)]
 
 
     def set_universe(self, file_name):
@@ -535,6 +539,10 @@ def main():
                         default="~",
                         type=character)
     
+    parser.add_argument("--no-restraints",
+                    dest="no_restraints",
+                    help="do not apply harmonic restraints on metal-coordinating residues",
+                    action="store_true")
 
     
     arguments = parser.parse_args()
@@ -546,10 +554,16 @@ def main():
         metal = True
     else:
         metal = False
-    
+
+    if arguments.no_restraints:
+        apply_restraints = False
+    else:
+        apply_restraints = True
+
     if metal:
         meze = Meze(prepared=True,
-                    protein_file=protocol["protein input file"],
+                    restraints=apply_restraints,
+                    protein_file=protocol["prepared protein file"],
                     cut_off=protocol["cutoff"],
                     force_constant_0=protocol["force constant"],
                     workdir=protocol["project directory"],
