@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH -o PATH_TO_LOGS/analysis.slurm.out
-#SBATCH -e PATH_TO_LOGS/analysis.slurm.err
+#SBATCH -o PATH_TO_LOGS/analyse_%x_%a.slurm.out
+#SBATCH -e PATH_TO_LOGS/analyse_%x_%a.slurm.err
 
 
 export MEZEHOME=PATH_TO_MEZE

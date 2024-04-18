@@ -183,22 +183,6 @@ def save_results(protocol, transformation):
         unbound = path + "unbound/"
         bound = path + "bound/"
 
-        # Move minimisation directory out of transformation directory to avoid BioSimSpace error
-        try:
-            unbound_minimisation_directory = f"{outputs}/{engine}_{i}/" + "unbound_minimisations"
-            bound_minimisation_directory =  f"{outputs}/{engine}_{i}/" + "bound_minimisations"
-            functions.mkdir(unbound_minimisation_directory)
-            functions.mkdir(bound_minimisation_directory)
-            target_path = unbound_minimisation_directory + "/" + transformation + "/"
-            source_path = unbound + "minimisation"
-            shutil.move(source_path, target_path)
-            target_path = bound_minimisation_directory + "/" + transformation + "/"
-            source_path = bound + "minimisation"
-            shutil.move(source_path, target_path)
-
-        except FileNotFoundError as error_message:
-            print(f"{error_message}: Files have already been moved")
-        
         analyser_path = os.environ["BSS_HOME"] + "analyse_freenrg"
         if not os.path.isfile(f"{unbound}/mbar.txt"):
             try:
@@ -241,8 +225,6 @@ def save_results(protocol, transformation):
 
         data = [transformation, relative_binding_free_energy, error]
         data_line = ",".join(str(item) for item in data) + "\n"
-
-
         data_file = outputs + "/" + engine + f"_{i}_raw.csv"
         
         input_lines = []

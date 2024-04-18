@@ -537,7 +537,8 @@ class Sofra(object):
                           "ncycles_per_snap": cycles_per_saved_frame,
                           "minimal coordinate saving": only_save_end_states,
                         #   "cutoff distance": "8 angstrom", # Make editable? 
-                          "minimise": True}
+                          "minimise": True,
+                          "minimise maximum iterations": self.min_steps}
 
         if self.cutoff_scheme == "pme":
             config_options["cutoff type"] = "PME"
