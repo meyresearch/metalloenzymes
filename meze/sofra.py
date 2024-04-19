@@ -403,7 +403,7 @@ class Sofra(object):
             self.box, self.box_angles = bss.Box.rhombicDodecahedronHexagon(max(box_area))
         elif self.box_shape == "rhombicDodecahedronSquare":
             self.box, self.box_angles = bss.Box.rhombicDodecahedronSquare(max(box_area))
-        elif self.box_shape == "truncatedOctahedron":
+        elif self.box_shape == "truncatedOctahedron" or "octahedron" in self.box_shape:
             self.box, self.box_angles = bss.Box.truncatedOctahedron(max(box_area))
         else:
             print(f"Box shape {self.box_shape} not supported.")
@@ -534,7 +534,8 @@ class Sofra(object):
                           "ncycles_per_snap": cycles_per_saved_frame,
                           "minimal coordinate saving": only_save_end_states,
                         #   "cutoff distance": "8 angstrom", # Make editable? 
-                          "minimise": True}
+                          "minimise": True,
+                          "minimise maximum iterations": self.min_steps}
 
         if self.cutoff_scheme == "pme":
             config_options["cutoff type"] = "PME"
