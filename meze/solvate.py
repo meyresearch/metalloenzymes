@@ -277,7 +277,7 @@ def main():
                           solvent_closeness=protocol["solvent closeness"])
 
     solvate_unbound(network=network, ligand_name=arguments.ligand_name)
-    # solvate_bound(network=network, ligand_name=arguments.ligand_name)
+    solvate_bound(network=network, ligand_name=arguments.ligand_name)
 
 if __name__ == "__main__":
     main()
