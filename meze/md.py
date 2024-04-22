@@ -9,6 +9,33 @@ import meze
 import solvate
 
 
+def production(hot_meze, system, outputs, time, timestep=2, temperature=300, pressure=1):
+
+    working_directory = functions.mkdir(outputs + hot_meze.ligand_name)
+
+    if type(timestep) != bss.Types._time.Time:
+        timestep = functions.convert_to_units(timestep, FEMTOSECOND)
+    if type(temperature) != bss.Types._temperature.Temperature:
+        temperature = functions.convert_to_units(temperature, KELVIN)
+    if type(pressure) != bss.Types._pressure.Pressure:
+        pressure = functions.convert_to_units(pressure, ATM)
+
+    if hot_meze.is_metal:
+        configuration = {"nmropt": 1}
+        restraints_file = hot_meze.write_restraints_file_0(workdir=working_directory)
+
+    protocol = bss.Protocol.Production(timestep=timestep,
+                                       runtime=time,
+                                       temperature=temperature,
+                                       pressure=pressure,
+                                       restart_interval=hot_meze.restart_write_steps,
+                                       report_interval=hot_meze.coordinate_write_steps)
+    
+    checkpoint = hot_meze.equilibration_directory + "/09_relax/09_relax.rst7"
+
+    hot_meze.run(system, protocol, "md", working_directory, configuration, checkpoint, restraints_file)
+
+
 def main():
     
     parser = argparse.ArgumentParser(description="MEZE: MetalloEnZymE FF-builder for alchemistry")
@@ -203,9 +230,6 @@ def main():
                         choices=["pme", "rf"],
                         type=str)
     
-
-    
-
     arguments = parser.parse_args()
 
     network = meze.Meze(protein_file=arguments.protein,
@@ -264,37 +288,8 @@ def main():
 
     production(hot_meze=hot_meze, 
                system=relaxed_system, 
-               outputs=hot_meze.outputs,)
-
-
-def production(hot_meze, system, outputs, time, timestep=2, temperature=300, pressure=1):
-
-    working_directory = functions.mkdir(outputs + hot_meze.ligand_name)
-
-    if type(timestep) != bss.Types._time.Time:
-        timestep = functions.convert_to_units(timestep, FEMTOSECOND)
-    if type(temperature) != bss.Types._temperature.Temperature:
-        temperature = functions.convert_to_units(temperature, KELVIN)
-    if type(pressure) != bss.Types._pressure.Pressure:
-        pressure = functions.convert_to_units(pressure, ATM)
-
-    if hot_meze.is_metal:
-        configuration = {"nmropt": 1}
-        restraints_file = hot_meze.write_restraints_file_0(workdir=working_directory)
-
-    protocol = bss.Protocol.Production(timestep=timestep,
-                                       runtime=time,
-                                       temperature=temperature,
-                                       pressure=pressure,
-                                       restart_interval=hot_meze.restart_write_steps,
-                                       report_interval=hot_meze.coordinate_write_steps)
-    
-    checkpoint = hot_meze.equilibration_directory + "/09_relax/09_relax.rst7"
-
-    hot_meze.run(system, protocol, "md", working_directory, configuration, checkpoint, restraints_file)
-
-
-
+               outputs=hot_meze.outputs,
+               time=network.sampling_time)
 
 
 if __name__ == "__main__":
