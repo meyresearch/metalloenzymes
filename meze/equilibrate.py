@@ -376,7 +376,7 @@ class coldMeze(meze.Meze):
         heat_02_dir = directories("02_heat")
         relax_03_dir = directories("03_relax")
         lower_04_dir = directories("04_lower")
-        bb_min_05_dir = directories("05_bb_min")
+        # bb_min_05_dir = directories("05_bb_min")
         relax_06_dir = directories("06_relax")
         reduce_07_dir = directories("07_reduce")
         continue_08_dir = directories("08_continue")
@@ -430,15 +430,15 @@ class coldMeze(meze.Meze):
                                     configuration=configuration,
                                     checkpoint=relax_03_dir + "/03_relax.rst7")
         
-        bb_min_05_system = self.minimise(system=lower_04_system,
-                                         working_directory=bb_min_05_dir,
-                                         process_name="05_bb_min",
-                                         configuration=configuration,
-                                         restraints_file=restraints_file,
-                                         position_restraints="backbone",
-                                         checkpoint=lower_04_dir + "/04_lower.rst7")
+        # bb_min_05_system = self.minimise(system=lower_04_system,
+        #                                  working_directory=bb_min_05_dir,
+        #                                  process_name="05_bb_min",
+        #                                  configuration=configuration,
+        #                                  restraints_file=restraints_file,
+        #                                  position_restraints="backbone",
+        #                                  checkpoint=lower_04_dir + "/04_lower.rst7")
         
-        relax_06_system = self.heat(system=bb_min_05_system,
+        relax_06_system = self.heat(system=lower_04_system,
                                     working_directory=relax_06_dir,
                                     process_name="06_relax",
                                     time=self.nvt,
@@ -447,7 +447,7 @@ class coldMeze(meze.Meze):
                                     timestep=self.short_timestep,
                                     restraints_file=restraints_file,
                                     configuration=configuration,
-                                    checkpoint=bb_min_05_dir + "05_bb_min.rst7")
+                                    checkpoint=lower_04_dir + "04_lower.rst7")
         
         self.restraint_weight = self.restraint_weight / 10
 
