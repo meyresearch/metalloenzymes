@@ -897,80 +897,81 @@ def plot_overlap_matrix(protocol):
 def plot_absolute_dGs(experimental_file, calculated_results, protocol, plots_directory, region=True):
 
     absolute_dG_dataframe = get_absolute_dGs(experimental_file, calculated_results, protocol)
-    experimental_free_energies = absolute_dG_dataframe.iloc[:, 1].to_numpy()
-    experimental_errors = absolute_dG_dataframe.iloc[:, 2].to_numpy()
-    calculated_free_energies = absolute_dG_dataframe.iloc[:, 3].to_numpy()
-    calculated_errors = absolute_dG_dataframe.iloc[:, 4].to_numpy()
-    ligand_names = absolute_dG_dataframe.iloc[:, 0].tolist()
+    if absolute_dG_dataframe is not None:
+        experimental_free_energies = absolute_dG_dataframe.iloc[:, 1].to_numpy()
+        experimental_errors = absolute_dG_dataframe.iloc[:, 2].to_numpy()
+        calculated_free_energies = absolute_dG_dataframe.iloc[:, 3].to_numpy()
+        calculated_errors = absolute_dG_dataframe.iloc[:, 4].to_numpy()
+        ligand_names = absolute_dG_dataframe.iloc[:, 0].tolist()
 
-    shift = np.min(experimental_free_energies)
-    # shift = 0
-    # from https://github.com/OpenFreeEnergy/cinnabar/blob/c140fea77d4019119ed40acd1a699b92ed6bbf10/cinnabar/plotting.py#L377
-    x_data = experimental_free_energies - np.mean(experimental_free_energies) + shift
-    y_data = calculated_free_energies - np.mean(calculated_free_energies) + shift
+        shift = np.min(experimental_free_energies)
+        # shift = 0
+        # from https://github.com/OpenFreeEnergy/cinnabar/blob/c140fea77d4019119ed40acd1a699b92ed6bbf10/cinnabar/plotting.py#L377
+        x_data = experimental_free_energies - np.mean(experimental_free_energies) + shift
+        y_data = calculated_free_energies - np.mean(calculated_free_energies) + shift
 
-    absolute_statistics, absolute_text_box = output_statistics(experimental_free_energy=x_data, 
-                                                               computational=y_data, 
-                                                               absolute=True)
-    save_statistics_to_file(protocol["outputs"], absolute_statistics, filename="absolute_statistics") 
-
-
-    fig, ax = plt.subplots(1, 1, figsize=(10,10))
-    sns.set_theme(context="notebook", palette="colorblind", style="ticks", font_scale=2)
-
-    ax.scatter(x_data, 
-               y_data, 
-               s=50, 
-               color=COLOURS["PINK"])
-
-    ax.errorbar(x_data,
-                y_data,
-                color=COLOURS["PINK"],
-                yerr=calculated_errors,
-                xerr=experimental_errors,
-                capsize=3,
-                linestyle="",
-                zorder=-1)
+        absolute_statistics, absolute_text_box = output_statistics(experimental_free_energy=x_data, 
+                                                                computational=y_data, 
+                                                                absolute=True)
+        save_statistics_to_file(protocol["outputs"], absolute_statistics, filename="absolute_statistics") 
 
 
-    max_calculated = max(y_data) + 1 
-    max_experimental = max(x_data) + 1
-    max_value = max(max_calculated, max_experimental)
+        fig, ax = plt.subplots(1, 1, figsize=(10,10))
+        sns.set_theme(context="notebook", palette="colorblind", style="ticks", font_scale=2)
 
-    min_calculated = min(y_data) - 1
-    min_experimental = min(x_data) - 1
-    min_value = min(min_calculated, min_experimental)
+        ax.scatter(x_data, 
+                y_data, 
+                s=50, 
+                color=COLOURS["PINK"])
 
-    ax.plot([min_value, max_value], [min_value, max_value], color=COLOURS["BLUE"], linestyle=":", zorder=-1)
-    ax.vlines(0, min_value, max_value, color="silver", linestyle="--", zorder=-1)
-    ax.hlines(0, min_value, max_value, color="silver", linestyle="--", zorder=-1)
+        ax.errorbar(x_data,
+                    y_data,
+                    color=COLOURS["PINK"],
+                    yerr=calculated_errors,
+                    xerr=experimental_errors,
+                    capsize=3,
+                    linestyle="",
+                    zorder=-1)
 
-    if region:
-        top = np.arange(min_value+0.5, max_value+1.5)
-        bottom = np.arange(min_value-0.5, max_value+0.5)
-        x = np.arange(min_value, max_value+1)
-        ax.fill_between(x, bottom, top, alpha=0.2, color=COLOURS["BLUE"], zorder=-1)
-    
-    box_properties = dict(boxstyle="square", facecolor="white")
-    ax.text(0.05, 0.95, absolute_text_box, transform=ax.transAxes, fontsize=16, verticalalignment="top", bbox=box_properties)
-    
-    ax.set_xlim(min_value, max_value)
-    ax.set_ylim(min_value, max_value)
-    ax.set_xlabel("$\Delta$ G$_\mathrm{EXP}$ (kcal mol \u207B \u00B9)", fontsize=20)
-    ax.set_ylabel("$\Delta$ G$_\mathrm{AFE}$ (kcal mol \u207B \u00B9)", fontsize=20)
-    fig.tight_layout()
-    fig.savefig(f"{plots_directory}/meze_absolute_dG_correlation.png", dpi=1000)     
-    
-    labels = [name.replace("ligand_", "") for name in ligand_names]
-    for i in range(len(labels)):
-        ax.annotate(labels[i], (x_data[i] + 0.07, y_data[i]), fontsize=14)
-    
-    ax.set_xlim(min_value, max_value)
-    ax.set_ylim(min_value, max_value)
-    ax.set_xlabel("$\Delta$ G$_\mathrm{EXP}$ (kcal mol \u207B \u00B9)", fontsize=20)
-    ax.set_ylabel("$\Delta$ G$_\mathrm{AFE}$ (kcal mol \u207B \u00B9)", fontsize=20)
-    fig.tight_layout()
-    fig.savefig(f"{plots_directory}/meze_absolute_dG_correlation_labeled.png", dpi=1000)    
+
+        max_calculated = max(y_data) + 1 
+        max_experimental = max(x_data) + 1
+        max_value = max(max_calculated, max_experimental)
+
+        min_calculated = min(y_data) - 1
+        min_experimental = min(x_data) - 1
+        min_value = min(min_calculated, min_experimental)
+
+        ax.plot([min_value, max_value], [min_value, max_value], color=COLOURS["BLUE"], linestyle=":", zorder=-1)
+        ax.vlines(0, min_value, max_value, color="silver", linestyle="--", zorder=-1)
+        ax.hlines(0, min_value, max_value, color="silver", linestyle="--", zorder=-1)
+
+        if region:
+            top = np.arange(min_value+0.5, max_value+1.5)
+            bottom = np.arange(min_value-0.5, max_value+0.5)
+            x = np.arange(min_value, max_value+1)
+            ax.fill_between(x, bottom, top, alpha=0.2, color=COLOURS["BLUE"], zorder=-1)
+        
+        box_properties = dict(boxstyle="square", facecolor="white")
+        ax.text(0.05, 0.95, absolute_text_box, transform=ax.transAxes, fontsize=16, verticalalignment="top", bbox=box_properties)
+        
+        ax.set_xlim(min_value, max_value)
+        ax.set_ylim(min_value, max_value)
+        ax.set_xlabel("$\Delta$ G$_\mathrm{EXP}$ (kcal mol \u207B \u00B9)", fontsize=20)
+        ax.set_ylabel("$\Delta$ G$_\mathrm{AFE}$ (kcal mol \u207B \u00B9)", fontsize=20)
+        fig.tight_layout()
+        fig.savefig(f"{plots_directory}/meze_absolute_dG_correlation.png", dpi=1000)     
+        
+        labels = [name.replace("ligand_", "") for name in ligand_names]
+        for i in range(len(labels)):
+            ax.annotate(labels[i], (x_data[i] + 0.07, y_data[i]), fontsize=14)
+        
+        ax.set_xlim(min_value, max_value)
+        ax.set_ylim(min_value, max_value)
+        ax.set_xlabel("$\Delta$ G$_\mathrm{EXP}$ (kcal mol \u207B \u00B9)", fontsize=20)
+        ax.set_ylabel("$\Delta$ G$_\mathrm{AFE}$ (kcal mol \u207B \u00B9)", fontsize=20)
+        fig.tight_layout()
+        fig.savefig(f"{plots_directory}/meze_absolute_dG_correlation_labeled.png", dpi=1000)    
 
 
 def get_absolute_dGs(experimental_file, calculated_dataframe, protocol):
@@ -996,25 +997,29 @@ def get_absolute_dGs(experimental_file, calculated_dataframe, protocol):
     savename = outputs_directory + f"cinnabar_absolute_dGs_{group_name}.csv"
     cinnabar_input_file = write_cinnabar_input_file(experimental_file, calculated_dataframe, outputs_directory, group_name)
 
-    free_energy_map = cinnabar.FEMap.from_csv(cinnabar_input_file)
-    free_energy_map.generate_absolute_values()
-    absolute_values_df = free_energy_map.get_absolute_dataframe()
-    experimental_values = absolute_values_df[absolute_values_df["computational"] == False]
-    calculated_values = absolute_values_df[absolute_values_df["computational"] == True]
-    merged_dataframe = functions.reset_index(pd.merge(experimental_values, calculated_values, on="label", how="left").drop(columns=["source_x",
-                                                                                                                                    "source_y",
-                                                                                                                                    "computational_x",
-                                                                                                                                    "computational_y"]).dropna())
-    clean_dataframe =  merged_dataframe.rename(columns={"DG (kcal/mol)_x": "exp_dG",
-                                                        "DG (kcal/mol)_y": "calc_dG",
-                                                        "uncertainty (kcal/mol)_x": "exp_err",
-                                                        "uncertainty (kcal/mol)_y": "calc_err"})   
-    clean_dataframe.to_csv(savename, index=False)
-    return clean_dataframe
-       
+    try:
 
-
-
+        free_energy_map = cinnabar.FEMap.from_csv(cinnabar_input_file)
+        free_energy_map.generate_absolute_values()
+        absolute_values_df = free_energy_map.get_absolute_dataframe()
+        experimental_values = absolute_values_df[absolute_values_df["computational"] == False]
+        calculated_values = absolute_values_df[absolute_values_df["computational"] == True]
+        merged_dataframe = functions.reset_index(pd.merge(experimental_values, calculated_values, on="label", how="left").drop(columns=["source_x",
+                                                                                                                                        "source_y",
+                                                                                                                                        "computational_x",
+                                                                                                                                        "computational_y"]).dropna())
+        clean_dataframe =  merged_dataframe.rename(columns={"DG (kcal/mol)_x": "exp_dG",
+                                                            "DG (kcal/mol)_y": "calc_dG",
+                                                            "uncertainty (kcal/mol)_x": "exp_err",
+                                                            "uncertainty (kcal/mol)_y": "calc_err"})   
+        clean_dataframe.to_csv(savename, index=False)
+        return clean_dataframe
+    except ValueError as e:
+        print(e)
+        print("\n")
+        print("Not able to do network analysis: consider running more edges")
+        
+    
 def write_cinnabar_input_file(experimental_file, calculated_dataframe, outputs_directory, group_name):
     """
     Parse the experimental Ki file and calculated, averaged ddGs dataframe into a cinnabar-readable input file. 
