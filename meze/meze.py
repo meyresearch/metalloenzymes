@@ -82,7 +82,7 @@ class Meze(sofra.Sofra):
     # it's annoying to have to put this in as an argument to the constructor everytime
 
     def __init__(self, protein_file, prepared=False, metal="ZN", cut_off=2.6, force_constant_0=100, water_file=None, 
-                 workdir=os.getcwd(), 
+                 workdir=os.getcwd(), restraints=True,
                  afe_input_path=os.getcwd()+"/afe/", equilibration_path=os.getcwd()+"/equilibration/", outputs=os.getcwd()+"/outputs/", log_directory=os.getcwd()+"/logs/",
                  ligand_path=os.getcwd()+"/inputs/ligands/", ligand_charge=0, ligand_ff="gaff2", 
                  group_name=None, protein_path=os.getcwd()+"/inputs/protein/", water_model="tip3p", protein_ff="ff14SB", 
@@ -99,7 +99,24 @@ class Meze(sofra.Sofra):
                          min_dt=min_dt, min_tol=min_tol, repeats=repeats, temperature=temperature, pressure=pressure, threshold=threshold, n_normal=n_normal, n_difficult=n_difficult,
                          cutoff_scheme=cutoff_scheme, solvation_method=solvation_method, solvent_closeness=solvent_closeness, only_save_end_states=only_save_end_states)
         
-        self.universe = mda.Universe(self.protein_file, format="pdb")
+        self.restraints = restraints
+        
+        if self.prepared:
+            for file in self.protein_file:
+                extension = functions.get_file_extension(file)
+                if extension.lower() in ["prm7", "top"]:
+                #     topology_format = extension
+                #     topology_file = file
+                    pass
+                elif extension.lower() in ["rst7", "gro"]:
+                    coordinate_format = extension
+                    coordinate_file = file
+                else:
+                    raise ValueError
+                
+            self.universe = mda.Universe(topology=coordinate_file, topology_format=coordinate_format)
+        else:
+            self.universe = mda.Universe(self.protein_file, format="pdb")
         self.force_constant_0 = functions.check_float(force_constant_0)
         self.cut_off = functions.check_positive(functions.check_float(cut_off))
         
@@ -191,7 +208,7 @@ class Meze(sofra.Sofra):
             file.writelines(restraints)
 
 
-    def combine_bound_ligands(self):
+    def combine_bound_ligands(self, flexible_align=False):
         """
         Take two bound bss.Systems and combine the ligands' systems
 
@@ -212,11 +229,6 @@ class Meze(sofra.Sofra):
         n_residues = [molecule.nResidues() for molecule in system_1]
         n_atoms = [molecule.nAtoms() for molecule in system_1]
 
-        # Debugging: 
-        # residues = system_1.getResidues()
-        bss.IO.saveMolecules(os.getcwd()+"/test.pdb", system_1, "pdb")
-
-
         for j, (n_residues, n_atoms) in enumerate(zip(n_residues[:20], n_atoms[:20])):
             if n_residues == 1 and n_atoms > 5:  
                 ligand_1 = system_1.getMolecule(j)
@@ -232,11 +244,10 @@ class Meze(sofra.Sofra):
             pass
         else:
             raise _Exceptions.AlignmentError("Could not extract ligands or protein from input systems.")
-        merged_ligands = sofra.merge_ligands(ligand_1, ligand_2)
+        merged_ligands = sofra.merge_ligands(ligand_1, ligand_2, flexible_align=flexible_align)
 
         removal_system = system_1.copy()
         removal_system.removeWaterMolecules()
-        # protein = removal_system.getMolecules()[0]
         removal_system.removeMolecules(ligand_1)
         zn_and_salts = removal_system - protein
 
@@ -254,7 +265,7 @@ class Meze(sofra.Sofra):
         return final_system
 
 
-    def prepare_afe(self, ligand_a_name, ligand_b_name, extra_edges=None, only_save_end_states=False):
+    def prepare_afe(self, ligand_a_name, ligand_b_name, extra_edges=None, only_save_end_states=False, flexible_align=False):
         """
         Inherited method from sofra.Network; adds restraints to somd config files
 
@@ -269,14 +280,16 @@ class Meze(sofra.Sofra):
         -------
         """
         
-        super().prepare_afe(ligand_a_name, ligand_b_name, extra_edges=extra_edges, only_save_end_states=only_save_end_states)
-        first_run_directory = self.output_directories[0]
-        transformation_directory = first_run_directory + f"/{ligand_a_name}~{ligand_b_name}/"
-        bound_directory = transformation_directory + "/bound/" # unbound doesn't have restraints
-        lambda_directories = functions.get_files(bound_directory + "lambda_*/")
-        for i in range(len(lambda_directories)):
-            self.add_somd_restraints(lambda_directories[i])
-        _ = [os.system(f"cp -r {transformation_directory.rstrip('/')} {self.output_directories[i]}") for i in range(1, self.n_repeats)]
+        super().prepare_afe(ligand_a_name, ligand_b_name, extra_edges=extra_edges, only_save_end_states=only_save_end_states, flexible_align=flexible_align)
+        
+        if self.restraints:
+            first_run_directory = self.output_directories[0]
+            transformation_directory = first_run_directory + f"/{ligand_a_name}~{ligand_b_name}/"
+            bound_directory = transformation_directory + "/bound/" # unbound doesn't have restraints
+            lambda_directories = functions.get_files(bound_directory + "lambda_*/")
+            for i in range(len(lambda_directories)):
+                self.add_somd_restraints(lambda_directories[i])
+            _ = [os.system(f"cp -r {transformation_directory.rstrip('/')} {self.output_directories[i]}") for i in range(1, self.n_repeats)]
 
 
     def set_universe(self, file_name):
@@ -508,6 +521,12 @@ def main():
                         help="the pair of ligands undergoing AFE transformation, e.g. ligand_1~ligand_2",
                         type=str)
     
+    parser.add_argument("-f",
+                        "--flexible-align",
+                        dest="flexible_align",
+                        help="use bss.Align.flexAlign to merge ligands",
+                        action=argparse.BooleanOptionalAction)
+
     parser.add_argument("-et",
                         "--extra-transformations",
                         dest="extra_transformations_file",
@@ -520,6 +539,10 @@ def main():
                         default="~",
                         type=character)
     
+    parser.add_argument("--no-restraints",
+                    dest="no_restraints",
+                    help="do not apply harmonic restraints on metal-coordinating residues",
+                    action="store_true")
 
     
     arguments = parser.parse_args()
@@ -531,10 +554,16 @@ def main():
         metal = True
     else:
         metal = False
-    
+
+    if arguments.no_restraints:
+        apply_restraints = False
+    else:
+        apply_restraints = True
+
     if metal:
         meze = Meze(prepared=True,
-                    protein_file=protocol["protein input file"],
+                    restraints=apply_restraints,
+                    protein_file=protocol["prepared protein file"],
                     cut_off=protocol["cutoff"],
                     force_constant_0=protocol["force constant"],
                     workdir=protocol["project directory"],
@@ -599,7 +628,7 @@ def main():
 
     equilibrated_network = meze.get_equilibrated(ligand_a, ligand_b)
 
-    equilibrated_network.prepare_afe(ligand_a, ligand_b, extra_edges=arguments.extra_transformations_file, only_save_end_states=meze.only_save_end_states) 
+    equilibrated_network.prepare_afe(ligand_a, ligand_b, extra_edges=arguments.extra_transformations_file, only_save_end_states=meze.only_save_end_states, flexible_align=arguments.flexible_align) 
 
 if __name__ == "__main__":
     main()

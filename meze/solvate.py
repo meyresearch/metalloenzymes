@@ -30,10 +30,12 @@ def solvate_unbound(network, ligand_name):
     if method == "gromacs":
         ligand_parameters = ligand.parameterise(network.ligand_forcefield, network.ligand_charge)
         unbound_box, unbound_box_angles = network.create_box(ligand_parameters)
+        # bss.IO.saveMolecules(f"{network.ligand_path}/test", ligand_parameters, "pdb")
         solvated_molecule = bss.Solvent.solvate(model=network.protein.water_model, 
                                                 molecule=ligand_parameters, 
                                                 box=unbound_box,
-                                                angles=unbound_box_angles)
+                                                angles=unbound_box_angles,
+                                                work_dir=network.ligand_path)
         solvated_files = bss.IO.saveMolecules(ligand_savename, solvated_molecule, ["PRM7", "RST7"])
 
     elif method == "amber":
@@ -170,7 +172,7 @@ def solvate_bound(network, ligand_name):
                 tleap_in.write("\n")
                 tleap_in.write(f"protein = loadpdb {protein_pdb}\n")
 
-                tleap_in.write("complex = combine {lig protein}\n")
+                tleap_in.write("complex = combine {protein lig}\n")
                 tleap_in.write(f"savepdb complex {ligand_name}_complex_dry.pdb\n")
                 tleap_in.write("check complex\n")
 

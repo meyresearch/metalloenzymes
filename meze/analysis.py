@@ -225,8 +225,6 @@ def save_results(protocol, transformation):
 
         data = [transformation, relative_binding_free_energy, error]
         data_line = ",".join(str(item) for item in data) + "\n"
-
-
         data_file = outputs + "/" + engine + f"_{i}_raw.csv"
         
         input_lines = []

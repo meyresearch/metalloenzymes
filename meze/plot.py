@@ -13,7 +13,8 @@ import argparse
 import os
 import meze
 import functions
-import analysis
+import matplotlib
+matplotlib.rcParams["font.size"] = 16
 
 
 def read_results(protocol):
@@ -75,7 +76,7 @@ def output_statistics(experimental_free_energy, computational, absolute=False):
 
     # mue = sklearn.metrics.mean_absolute_error(experimental_values, calculated_values)
     # rmse = sklearn.metrics.root_mean_squared_error(experimental_values, calculated_values)
-    stats = bootstrap_statistics(experimental=experimental_values, n_samples=100, calculated=calculated_values, absolute=absolute)
+    stats = bootstrap_statistics(experimental=experimental_values, n_samples=1000, calculated=calculated_values, absolute=absolute)
 
     mue = f"{stats['mue']['mean_value']:.2f}"
 
@@ -105,7 +106,7 @@ def output_statistics(experimental_free_energy, computational, absolute=False):
         spearman_text = r"$\rho$:"
         spearman_value = f"{spearman}" + r"$^{{{upper:.2f}}}_{{{lower:.2f}}}$".format(upper = stats["spearman_rho"]["upper_bound"],
                                                                                       lower = stats["spearman_rho"]["lower_bound"])
-        spearman_formatted = spearman_text + 31 * " " + spearman_value
+        spearman_formatted = spearman_text + 33 * " " + spearman_value
         
         text_string = "\n".join((text_string, pearson_formatted, spearman_formatted))
     
@@ -290,7 +291,7 @@ def inhibition_to_ddg(ki_a, ki_b, temperature=300.0):
 
 def inhibition_to_dg(ki, temperature=300.0):
     """
-    Convert experimental inhibition constant (K_i) values to absolute binding free energy
+    Convert experimental inhibition constant (K_i in uM) values to absolute binding free energy
 
     Parameters:
     -----------
@@ -304,7 +305,8 @@ def inhibition_to_dg(ki, temperature=300.0):
     float
         absolute binding free energy
     """
-    return (BOLTZMANN_CONSTANT * AVOGADROS_NUMBER * temperature / 4184) * np.log(ki / 1)
+    k = ki * 10 ** (-6) #TODO convert properly to M 
+    return (BOLTZMANN_CONSTANT * AVOGADROS_NUMBER * temperature / 4184) * np.log(k / 1) # divide by 1 M; standard concentration
 
 
 def propagate_experimental_error(error_a, ki_a, error_b, ki_b, temperature=300):
@@ -334,7 +336,7 @@ def propagate_experimental_error(error_a, ki_a, error_b, ki_b, temperature=300):
 
 def propagate_experimental_dg_error(error, ki, temperature=300):
     """
-    Propagate experimental error to obtain error on experimental absolute binding free energy
+    Propagate experimental error (uM) to obtain error on experimental absolute binding free energy
 
     Parameters:
     -----------
@@ -348,7 +350,9 @@ def propagate_experimental_dg_error(error, ki, temperature=300):
     float
         propagated error in kcal / mol
     """
-    return (BOLTZMANN_CONSTANT * temperature * AVOGADROS_NUMBER / 4184) * (error / ki)
+    error_M = error * 10 ** (-6)
+    k = ki * 10 ** (-6)
+    return (BOLTZMANN_CONSTANT * temperature * AVOGADROS_NUMBER / 4184) * (error_M / k)
 
 
 def bootstrap_statistics(experimental, calculated, n_samples = 10000, alpha_level = 0.95, absolute=False):
@@ -626,17 +630,22 @@ def plot_correlation(plots_directory, results, experimental_free_energies_with_n
         labels[i] = np.nan
     for i in calculated_nan_indices:
         labels[i] = np.nan
-    
-    labels = [value for value in labels if str(value).lower() != "nan"]
-    for i in range(len(labels)):
-        ax.annotate(labels[i], (experimental_free_energies[i] + 0.07, calculated_free_energies[i] + 0.07), fontsize=9)
-    
+
     ax.set_xlim(-max_y, max_y)
     ax.set_ylim(-max_y, max_y)
     ax.set_xlabel("$\Delta \Delta$ G$_\mathrm{EXP}$ (kcal mol \u207B \u00B9)")
     ax.set_ylabel("$\Delta \Delta$ G$_\mathrm{AFE}$ (kcal mol \u207B \u00B9)")
     fig.tight_layout()
     fig.savefig(f"{plots_directory}/meze_AFE_correlation.png", dpi=1000)
+
+    labels = [value for value in labels if str(value).lower() != "nan"]
+    for i in range(len(labels)):
+        ax.annotate(labels[i], (experimental_free_energies[i] + 0.07, calculated_free_energies[i] + 0.07), fontsize=9)
+
+    ax.set_xlabel("$\Delta \Delta$ G$_\mathrm{EXP}$ (kcal mol \u207B \u00B9)")
+    ax.set_ylabel("$\Delta \Delta$ G$_\mathrm{AFE}$ (kcal mol \u207B \u00B9)")
+    fig.tight_layout()
+    fig.savefig(f"{plots_directory}/meze_AFE_correlation_labeled.png", dpi=1000)
     
 
 def plot_bar(plots_directory, afe_df, exp_free_energy, exp_error):
@@ -885,23 +894,37 @@ def plot_overlap_matrix(protocol):
                         print(f"transformation {transformation_directory.split('/')[-2]} at repeat {i} raised error: {e}")
 
 
-def plot_absolute_dGs(absolute_dG_dataframe, plots_directory, text_box, region=True):
+def plot_absolute_dGs(experimental_file, calculated_results, protocol, plots_directory, region=True):
 
+    absolute_dG_dataframe = get_absolute_dGs(experimental_file, calculated_results, protocol)
     experimental_free_energies = absolute_dG_dataframe.iloc[:, 1].to_numpy()
     experimental_errors = absolute_dG_dataframe.iloc[:, 2].to_numpy()
     calculated_free_energies = absolute_dG_dataframe.iloc[:, 3].to_numpy()
     calculated_errors = absolute_dG_dataframe.iloc[:, 4].to_numpy()
     ligand_names = absolute_dG_dataframe.iloc[:, 0].tolist()
+
+    shift = np.min(experimental_free_energies)
+    # shift = 0
+    # from https://github.com/OpenFreeEnergy/cinnabar/blob/c140fea77d4019119ed40acd1a699b92ed6bbf10/cinnabar/plotting.py#L377
+    x_data = experimental_free_energies - np.mean(experimental_free_energies) + shift
+    y_data = calculated_free_energies - np.mean(calculated_free_energies) + shift
+
+    absolute_statistics, absolute_text_box = output_statistics(experimental_free_energy=x_data, 
+                                                               computational=y_data, 
+                                                               absolute=True)
+    save_statistics_to_file(protocol["outputs"], absolute_statistics, filename="absolute_statistics") 
+
+
     fig, ax = plt.subplots(1, 1, figsize=(10,10))
     sns.set_theme(context="notebook", palette="colorblind", style="ticks", font_scale=2)
 
-    ax.scatter(experimental_free_energies, 
-               calculated_free_energies, 
+    ax.scatter(x_data, 
+               y_data, 
                s=50, 
                color=COLOURS["PINK"])
 
-    ax.errorbar(experimental_free_energies,
-                calculated_free_energies,
+    ax.errorbar(x_data,
+                y_data,
                 color=COLOURS["PINK"],
                 yerr=calculated_errors,
                 xerr=experimental_errors,
@@ -909,33 +932,45 @@ def plot_absolute_dGs(absolute_dG_dataframe, plots_directory, text_box, region=T
                 linestyle="",
                 zorder=-1)
 
-    max_calculated = max(np.absolute(calculated_free_energies)) + 1 
-    max_experimental = max(np.absolute(experimental_free_energies)) + 1
-    max_y = max(max_calculated, max_experimental)
 
-    ax.plot([-max_y, max_y], [-max_y, max_y], color=COLOURS["BLUE"], linestyle=":", zorder=-1)
-    ax.vlines(0, -max_y, max_y, color="silver", linestyle="--", zorder=-1)
-    ax.hlines(0, -max_y, max_y, color="silver", linestyle="--", zorder=-1)
+    max_calculated = max(y_data) + 1 
+    max_experimental = max(x_data) + 1
+    max_value = max(max_calculated, max_experimental)
+
+    min_calculated = min(y_data) - 1
+    min_experimental = min(x_data) - 1
+    min_value = min(min_calculated, min_experimental)
+
+    ax.plot([min_value, max_value], [min_value, max_value], color=COLOURS["BLUE"], linestyle=":", zorder=-1)
+    ax.vlines(0, min_value, max_value, color="silver", linestyle="--", zorder=-1)
+    ax.hlines(0, min_value, max_value, color="silver", linestyle="--", zorder=-1)
 
     if region:
-        top = np.arange(-max_y+0.5, max_y+1.5)
-        bottom = np.arange(-max_y-0.5, max_y+0.5)
-        x = np.arange(-max_y, max_y+1)
+        top = np.arange(min_value+0.5, max_value+1.5)
+        bottom = np.arange(min_value-0.5, max_value+0.5)
+        x = np.arange(min_value, max_value+1)
         ax.fill_between(x, bottom, top, alpha=0.2, color=COLOURS["BLUE"], zorder=-1)
     
     box_properties = dict(boxstyle="square", facecolor="white")
-    ax.text(0.05, 0.95, text_box, transform=ax.transAxes, fontsize=16, verticalalignment="top", bbox=box_properties)
+    ax.text(0.05, 0.95, absolute_text_box, transform=ax.transAxes, fontsize=16, verticalalignment="top", bbox=box_properties)
+    
+    ax.set_xlim(min_value, max_value)
+    ax.set_ylim(min_value, max_value)
+    ax.set_xlabel("$\Delta$ G$_\mathrm{EXP}$ (kcal mol \u207B \u00B9)", fontsize=20)
+    ax.set_ylabel("$\Delta$ G$_\mathrm{AFE}$ (kcal mol \u207B \u00B9)", fontsize=20)
+    fig.tight_layout()
+    fig.savefig(f"{plots_directory}/meze_absolute_dG_correlation.png", dpi=1000)     
     
     labels = [name.replace("ligand_", "") for name in ligand_names]
     for i in range(len(labels)):
-        ax.annotate(labels[i], (experimental_free_energies[i] + 0.07, calculated_free_energies[i]), fontsize=14)
+        ax.annotate(labels[i], (x_data[i] + 0.07, y_data[i]), fontsize=14)
     
-    ax.set_xlim(-max_y, max_y)
-    ax.set_ylim(-max_y, max_y)
-    ax.set_xlabel("$\Delta$ G$_\mathrm{EXP}$ (kcal mol \u207B \u00B9)")
-    ax.set_ylabel("$\Delta$ G$_\mathrm{AFE}$ (kcal mol \u207B \u00B9)")
+    ax.set_xlim(min_value, max_value)
+    ax.set_ylim(min_value, max_value)
+    ax.set_xlabel("$\Delta$ G$_\mathrm{EXP}$ (kcal mol \u207B \u00B9)", fontsize=20)
+    ax.set_ylabel("$\Delta$ G$_\mathrm{AFE}$ (kcal mol \u207B \u00B9)", fontsize=20)
     fig.tight_layout()
-    fig.savefig(f"{plots_directory}/meze_absolute_dG_correlation.png", dpi=1000)    
+    fig.savefig(f"{plots_directory}/meze_absolute_dG_correlation_labeled.png", dpi=1000)    
 
 
 def get_absolute_dGs(experimental_file, calculated_dataframe, protocol):
@@ -1143,9 +1178,9 @@ def main():
     protocol_file = functions.file_exists(arguments.protocol_file)
     protocol = functions.read_protocol(protocol_file)
 
-    plot_rmsd_box_plot(protocol)
-    plot_pairwise_lambda_rmsd(protocol)
-    plot_overlap_matrix(protocol)
+    # plot_rmsd_box_plot(protocol)
+    # plot_pairwise_lambda_rmsd(protocol)
+    # plot_overlap_matrix(protocol)
 
     transformations, free_energies, errors = read_results(protocol) 
     results = combine_results(protocol, transformations, free_energies, errors)
@@ -1155,10 +1190,10 @@ def main():
     statistics, text_box = output_statistics(experimental_free_energy, average_free_energies) 
     save_statistics_to_file(protocol["outputs"], statistics) 
     
-    absolute_dG_dataframe = get_absolute_dGs(experimental_file, results, protocol)
-    absolute_statistics, absolute_text_box = output_statistics(absolute_dG_dataframe["exp_dG"].to_numpy(), absolute_dG_dataframe["calc_dG"].to_numpy(), absolute=True)
-    save_statistics_to_file(protocol["outputs"], absolute_statistics, filename="absolute_statistics") 
-    plot_absolute_dGs(absolute_dG_dataframe, protocol["plots directory"], absolute_text_box)
+    plot_absolute_dGs(experimental_file=experimental_file, 
+                      calculated_results=results,
+                      protocol=protocol,
+                      plots_directory=protocol["plots directory"])
    
     plot_bar(protocol["plots directory"], results, experimental_free_energy, experimental_error)
     plot_correlation(protocol["plots directory"], results, experimental_free_energy, experimental_error, text_box=text_box)
