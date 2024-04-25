@@ -115,7 +115,7 @@ def output_statistics(experimental_free_energy, computational, absolute=False):
     return statistics_dataframe, text_string
 
 
-def get_ligand_indices(transformations):
+def get_ligand_indices(transformations, dataframe):
     """
     Take the list of transformation strings and extract the ligand numbers.
     The ligand numbers are used as indicies for comparing with experiments.
@@ -135,8 +135,11 @@ def get_ligand_indices(transformations):
         clean_line = transformation.strip("\n")
         ligand_1 = clean_line.split("~")[0].split("_")[-1]
         ligand_2 = clean_line.split("~")[1].split("_")[-1]
-        first_indices.append(int(ligand_1) - 1)
-        second_indices.append(int(ligand_2) - 1)
+        ligand_column_name = dataframe.columns[0]
+        first_index = dataframe.index[dataframe[ligand_column_name] == ligand_1].tolist()[0]
+        second_index = dataframe.index[dataframe[ligand_column_name] == ligand_2].tolist()[0]
+        first_indices.append(first_index)
+        second_indices.append(second_index)
     return first_indices, second_indices
        
 
@@ -160,7 +163,7 @@ def get_experimental_data(file, transformations):
     df = pd.read_csv(file)
     columns = list(df.columns)
     ki, ki_error = df[columns[1]], df[columns[2]]
-    first_indices, second_indices = get_ligand_indices(transformations)
+    first_indices, second_indices = get_ligand_indices(transformations, df)
 
     free_energies, errors = [], []
     for i in range(len(first_indices)):
@@ -1190,10 +1193,10 @@ def main():
     statistics, text_box = output_statistics(experimental_free_energy, average_free_energies) 
     save_statistics_to_file(protocol["outputs"], statistics) 
     
-    plot_absolute_dGs(experimental_file=experimental_file, 
-                      calculated_results=results,
-                      protocol=protocol,
-                      plots_directory=protocol["plots directory"])
+    # plot_absolute_dGs(experimental_file=experimental_file, 
+    #                   calculated_results=results,
+    #                   protocol=protocol,
+    #                   plots_directory=protocol["plots directory"])
    
     plot_bar(protocol["plots directory"], results, experimental_free_energy, experimental_error)
     plot_correlation(protocol["plots directory"], results, experimental_free_energy, experimental_error, text_box=text_box)
