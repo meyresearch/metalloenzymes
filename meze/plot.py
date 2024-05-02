@@ -78,15 +78,15 @@ def output_statistics(experimental_free_energy, computational, absolute=False):
     # rmse = sklearn.metrics.root_mean_squared_error(experimental_values, calculated_values)
     stats = bootstrap_statistics(experimental=experimental_values, n_samples=1000, calculated=calculated_values, absolute=absolute)
 
-    mue = f"{stats['mue']['mean_value']:.2f}"
+    mue = f"{stats['mue']['mean_value']:.3f}"
 
     mue_text = f"MUE:"
-    mue_value = f"{mue}" + r"$^{{{upper:.2f}}}_{{{lower:.2f}}}$ kcal mol$^{{-1}}$".format(upper = stats["mue"]["upper_bound"],
+    mue_value = f"{mue}" + r"$^{{{upper:.3f}}}_{{{lower:.3f}}}$ kcal mol$^{{-1}}$".format(upper = stats["mue"]["upper_bound"],
                                                                                           lower = stats["mue"]["lower_bound"])
     
-    rmse = f"{stats['rmse']['mean_value']:.2f}"
+    rmse = f"{stats['rmse']['mean_value']:.3f}"
     rmse_text = f"RMSE:" 
-    rmse_value = f"{rmse}" + r"$^{{{upper:.2f}}}_{{{lower:.2f}}}$ kcal mol$^{{-1}}$".format(upper = stats["rmse"]["upper_bound"],
+    rmse_value = f"{rmse}" + r"$^{{{upper:.3f}}}_{{{lower:.3f}}}$ kcal mol$^{{-1}}$".format(upper = stats["rmse"]["upper_bound"],
                                                                                             lower = stats["rmse"]["lower_bound"])
     
     formatted_mue = mue_text + 10 * " " + mue_value
@@ -96,17 +96,17 @@ def output_statistics(experimental_free_energy, computational, absolute=False):
 
    
     if absolute:
-        pearson = f"{stats['pearson_r2']['mean_value']:.2f}"
+        pearson = f"{stats['pearson_r2']['mean_value']:.3f}"
         pearson_text =  r"R$^2$:"
-        pearson_value =f"{pearson}" + r"$^{{{upper:.2f}}}_{{{lower:.2f}}}$".format(upper = stats["pearson_r2"]["upper_bound"],
+        pearson_value =f"{pearson}" + r"$^{{{upper:.3f}}}_{{{lower:.3f}}}$".format(upper = stats["pearson_r2"]["upper_bound"],
                                                                                    lower = stats["pearson_r2"]["lower_bound"])
         
         pearson_formatted = pearson_text + 31 * " " + pearson_value
-        spearman = f"{stats['spearman_rho']['mean_value']:.2f}"
+        spearman = f"{stats['spearman_rho']['mean_value']:.3f}"
         spearman_text = r"$\rho$:"
-        spearman_value = f"{spearman}" + r"$^{{{upper:.2f}}}_{{{lower:.2f}}}$".format(upper = stats["spearman_rho"]["upper_bound"],
+        spearman_value = f"{spearman}" + r"$^{{{upper:.3f}}}_{{{lower:.3f}}}$".format(upper = stats["spearman_rho"]["upper_bound"],
                                                                                       lower = stats["spearman_rho"]["lower_bound"])
-        spearman_formatted = spearman_text + 33 * " " + spearman_value
+        spearman_formatted = spearman_text + 31 * " " + spearman_value
         
         text_string = "\n".join((text_string, pearson_formatted, spearman_formatted))
     
