@@ -203,7 +203,11 @@ def get_file_extension(path):
         file extension
     """
     file_name = path.split("/")[-1]
-    return file_name.split(".")[-1]
+    if "." in file_name:
+        extension = file_name.split(".")[-1]
+    else:
+        extension = ""
+    return extension
 
 
 def tuple_to_str(object):
