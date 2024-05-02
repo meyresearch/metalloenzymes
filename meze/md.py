@@ -6,12 +6,13 @@ from definitions import KELVIN, FEMTOSECOND, ATM
 import BioSimSpace as bss
 import os
 import meze
+import sofra
 import solvate
 
 
-def production(hot_meze, system, outputs, time, timestep=2, temperature=300, pressure=1):
+def production(hot_meze, system, outputs, time, timestep=2, temperature=300, pressure=1, restart_write_steps=10000, coordinate_write_steps=10000):
 
-    working_directory = functions.mkdir(outputs + hot_meze.ligand_name)
+    working_directory = functions.mkdir(outputs + hot_meze.ligand_name + "/")
 
     if type(timestep) != bss.Types._time.Time:
         timestep = functions.convert_to_units(timestep, FEMTOSECOND)
@@ -20,6 +21,8 @@ def production(hot_meze, system, outputs, time, timestep=2, temperature=300, pre
     if type(pressure) != bss.Types._pressure.Pressure:
         pressure = functions.convert_to_units(pressure, ATM)
 
+    configuration = {}
+    restraints_file = None
     if hot_meze.is_metal:
         configuration = {"nmropt": 1}
         restraints_file = hot_meze.write_restraints_file_0(workdir=working_directory)
@@ -28,10 +31,10 @@ def production(hot_meze, system, outputs, time, timestep=2, temperature=300, pre
                                        runtime=time,
                                        temperature=temperature,
                                        pressure=pressure,
-                                       restart_interval=hot_meze.restart_write_steps,
-                                       report_interval=hot_meze.coordinate_write_steps)
+                                       restart_interval=restart_write_steps,
+                                       report_interval=coordinate_write_steps)
     
-    checkpoint = hot_meze.equilibration_directory + "/09_relax/09_relax.rst7"
+    checkpoint = hot_meze.equilibration_directory + "/" + hot_meze.ligand_name + "/08_relax/08_relax"
 
     hot_meze.run(system, protocol, "md", working_directory, configuration, checkpoint, restraints_file)
 
@@ -43,7 +46,13 @@ def main():
     parser.add_argument("ligand_name",
                         help="name of ligand",
                         type=str)
-
+    
+    parser.add_argument("-n",
+                        "--non-metal",
+                        dest="non_metal", 
+                        help="boolean flag for preparing non-metal proteins",
+                        action="store_true")
+    
     parser.add_argument("-co",
                         "--cut-off",
                         dest="cut_off",
@@ -232,29 +241,57 @@ def main():
     
     arguments = parser.parse_args()
 
-    network = meze.Meze(protein_file=arguments.protein,
-                        cut_off=arguments.cut_off,
-                        is_md=True,
-                        md_input_directory=arguments.working_directory + "md_input_files/",
-                        workdir=arguments.working_directory,
-                        ligand_path=arguments.ligand_directory,
-                        ligand_charge=arguments.ligand_charge,
-                        ligand_ff=arguments.ligand_forcefield,
-                        group_name=arguments.group_name,        
-                        protein_path=arguments.protein_directory,
-                        water_model=arguments.water_model,
-                        protein_ff=arguments.forcefield,
-                        engine=arguments.engine,
-                        sampling_time=arguments.sampling_time,
-                        box_edges=arguments.box_edges,
-                        box_shape=arguments.box_shape,
-                        cutoff_scheme=arguments.cutoff_scheme,
-                        solvation_method=arguments.solvation_method,
-                        solvent_closeness=arguments.solvent_closeness,
-                        short_nvt=arguments.equilibration_runtime,
-                        nvt=arguments.equilibration_runtime,
-                        npt=arguments.equilibration_runtime)
-    
+    if not arguments.non_metal:
+        metal = True
+    elif arguments.non_metal:
+        metal = False
+    if metal:
+        network = meze.Meze(protein_file=arguments.protein,
+                            cut_off=arguments.cut_off,
+                            is_md=True,
+                            md_input_directory=arguments.working_directory + "md_input_files/",
+                            workdir=arguments.working_directory,
+                            ligand_path=arguments.ligand_directory,
+                            ligand_charge=arguments.ligand_charge,
+                            ligand_ff=arguments.ligand_forcefield,
+                            group_name=arguments.group_name,        
+                            protein_path=arguments.protein_directory,
+                            water_model=arguments.water_model,
+                            protein_ff=arguments.forcefield,
+                            engine=arguments.engine,
+                            sampling_time=arguments.sampling_time,
+                            box_edges=arguments.box_edges,
+                            box_shape=arguments.box_shape,
+                            cutoff_scheme=arguments.cutoff_scheme,
+                            solvation_method=arguments.solvation_method,
+                            solvent_closeness=arguments.solvent_closeness,
+                            short_nvt=arguments.equilibration_runtime,
+                            nvt=arguments.equilibration_runtime,
+                            npt=arguments.equilibration_runtime)
+    else:
+        network = sofra.Sofra(protein_file=arguments.protein,
+                              is_md=True,
+                              md_input_directory=arguments.working_directory + "md_input_files/",
+                              workdir=arguments.working_directory,
+                              ligand_path=arguments.ligand_directory,
+                              ligand_charge=arguments.ligand_charge,
+                              ligand_ff=arguments.ligand_forcefield,
+                              group_name=arguments.group_name,        
+                              protein_path=arguments.protein_directory,
+                              water_model=arguments.water_model,
+                              protein_ff=arguments.forcefield,
+                              engine=arguments.engine,
+                              sampling_time=arguments.sampling_time,
+                              box_edges=arguments.box_edges,
+                              box_shape=arguments.box_shape,
+                              cutoff_scheme=arguments.cutoff_scheme,
+                              solvation_method=arguments.solvation_method,
+                              solvent_closeness=arguments.solvent_closeness,
+                              short_nvt=arguments.equilibration_runtime,
+                              nvt=arguments.equilibration_runtime,
+                              npt=arguments.equilibration_runtime)
+
+        
     network.protein_water_complex = network.protein.create_complex()
     network.prepared_protein = network.protein.tleap(network.protein_water_complex)
     network.log_directory = network.create_directory(f"{network.working_directory}/logs/")
@@ -265,6 +302,7 @@ def main():
     cold_meze = equilibrate.coldMeze(group_name=network.group_name,
                                      ligand_name=arguments.ligand_name,
                                      prepared=True,
+                                     is_metal=metal,
                                      equilibration_directory=network.equilibration_directory,
                                      input_protein_file=network.protein_file,
                                      protein_directory=network.protein_path,
@@ -289,7 +327,7 @@ def main():
     production(hot_meze=hot_meze, 
                system=relaxed_system, 
                outputs=hot_meze.outputs,
-               time=network.sampling_time)
+               time=network.md_time)
 
 
 if __name__ == "__main__":
