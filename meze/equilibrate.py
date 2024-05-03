@@ -15,10 +15,8 @@ class coldMeze(meze.Meze):
 
     def __init__(self, group_name, ligand_name, outputs, input_protein_file,
                  protein_directory, ligand_directory, log_directory, equilibration_directory, afe_input_directory, 
-                 min_steps, short_nvt, nvt, npt, min_dt, min_tol, temperature, pressure, short_timestep=0.5, 
-                 is_md=False, is_metal=True, restraints=True, prepared=True, 
-                 force_constant_0=100, restraint_weight=10, restart_write_steps=100, coordinate_write_steps=500):
-
+                 min_steps, short_nvt, nvt, npt, min_dt, min_tol, temperature, pressure, short_timestep=0.5, is_metal=True, prepared=True, restraints=True,
+                is_md=False, force_constant_0=100, restraint_weight=10, restart_write_steps=100, coordinate_write_steps=500):
         self.is_metal = is_metal
         self.prepared = prepared
         if self.is_metal:
@@ -26,12 +24,10 @@ class coldMeze(meze.Meze):
                              equilibration_path=equilibration_directory, afe_input_path=afe_input_directory, outputs=outputs,
                              protein_path=protein_directory, ligand_path=ligand_directory, force_constant_0=force_constant_0)
         else:
-
             self.protein_file = input_protein_file
             super(meze.Meze, self).__init__(protein_file=input_protein_file, prepared=prepared, group_name=group_name, is_md=is_md, log_directory=log_directory,
                                             equilibration_path=equilibration_directory, afe_input_path=afe_input_directory, outputs=outputs,
                                             protein_path=protein_directory, ligand_path=ligand_directory,)
-            restraints = False
 
         self.restraints = restraints
             
@@ -88,6 +84,8 @@ class coldMeze(meze.Meze):
             configuration["irest"] = 1
             configuration["ntx"] = 5 
 
+        config = working_directory + "/*.cfg"
+        config_file = functions.get_files(config)[0]
 
         if self.is_metal and restraints_file: # restraints for bound with metalloenzymes
             try:
@@ -100,9 +98,6 @@ class coldMeze(meze.Meze):
             amber_path = os.environ["AMBERHOME"] + "/bin/pmemd.cuda"
 
             process = bss.Process.Amber(system=system, protocol=protocol, name=name, work_dir=working_directory, extra_options=configuration, extra_lines=namelist, exe=amber_path)             
-            config = working_directory + "/*.cfg"
-            config_file = functions.get_files(config)[0]
-
 
 
             with open(config_file, "a") as file:
@@ -119,9 +114,27 @@ class coldMeze(meze.Meze):
 
         config_lines = list(map(lambda key_word: key_word.replace('   restraintmask="@N,CA,C,O",\n', '   restraintmask="@N,CA,C",\n'), config_lines))
 
+        if self.is_metal:
+            metal_ligands = self.get_metal_ligands()
+            keys = list(metal_ligands.keys())
+            metal_ligating_atom_groups = metal_ligands[keys[0]] + metal_ligands[keys[1]]
+            metal_ligating_residue_ids = [atom.resnum for atom in metal_ligating_atom_groups]
+            restrained_residue_ids = metal_ligating_residue_ids + self.metal_resids.tolist()
+            metal_restraint_mask = meze.residue_restraint_mask(restrained_residue_ids)
+        
+            for line in config_lines:
+                if "restraintmask" in line:
+                    key, value = line.split("=")
+                    string = value.split('"')
+                    old_line = line
+                    old_mask = string[1]
+                    new_mask = "(" + old_mask + ") " + "& " + metal_restraint_mask
+                    new_string = key + '="' + new_mask + '",\n'
+            
+            config_lines = list(map(lambda key_word: key_word.replace(old_line, new_string), config_lines))
+
         with open(config_file, "w") as file:
             file.writelines(config_lines)
-
 
         process.start()
         process.wait()
@@ -319,13 +332,16 @@ class coldMeze(meze.Meze):
         npt_dir = directories("npt")     
         start_temp = functions.convert_to_units(0, KELVIN)
         print(f"Equilibrating bound ligand {self.ligand_name}")
+
         restraints_file = None
         configuration = {}
         if self.is_metal and self.restraints:
             configuration = {"nmropt": 1}
             restraints_file = self.write_restraints_file_0(workdir=directory)
+
         elif not self.is_metal:
             configuration = {"emstep": self.min_dt, "emtol": self.min_tol}
+    
         minimised_system = self.minimise(system=solvated_system, working_directory=min_dir, configuration=configuration, restraints_file=restraints_file)
 
         restrained_nvt = self.heat(system=minimised_system,
@@ -378,7 +394,18 @@ class coldMeze(meze.Meze):
     
 
     def heat_md(self):
-        # heat a bound system for md simulation
+        """
+        Perform minimisation and NVT and NPT equilibrations for MD simulations 
+
+        Parameters:
+        -----------
+
+        Return:
+        -------
+        
+        self, relaxed_system: tuple
+
+        """        
         directory = functions.mkdir(self.equilibration_directory+f"/{self.ligand_name}/")
         filename = f"bound_{self.ligand_name}_solvated"
         files = functions.get_files(f"{self.protein_path}/{filename}" + ".*")
@@ -402,7 +429,7 @@ class coldMeze(meze.Meze):
 
         restraints_file = None
         configuration = {}
-        if self.is_metal:
+        if self.is_metal and self.restraints:
             configuration = {"nmropt": 1}
             restraints_file = self.write_restraints_file_0(workdir=directory)
 
@@ -446,10 +473,7 @@ class coldMeze(meze.Meze):
                                     restraints_file=restraints_file,
                                     configuration=configuration,
                                     checkpoint=relax_03_dir + "/03_relax")
-        # Debugging
-        # lower_04_system = bss.IO.readMolecules(["/home/jguven/projects/alchemistry/vim2/md/equilibration/ligand_10/04_lower/04_lower.prm7",
-        #                                         "/home/jguven/projects/alchemistry/vim2/md/equilibration/ligand_10/04_lower/04_lower.rst7"])
-        
+
         relax_05_system = self.heat(system=lower_04_system,
                                     working_directory=relax_05_dir,
                                     process_name="05_relax",
@@ -486,9 +510,6 @@ class coldMeze(meze.Meze):
                                        restraints_file=restraints_file,
                                        configuration=configuration,
                                        checkpoint=reduce_06_dir + "/06_reduce")
-
-        # Debugging
-        # continue_07_system = bss.IO.readMolecules([continue_07_dir + "/07_continue.top", continue_07_dir + "/07_continue.gro"])
         
         relax_08_system = self.heat(system=continue_07_system,
                                     working_directory=relax_08_dir,
@@ -517,11 +538,6 @@ def main():
                         help="protocol file containing equilibration options",
                         type=str,
                         default=os.getcwd() + "/afe/protocol.dat")
-
-    parser.add_argument("--no-restraints",
-                        dest="no_restraints",
-                        help="do not apply harmonic restraints on metal-coordinating residues",
-                        action="store_true")
     
     arguments = parser.parse_args()
     protocol = functions.input_to_dict(file=arguments.protocol_file)
@@ -532,20 +548,14 @@ def main():
     else:
         metal = False
 
-    if arguments.no_restraints:
-        apply_restraints = False
-    else:
-        apply_restraints = True
-
     cold_meze = coldMeze(is_metal=metal,
-                         restraints=apply_restraints,
                          group_name=protocol["group name"],
                          ligand_name=arguments.ligand_name,
                          afe_input_directory=protocol["afe input directory"],
                          outputs=protocol["outputs"],
                          log_directory=protocol["log directory"],
                          equilibration_directory=protocol["equilibration directory"],
-                         input_protein_file=protocol["prepared protein file"],
+                         input_protein_file=protocol["protein input file"],
                          protein_directory=protocol["protein directory"],
                          ligand_directory=protocol["ligand directory"],
                          min_steps=protocol["minimisation steps"],
