@@ -82,7 +82,7 @@ class Meze(sofra.Sofra):
     # it's annoying to have to put this in as an argument to the constructor everytime
 
     def __init__(self, protein_file, prepared=False, metal="ZN", cut_off=2.6, force_constant_0=100, water_file=None, 
-                 workdir=os.getcwd(), restraints=True,
+                 workdir=os.getcwd(), is_md=False, md_input_directory=None, restraints=True,
                  afe_input_path=os.getcwd()+"/afe/", equilibration_path=os.getcwd()+"/equilibration/", outputs=os.getcwd()+"/outputs/", log_directory=os.getcwd()+"/logs/",
                  ligand_path=os.getcwd()+"/inputs/ligands/", ligand_charge=0, ligand_ff="gaff2", 
                  group_name=None, protein_path=os.getcwd()+"/inputs/protein/", water_model="tip3p", protein_ff="ff14SB", 
@@ -92,8 +92,8 @@ class Meze(sofra.Sofra):
         
         self.protein_file = protein_file
 
-        super().__init__(prepared=prepared, workdir=workdir, ligand_path=ligand_path, group_name=group_name, protein_file=protein_file, protein_path=protein_path, 
-                         water_model=water_model, ligand_ff=ligand_ff, protein_ff=protein_ff, ligand_charge=ligand_charge, 
+        super().__init__(prepared=prepared, workdir=workdir, ligand_path=ligand_path, group_name=group_name, protein_file=protein_file, protein_path=protein_path,
+                         water_model=water_model, ligand_ff=ligand_ff, protein_ff=protein_ff, ligand_charge=ligand_charge, is_md=is_md,md_input_directory=md_input_directory,
                          afe_input_path=afe_input_path, equilibration_path=equilibration_path, outputs=outputs, log_directory=log_directory,
                          engine=engine, sampling_time=sampling_time, box_edges=box_edges, box_shape=box_shape, min_steps=min_steps, short_nvt=short_nvt, nvt=nvt, npt=npt, 
                          min_dt=min_dt, min_tol=min_tol, repeats=repeats, temperature=temperature, pressure=pressure, threshold=threshold, n_normal=n_normal, n_difficult=n_difficult,

@@ -1,7 +1,24 @@
 #!/bin/bash
-#SBATCH -n 1
-#SBATCH --gres=gpu:3
-#SBATCH --cpus-per-gpu 10
-#SBATCH --mem 4069
+#SBATCH -o PATH_TO_LOGS/md_%a.slurm.out
+#SBATCH -e PATH_TO_LOGS/md_%a.slurm.err
+#SBATCH -n N_TASKS
+#SBATCH --gres=gpu:N_GPUS
+#SBATCH --cpus-per-gpu=N_CPUS
 
-python $MEZEHOME/prepare_md_0.py "ligand_1" -if "$HOME/projects/alchemistry/vim2/deprotonated_ligand/md/inputs/protein/vim2.input.pdb" -c -2 -g vim2
+export ligands_dat_file=LIGANDS_DATA_FILE
+export transformations_file=TRANSFORMATIONS_DATA_FILE
+export MEZEHOME=PATH_TO_MEZE
+
+source $MEZEHOME/parse.sh
+
+lig_i=$SLURM_ARRAY_TASK_ID
+ligand=${ligand_array[$lig_i]}
+
+start=`date +%s`
+
+python $MEZEHOME/md.py $ligand --input-pdb-file INPUTPROTEINFILE --ligand-charge -2 --group-name vim2
+
+end=`date +%s`
+runtime=$((end - start))
+
+echo "Finished in $runtime seconds, or $((runtime/60)) minutes"

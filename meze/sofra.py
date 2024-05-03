@@ -216,7 +216,7 @@ class Sofra(object):
     Return:
     -------
     """
-    def __init__(self, protein_file, workdir=os.getcwd(), prepared=False, 
+    def __init__(self, protein_file, workdir=os.getcwd(), prepared=False, is_md=False, md_input_directory=None,
                  afe_input_path=os.getcwd()+"/afe/", equilibration_path=os.getcwd()+"/equilibration/", outputs=os.getcwd()+"/outputs/", log_directory=os.getcwd()+"/logs/",
                  ligand_path=os.getcwd()+"/inputs/ligands/", ligand_charge=0, ligand_ff="gaff2", 
                  group_name=None, protein_path=os.getcwd()+"/inputs/protein/", water_model="tip3p", protein_ff="ff14SB", 
@@ -230,26 +230,36 @@ class Sofra(object):
         self.only_save_end_states = only_save_end_states
         self.md_engine = engine
         self.md_time = functions.convert_to_units(sampling_time, NANOSECOND)
-        self.n_repeats = repeats
+        self.is_md = is_md
+        if not self.is_md:
+            self.n_repeats = repeats
+        else:
+            self.n_repeats = 0
 
         self.prepared = prepared 
         if self.prepared: 
             self.prepared_protein = functions.get_files(protein_file + ".*")
             self.protein_file = self.prepared_protein
-            self.afe_input_directory = functions.path_exists(afe_input_path)
+            if not is_md:
+                self.afe_input_directory = functions.path_exists(afe_input_path)
+                self.output_directories = functions.get_files(self.outputs + f"/{engine}_*/")
+            else: 
+                self.md_input_directory = functions.path_exists(md_input_directory)
             self.equilibration_directory = functions.path_exists(equilibration_path)  
             self.outputs = functions.path_exists(outputs) 
             self.log_directory = functions.path_exists(log_directory)
-            self.output_directories = functions.get_files(self.outputs + f"/{engine}_*/")
             self.plots = functions.get_files(f"{self.outputs}/plots/")
         else:
             self.protein_file = protein_file
-            self.afe_input_directory = self.create_directory(afe_input_path)
+            if not self.is_md:
+                self.afe_input_directory = self.create_directory(afe_input_path)
+                self.output_directories = self.create_output_directories()
+            else:
+                self.md_input_directory = self.create_directory(md_input_directory)
             self.equilibration_directory = self.create_directory(equilibration_path)
             self.outputs = self.create_directory(outputs)
-            self.output_directories = self.create_output_directories()
             self.plots = self.create_directory(f"{self.outputs}/plots/")
-
+            self.log_directory = self.create_directory(log_directory)
         self.solvation_method = solvation_method
         self.solvent_closeness = functions.check_positive(solvent_closeness)
 
@@ -262,7 +272,6 @@ class Sofra(object):
         self.ligand_molecules = [ligand.get_ligand() for ligand in self.ligands]
         self.names = [ligand.get_name() for ligand in self.ligands]
 
-
         self.protein_forcefield = protein_ff
         self.protein_path = functions.path_exists(protein_path)
         self.group_name = self.get_name(group_name)
@@ -274,11 +283,15 @@ class Sofra(object):
                                        parameterised=self.prepared)
         
         self.cutoff_scheme = cutoff_scheme.lower()
-        self.threshold = threshold
-        self.n_normal = n_normal
-        self.n_difficult = n_difficult
-        self.n_windows = []
-        self.lambdas = []
+        if not is_md:
+            self.threshold = threshold
+            self.n_normal = n_normal
+            self.n_difficult = n_difficult
+            self.n_windows = []
+            self.lambdas = []
+        self.short_nvt = functions.convert_to_units(short_nvt, PICOSECOND)
+        self.nvt = functions.convert_to_units(nvt, PICOSECOND)
+        self.npt = functions.convert_to_units(npt, PICOSECOND)
         self.n_ligands = self.get_n_ligands()
         self.bound_ligands = [None] * self.n_ligands
         self.bound_ligand_molecules = [None] * self.n_ligands
@@ -286,10 +299,6 @@ class Sofra(object):
         self.box_shape = box_shape
         self.box_edges = box_edges
         self.min_steps = min_steps
-        
-        self.short_nvt = functions.convert_to_units(short_nvt, PICOSECOND)
-        self.nvt = functions.convert_to_units(nvt, PICOSECOND)
-        self.npt = functions.convert_to_units(npt, PICOSECOND)
         self.min_dt = min_dt
         self.min_tol = min_tol
         self.temperature = functions.convert_to_units(temperature, KELVIN)
@@ -351,6 +360,7 @@ class Sofra(object):
             parent directories list, unbound dirs, bound dirs
         """
         output_directories = []
+
         for i in range(1, self.n_repeats + 1, 1):
             output_directories.append(self.create_directory(f"{self.outputs}/{self.md_engine}_{i}/"))
         return output_directories
@@ -809,8 +819,12 @@ class Sofra(object):
         protocol_file: str
             protocol datafile
         """
-        strip = self.output_directories[0].split("/")[-2]
-        path_to_outputs = self.output_directories[0].replace(strip, "")
+        if not self.is_md:
+            strip = self.output_directories[0].split("/")[-2]
+            path_to_outputs = self.output_directories[0].replace(strip, "")
+        else: 
+            path_to_outputs = self.outputs
+
         protocol = [f"group name = {self.group_name}",
                     f"ligand forcefield = {self.ligand_forcefield}", 
                     f"ligand charge = {self.ligand_charge}",
@@ -826,9 +840,7 @@ class Sofra(object):
                     f"minimisation steps = {self.min_steps}",
                     f"minimisation stepsize = {self.min_dt}",
                     f"minimisation tolerance = {self.min_tol}",
-                    f"short nvt = {self.short_nvt._value}",
-                    f"nvt = {self.nvt._value}",
-                    f"npt = {self.npt._value}",
+
                     f"temperature = {self.temperature._value}",
                     f"pressure = {self.pressure._value}",
                     f"sampling time = {self.md_time._value}",
@@ -836,16 +848,23 @@ class Sofra(object):
                     f"only save end states = {self.only_save_end_states}",
                     f"outputs = {path_to_outputs}",
                     f"repeats = {self.n_repeats}",
-                    f"network file = {self.network_file}",
+
                     f"project directory = {self.working_directory}",
                     f"equilibration directory = {self.equilibration_directory}",
                     f"ligand directory = {self.ligand_path}",
                     f"protein directory = {self.protein_path}",
                     f"log directory = {self.log_directory}",
-                    f"afe input directory = {self.afe_input_directory}",
                     f"plots directory = {self.plots}"]
-
-        protocol_file = self.afe_input_directory + "/protocol.dat"
+        
+        if not self.is_md:
+            protocol.append(f"afe input directory = {self.afe_input_directory}",
+                            f"short nvt = {self.short_nvt._value}",
+                            f"nvt = {self.nvt._value}",
+                            f"npt = {self.npt._value}",
+                            f"network file = {self.network_file}",)
+            protocol_file = self.afe_input_directory + "/protocol.dat"
+        else:
+            protocol_file = self.md_input_directory + "/protocol.dat"
 
         with open(protocol_file, "w") as file:
             writer = csv.writer(file)

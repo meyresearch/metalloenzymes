@@ -178,7 +178,7 @@ def main():
                         dest="solvation_method",
                         help="MD engine used for solvation; default is BioSimSpace (GROMACS)",
                         choices=["amber", "gromacs"],
-                        default="gromacs",
+                        default="amber",
                         type=str)
     
     parser.add_argument("-sc",
@@ -382,6 +382,9 @@ def main():
                                            temperature=protocol["temperature"],
                                            pressure=protocol["pressure"],
                                            n_normal=arguments.lambdas,
+                                           n_difficult=arguments.n_difficult,
+                                           solvation_method=protocol["solvation_method"],
+                                           solvent_closeness=protocol["solvent_closeness"],
                                            n_difficult=arguments.n_difficult, 
                                            only_save_end_states=arguments.only_save_end_states)
 
