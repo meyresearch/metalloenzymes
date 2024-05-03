@@ -80,7 +80,7 @@ def output_statistics(experimental_free_energy, computational, absolute=False):
 
     mue = f"{stats['mue']['mean_value']:.3f}"
 
-    mue_text = f"MUE:"
+    mue_text = f"MAE:"
     mue_value = f"{mue}" + r"$^{{{upper:.3f}}}_{{{lower:.3f}}}$ kcal mol$^{{-1}}$".format(upper = stats["mue"]["upper_bound"],
                                                                                           lower = stats["mue"]["lower_bound"])
     
@@ -89,8 +89,11 @@ def output_statistics(experimental_free_energy, computational, absolute=False):
     rmse_value = f"{rmse}" + r"$^{{{upper:.3f}}}_{{{lower:.3f}}}$ kcal mol$^{{-1}}$".format(upper = stats["rmse"]["upper_bound"],
                                                                                             lower = stats["rmse"]["lower_bound"])
     
-    formatted_mue = mue_text + 10 * " " + mue_value
-    formatted_rmse = rmse_text + 8 * " " + rmse_value 
+    # formatted_mue = mue_text + 10 * " " + mue_value
+    # formatted_rmse = rmse_text + 8 * " " + rmse_value 
+
+    formatted_mue = mue_text + " " + mue_value
+    formatted_rmse = rmse_text + " " + rmse_value
 
     text_string = "\n".join((formatted_mue, formatted_rmse))
 
@@ -101,12 +104,14 @@ def output_statistics(experimental_free_energy, computational, absolute=False):
         pearson_value =f"{pearson}" + r"$^{{{upper:.3f}}}_{{{lower:.3f}}}$".format(upper = stats["pearson_r2"]["upper_bound"],
                                                                                    lower = stats["pearson_r2"]["lower_bound"])
         
-        pearson_formatted = pearson_text + 31 * " " + pearson_value
+        # pearson_formatted = pearson_text + 31 * " " + pearson_value
+        pearson_formatted = pearson_text + " " + pearson_value
         spearman = f"{stats['spearman_rho']['mean_value']:.3f}"
-        spearman_text = r"$\rho$:"
+        spearman_text = r"Spearman $\rho$:"
         spearman_value = f"{spearman}" + r"$^{{{upper:.3f}}}_{{{lower:.3f}}}$".format(upper = stats["spearman_rho"]["upper_bound"],
                                                                                       lower = stats["spearman_rho"]["lower_bound"])
-        spearman_formatted = spearman_text + 31 * " " + spearman_value
+        # spearman_formatted = spearman_text + 33 * " " + spearman_value
+        spearman_formatted = spearman_text + " " + spearman_value
         
         text_string = "\n".join((text_string, pearson_formatted, spearman_formatted))
     
