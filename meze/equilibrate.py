@@ -84,11 +84,13 @@ class coldMeze(meze.Meze):
             configuration["irest"] = 1
             configuration["ntx"] = 5 
 
+
         if self.is_metal and restraints_file: # restraints for bound with metalloenzymes
             try:
                 restraints_file = shutil.copy(restraints_file, working_directory).split("/")[-1]
             except shutil.SameFileError as e:
                 print(e)
+                restraints_file = restraints_file.split("/")[-1]
                 pass
             namelist = ["&wt TYPE='DUMPFREQ', istep1=1 /"]
             amber_path = os.environ["AMBERHOME"] + "/bin/pmemd.cuda"
@@ -96,6 +98,9 @@ class coldMeze(meze.Meze):
             process = bss.Process.Amber(system=system, protocol=protocol, name=name, work_dir=working_directory, extra_options=configuration, extra_lines=namelist, exe=amber_path)             
             config = working_directory + "/*.cfg"
             config_file = functions.get_files(config)[0]
+
+
+
             with open(config_file, "a") as file:
                 file.write("\n")
                 file.write(f"DISANG={restraints_file}\n")
@@ -104,6 +109,15 @@ class coldMeze(meze.Meze):
         elif not restraints_file: 
             amber_path = os.environ["AMBERHOME"] + "/bin/pmemd.cuda"
             process = bss.Process.Amber(system=system, protocol=protocol, name=name, work_dir=working_directory, extra_options=configuration, exe=amber_path)
+
+        with open(config_file, "r") as file:
+            config_lines = file.readlines()
+
+        config_lines = list(map(lambda key_word: key_word.replace('   restraintmask="@N,CA,C,O",\n', '   restraintmask="@N,CA,C",\n'), config_lines))
+
+        with open(config_file, "w") as file:
+            file.writelines(config_lines)
+
 
         process.start()
         process.wait()
@@ -427,6 +441,9 @@ class coldMeze(meze.Meze):
                                     restraints_file=restraints_file,
                                     configuration=configuration,
                                     checkpoint=relax_03_dir + "/03_relax")
+        # Debugging
+        # lower_04_system = bss.IO.readMolecules(["/home/jguven/projects/alchemistry/vim2/md/equilibration/ligand_10/04_lower/04_lower.prm7",
+        #                                         "/home/jguven/projects/alchemistry/vim2/md/equilibration/ligand_10/04_lower/04_lower.rst7"])
         
         relax_05_system = self.heat(system=lower_04_system,
                                     working_directory=relax_05_dir,
