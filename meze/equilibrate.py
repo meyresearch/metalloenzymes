@@ -84,8 +84,6 @@ class coldMeze(meze.Meze):
             configuration["irest"] = 1
             configuration["ntx"] = 5 
 
-        config = working_directory + "/*.cfg"
-        config_file = functions.get_files(config)[0]
 
         if self.is_metal and restraints_file: # restraints for bound with metalloenzymes
             try:
@@ -99,6 +97,8 @@ class coldMeze(meze.Meze):
 
             process = bss.Process.Amber(system=system, protocol=protocol, name=name, work_dir=working_directory, extra_options=configuration, extra_lines=namelist, exe=amber_path)             
 
+            config = working_directory + "/*.cfg"
+            config_file = functions.get_files(config)[0]
 
             with open(config_file, "a") as file:
                 file.write("\n")
@@ -108,7 +108,9 @@ class coldMeze(meze.Meze):
         elif not restraints_file: 
             amber_path = os.environ["AMBERHOME"] + "/bin/pmemd.cuda"
             process = bss.Process.Amber(system=system, protocol=protocol, name=name, work_dir=working_directory, extra_options=configuration, exe=amber_path)
-
+            config = working_directory + "/*.cfg"
+            config_file = functions.get_files(config)[0]
+            
         with open(config_file, "r") as file:
             config_lines = file.readlines()
 
