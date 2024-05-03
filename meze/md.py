@@ -239,16 +239,29 @@ def main():
                         choices=["pme", "rf"],
                         type=str)
     
+    parser.add_argument("--no-restraints",
+                        dest="no_restraints",
+                        help="do not apply harmonic restraints on metal-coordinating residues",
+                        action="store_true")
+    
     arguments = parser.parse_args()
 
     if not arguments.non_metal:
         metal = True
     elif arguments.non_metal:
         metal = False
+
+    if arguments.no_restraints:
+        apply_restraints = False
+    else:
+        apply_restraints = True
+
+    
     if metal:
         network = meze.Meze(protein_file=arguments.protein,
                             cut_off=arguments.cut_off,
                             is_md=True,
+                            restraints=apply_restraints,
                             md_input_directory=arguments.working_directory + "md_input_files/",
                             workdir=arguments.working_directory,
                             ligand_path=arguments.ligand_directory,
@@ -302,9 +315,10 @@ def main():
     cold_meze = equilibrate.coldMeze(group_name=network.group_name,
                                      ligand_name=arguments.ligand_name,
                                      prepared=True,
+                                     restraints=apply_restraints,
                                      is_metal=metal,
                                      equilibration_directory=network.equilibration_directory,
-                                     input_protein_file=network.protein_file,
+                                     input_protein_file=network.prepared_protein,
                                      protein_directory=network.protein_path,
                                      ligand_directory=network.ligand_path,
                                      min_steps=network.min_steps,
