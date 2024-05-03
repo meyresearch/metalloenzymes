@@ -239,9 +239,6 @@ class Sofra(object):
         self.prepared = prepared 
         if self.prepared: 
             self.prepared_protein = functions.get_files(protein_file + ".*")
-            # with vim2 + equilibrate.py this returns None 
-            if not self.prepared_protein:
-                self.prepared_protein = self.protein_file
             self.protein_file = self.prepared_protein
             if not is_md:
                 self.afe_input_directory = functions.path_exists(afe_input_path)
@@ -547,7 +544,8 @@ class Sofra(object):
                           "ncycles_per_snap": cycles_per_saved_frame,
                           "minimal coordinate saving": only_save_end_states,
                         #   "cutoff distance": "8 angstrom", # Make editable? 
-                          "minimise": True}
+                          "minimise": True,
+                          "minimise maximum iterations": self.min_steps}
 
         if self.cutoff_scheme == "pme":
             config_options["cutoff type"] = "PME"
