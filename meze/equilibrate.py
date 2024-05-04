@@ -84,8 +84,9 @@ class coldMeze(meze.Meze):
             configuration["irest"] = 1
             configuration["ntx"] = 5 
 
+        if self.is_metal and restraints_file:
+            configuration = {"nmropt": 1}
 
-        if self.is_metal and restraints_file: # restraints for bound with metalloenzymes
             try:
                 restraints_file = shutil.copy(restraints_file, working_directory).split("/")[-1]
             except shutil.SameFileError as e:
@@ -110,7 +111,7 @@ class coldMeze(meze.Meze):
             process = bss.Process.Amber(system=system, protocol=protocol, name=name, work_dir=working_directory, extra_options=configuration, exe=amber_path)
             config = working_directory + "/*.cfg"
             config_file = functions.get_files(config)[0]
-            
+
         with open(config_file, "r") as file:
             config_lines = file.readlines()
 
@@ -123,14 +124,15 @@ class coldMeze(meze.Meze):
             metal_ligating_residue_ids = [atom.resnum for atom in metal_ligating_atom_groups]
             restrained_residue_ids = metal_ligating_residue_ids + self.metal_resids.tolist()
             metal_restraint_mask = meze.residue_restraint_mask(restrained_residue_ids)
-        
+            old_line = ""
+            new_string = ""
             for line in config_lines:
                 if "restraintmask" in line:
                     key, value = line.split("=")
                     string = value.split('"')
                     old_line = line
                     old_mask = string[1]
-                    new_mask = "(" + old_mask + ") " + "& " + metal_restraint_mask
+                    new_mask = old_mask + " & :" + metal_restraint_mask
                     new_string = key + '="' + new_mask + '",\n'
             
             config_lines = list(map(lambda key_word: key_word.replace(old_line, new_string), config_lines))
@@ -268,7 +270,6 @@ class coldMeze(meze.Meze):
         directories = lambda step: functions.mkdir(directory+step)
         min_directory = directories("min")
         r_nvt_directory = directories("r_nvt")
-        nvt_directory = directories("nvt")
         r_npt_directory = directories("r_npt")
         npt_directory = directories("npt")
 
@@ -281,20 +282,14 @@ class coldMeze(meze.Meze):
                                    start_t=start_temp, end_t=self.temperature,
                                    timestep=self.short_timestep,
                                    position_restraints="all")
-        nvt = self.heat(system=restrained_nvt,
-                        process_name="nvt",
-                        working_directory=nvt_directory,
-                        time=self.nvt,
-                        temperature=self.temperature,
-                        checkpoint=r_nvt_directory + "/r_nvt.cpt")
-        restrained_npt = self.heat(system=nvt,
+        restrained_npt = self.heat(system=restrained_nvt,
                                    process_name="r_npt",
                                    working_directory=r_npt_directory,
                                    time=self.npt,
                                    pressure=self.pressure,
                                    temperature=self.temperature,
                                    position_restraints="heavy",
-                                   checkpoint=nvt_directory + "/nvt.cpt")
+                                   checkpoint=r_nvt_directory + "/r_nvt.cpt")
         equilibrated_molecule = self.heat(system=restrained_npt,
                                           process_name="npt",
                                           working_directory=npt_directory,
@@ -329,7 +324,6 @@ class coldMeze(meze.Meze):
         min_dir = directories("min")
         r_nvt_dir = directories("r_nvt")
         bb_r_nvt_dir = directories("bb_r_nvt")
-        nvt_dir = directories("nvt")
         r_npt_dir = directories("r_npt")
         npt_dir = directories("npt")     
         start_temp = functions.convert_to_units(0, KELVIN)
@@ -338,13 +332,12 @@ class coldMeze(meze.Meze):
         restraints_file = None
         configuration = {}
         if self.is_metal and self.restraints:
-            configuration = {"nmropt": 1}
             restraints_file = self.write_restraints_file_0(workdir=directory)
 
         elif not self.is_metal:
             configuration = {"emstep": self.min_dt, "emtol": self.min_tol}
     
-        minimised_system = self.minimise(system=solvated_system, working_directory=min_dir, configuration=configuration, restraints_file=restraints_file)
+        minimised_system = self.minimise(system=solvated_system, working_directory=min_dir, configuration=configuration)
 
         restrained_nvt = self.heat(system=minimised_system,
                                    working_directory=r_nvt_dir,
@@ -353,7 +346,6 @@ class coldMeze(meze.Meze):
                                    start_t=start_temp, end_t=self.temperature,
                                    position_restraints="all",
                                    timestep=self.short_timestep, 
-                                   restraints_file=restraints_file,
                                    configuration=configuration) 
         backbone_restrained_nvt = self.heat(system=restrained_nvt,
                                             process_name="bb_r_nvt",
@@ -362,25 +354,15 @@ class coldMeze(meze.Meze):
                                             temperature=self.temperature,
                                             position_restraints="backbone",
                                             checkpoint=r_nvt_dir + "/r_nvt.cpt",
-                                            restraints_file=restraints_file,
                                             configuration=configuration)
-        nvt = self.heat(system=backbone_restrained_nvt,
-                        process_name="nvt",
-                        working_directory=nvt_dir,
-                        time=self.nvt,
-                        temperature=self.temperature,
-                        checkpoint=bb_r_nvt_dir + "/bb_r_nvt.cpt", 
-                        restraints_file=restraints_file,
-                        configuration=configuration)
-        restrained_npt = self.heat(system=nvt,
+        restrained_npt = self.heat(system=backbone_restrained_nvt,
                                    process_name="r_npt",
                                    working_directory=r_npt_dir,
                                    time=self.npt,
                                    pressure=self.pressure,
                                    temperature=self.temperature,
                                    position_restraints="heavy",
-                                   checkpoint=nvt_dir + "/nvt.cpt", 
-                                   restraints_file=restraints_file,
+                                   checkpoint=bb_r_nvt_dir + "/bb_r_nvt.cpt", 
                                    configuration=configuration)
         equilibrated_protein = self.heat(system=restrained_npt,
                                          process_name="npt",
@@ -429,18 +411,13 @@ class coldMeze(meze.Meze):
         continue_07_dir = directories("07_continue")
         relax_08_dir = directories("08_relax")   
 
-        restraints_file = None
-        configuration = {}
         if self.is_metal and self.restraints:
-            configuration = {"nmropt": 1}
             restraints_file = self.write_restraints_file_0(workdir=directory)
 
         minimised_system = self.minimise(system=solvated_system, 
                                          process_name="01_min", 
                                          working_directory=min_dir, 
-                                         position_restraints="heavy", 
-                                         configuration=configuration, 
-                                         restraints_file=restraints_file)
+                                         position_restraints="heavy")
         
         heat_02_system = self.heat(system=minimised_system,
                                    working_directory=heat_02_dir,
@@ -448,9 +425,7 @@ class coldMeze(meze.Meze):
                                    time=self.nvt,
                                    start_t=start_temp, end_t=self.temperature,
                                    position_restraints="heavy",
-                                   timestep=self.short_timestep,
-                                   restraints_file=restraints_file,
-                                   configuration=configuration) 
+                                   timestep=self.short_timestep) 
         
         relax_03_system = self.heat(system=heat_02_system,
                                     working_directory=relax_03_dir,
@@ -459,8 +434,6 @@ class coldMeze(meze.Meze):
                                     temperature=self.temperature,
                                     position_restraints="heavy",
                                     timestep=self.short_timestep,
-                                    restraints_file=restraints_file,
-                                    configuration=configuration,
                                     checkpoint=heat_02_dir + "/02_heat")
         
         self.restraint_weight = self.restraint_weight / 10
@@ -472,8 +445,6 @@ class coldMeze(meze.Meze):
                                     temperature=self.temperature,
                                     position_restraints="heavy",
                                     timestep=self.short_timestep,
-                                    restraints_file=restraints_file,
-                                    configuration=configuration,
                                     checkpoint=relax_03_dir + "/03_relax")
 
         relax_05_system = self.heat(system=lower_04_system,
@@ -483,8 +454,6 @@ class coldMeze(meze.Meze):
                                     temperature=self.temperature,
                                     position_restraints="backbone",
                                     timestep=self.short_timestep,
-                                    restraints_file=restraints_file,
-                                    configuration=configuration,
                                     checkpoint=lower_04_dir + "/04_lower")
         
         self.restraint_weight = self.restraint_weight / 10
@@ -496,8 +465,6 @@ class coldMeze(meze.Meze):
                                      temperature=self.temperature,
                                      position_restraints="backbone",
                                      timestep=self.short_timestep,
-                                     restraints_file=restraints_file,
-                                     configuration=configuration,
                                      checkpoint=relax_05_dir + "/05_relax")
         
         self.restraint_weight = self.restraint_weight / 10
@@ -509,8 +476,6 @@ class coldMeze(meze.Meze):
                                        temperature=self.temperature,
                                        position_restraints="backbone",
                                        timestep=self.short_timestep,
-                                       restraints_file=restraints_file,
-                                       configuration=configuration,
                                        checkpoint=reduce_06_dir + "/06_reduce")
         
         relax_08_system = self.heat(system=continue_07_system,
@@ -520,7 +485,6 @@ class coldMeze(meze.Meze):
                                     temperature=self.temperature,
                                     timestep=self.short_timestep,
                                     restraints_file=restraints_file,
-                                    configuration=configuration,
                                     checkpoint=continue_07_dir + "/07_continue")
         
         savename = relax_08_dir + f"/bound_{self.ligand_name}"
@@ -541,6 +505,11 @@ def main():
                         type=str,
                         default=os.getcwd() + "/afe/protocol.dat")
     
+    parser.add_argument("--no-restraints",
+                        dest="no_restraints",
+                        help="do not apply harmonic restraints on metal-coordinating residues",
+                        action="store_true")    
+    
     arguments = parser.parse_args()
     protocol = functions.input_to_dict(file=arguments.protocol_file)
 
@@ -550,8 +519,14 @@ def main():
     else:
         metal = False
 
+    if arguments.no_restraints:
+        apply_restraints = False
+    else:
+        apply_restraints = True
+
     cold_meze = coldMeze(is_metal=metal,
                          group_name=protocol["group name"],
+                         restraints=apply_restraints,
                          ligand_name=arguments.ligand_name,
                          afe_input_directory=protocol["afe input directory"],
                          outputs=protocol["outputs"],
