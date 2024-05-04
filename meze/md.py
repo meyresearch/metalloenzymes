@@ -23,7 +23,7 @@ def production(hot_meze, system, outputs, time, timestep=2, temperature=300, pre
 
     configuration = {}
     restraints_file = None
-    if hot_meze.is_metal:
+    if hot_meze.is_metal and hot_meze.restraints:
         configuration = {"nmropt": 1}
         restraints_file = hot_meze.write_restraints_file_0(workdir=working_directory)
 
