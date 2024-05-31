@@ -242,7 +242,7 @@ class Sofra(object):
             self.protein_file = self.prepared_protein
             if not is_md:
                 self.afe_input_directory = functions.path_exists(afe_input_path)
-                self.output_directories = functions.get_files(self.outputs + f"/{engine}_*/")
+                self.output_directories = functions.get_files(outputs + f"/{engine}_*/")
             else: 
                 self.md_input_directory = functions.path_exists(md_input_directory)
             self.equilibration_directory = functions.path_exists(equilibration_path)  

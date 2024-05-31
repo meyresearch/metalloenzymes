@@ -23,23 +23,26 @@ Useful software:
 
 # 2. System setup
 
-- Start with a pdb file of the protein. You can save it in e.g. `inputs/protein/` in your project directory
-- If your protein contains metal ions, save these in pdb format in the above directory
+- Start with a pdb file of the protein. You can save it in e.g. `inputs/protein/` in your project directory. The pdb file can contain crystallographic waters or metal cofactors.
 - Create ligand files in `*.sdf` or `*.mol2` formats and save in the same directory, e.g. `inputs/ligands/`
-- If you want to keep crystallographic waters, save these in the protein directory in pdb format
+
+You can set up an environment variable `$MEZEHOME` in your `bash_profile` or `bashrc`. More details [here](https://unix.stackexchange.com/a/21600):
+
+```
+export={path-to-metalloenzymes}/metalloenzymes/meze/
+```
 
 # 3. Prepare meze
 
-The workflow starts by setting up the project directory tree with the use of a python script called `prepare.py`. This script can be ran directly from the command line, or with the use of a bash script as:
-```
-$MEZEHOME/01_prepare.sh <path-to-input-files>/protein.pdb <ligand_charge> kpc2
-```
 
-For example, with KPC-2 with ligands whose net charge is -1:
+The workflow starts by setting up the project directory tree with the use of a python script called `prepare.py`. For example, with KPC-2 with ligands whose net charge is -1:
 
 ```
-$MEZEHOME/01_prepare.sh inputs/protein/kpc2.input.pdb -1 
+python $MEZEHOME/prepare.py --input-file inputs/protein/kpc2.input.pdb --ligand-charge -1 --group-name kpc2 --non-metal
 ```
+
+Note, that for proteins not containing metals it is important to define the `--non-metal` flag!
+
 
 Example output:
 ```
@@ -50,7 +53,7 @@ INFO:numexpr.utils:NumExpr defaulting to 8 threads.
 No separate water file detected in working directory. Continuing without it.
 
 Successfully prepared meze network for AFE calculations.
-Run scripts saved in: /home/jguven/projects/alchemistry/kpc2/partially_protonated_ligand///afe/
+Run scripts saved in: /home/jguven/projects/alchemistry/kpc2/afe/
 ```
 
 For help with `prepare.py` run: `python prepare.py -h`
@@ -77,6 +80,8 @@ The project directory tree will then look something like:
 ```
 
 # 4. Run meze AFE
+
+It is a good idea to check that all the generated slurm scripts have the correct directory paths and slurm options. 
 
 To run the entire workflow using SLURM, simply run:
 
@@ -166,4 +171,16 @@ The above project directory three will then be updated as:
     |   |--- ligand_1_ligand_2_1.slurm.err  AFE calculation SLURM error output for the first lambda window for transformation ligand_1~ligand_2
     |   |--- ...
     
-    ```
+```
+
+# 5. Plotting
+
+To plot finished AFE calculations, run:
+
+```
+python $MEZEHOME/plot.py afe/protocol.dat afe/experimental_K_i.csv
+```
+
+There is also a jupyter notebook for plotting, used in the publication, called `plots.ipynb`.
+
+

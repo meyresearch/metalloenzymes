@@ -102,19 +102,33 @@ class Meze(sofra.Sofra):
         self.restraints = restraints
         
         if self.prepared:
-            for file in self.protein_file:
-                extension = functions.get_file_extension(file)
-                if extension.lower() in ["prm7", "top"]:
-                #     topology_format = extension
-                #     topology_file = file
-                    pass
-                elif extension.lower() in ["rst7", "gro"]:
-                    coordinate_format = extension
-                    coordinate_file = file
-                else:
-                    raise ValueError
-                
-            self.universe = mda.Universe(topology=coordinate_file, topology_format=coordinate_format)
+            extensions = [functions.get_file_extension(file) for file in self.protein_file]
+            for extension in extensions:
+                if extension not in ["rst7", "prm7", "gro", "top"]:
+                    raise ValueError("The prepared file must have a topology file in either PARM7 or Gro format!")
+            
+            if "prm7" in extensions:
+                topology_format = "PARM7"
+                topology_file = [file for file in self.protein_file if functions.get_file_extension(file) == "prm7"][0]
+
+                coordinate_file = [file for file in self.protein_file if functions.get_file_extension(file) == "rst7"][0]
+
+                self.universe = mda.Universe(topology=topology_file, topology_format=topology_format,
+                                             coordinates=coordinate_file)
+            elif "gro" in extensions:
+                file = [file for file in self.protein_file if functions.get_file_extension(file) == "gro"][0]
+                self.universe = mda.Universe(file)
+            # for file in self.protein_file:
+            #     extension = functions.get_file_extension(file)
+            #     if extension.lower() == "prm7":
+            #         topology_format = "PARM7"
+            #         topology_file = file
+            #         # self.universe = mda.Universe(topology=topology_file, topology_format=topology_format)
+            #     elif extension.lower() == "gro":
+            #         coordinate_format = extension
+            #         coordinate_file = file
+
+            # self.universe = mda.Universe(topology=topology_format, topology_format=topology_format, coordinates=coordinate_file, format=coordinate_format)
         else:
             self.universe = mda.Universe(self.protein_file, format="pdb")
         self.force_constant_0 = functions.check_float(force_constant_0)
