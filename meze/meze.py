@@ -115,7 +115,9 @@ class Meze(sofra.Sofra):
 
                 self.universe = mda.Universe(topology=topology_file, topology_format=topology_format,
                                              coordinates=coordinate_file)
-
+            elif "gro" in extensions:
+                file = [file for file in self.protein_file if functions.get_file_extension(file) == "gro"][0]
+                self.universe = mda.Universe(file)
             # for file in self.protein_file:
             #     extension = functions.get_file_extension(file)
             #     if extension.lower() == "prm7":

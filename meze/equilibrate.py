@@ -2,7 +2,7 @@
 Minimise and equilibrate bound and unbound stages.
 """
 import shutil
-from definitions import FEMTOSECOND, PICOSECOND, KELVIN, ATM
+from definitions import FEMTOSECOND, PICOSECOND, NANOSECOND, KELVIN, ATM
 import functions
 import BioSimSpace as bss
 import argparse
@@ -142,52 +142,53 @@ class coldMeze(meze.Meze):
 
         process.start()
         process.wait()
-        if process.isError():
+        # if process.isError():
 
-            amberhome = os.environ["AMBERHOME"]
-            try:
-                sander_mpi = functions.file_exists(f"{amberhome}/bin/sander.MPI")
+        #     amberhome = os.environ["AMBERHOME"]
+        #     try:
+        #         sander_mpi = functions.file_exists(f"{amberhome}/bin/sander.MPI")
 
-                readme = working_directory + "/" + "README.txt"
-                with open(readme, "r") as file:
-                    all_lines = file.readlines()
-                    for line in all_lines:
-                        if "#" not in line:
-                            cuda_command = line
-                amber_command = " ".join(cuda_command.split()[1:])
-                sander_run_command = sander_mpi + " " + amber_command
-                code_dir = os.getcwd()
-                os.chdir(working_directory) 
-                os.system(f"mpirun {sander_run_command}")
-                os.chdir(code_dir)
-                with open(readme, "a") as file:
-                    file.write(f"# Process {name} was run with the below command for {working_directory}:\n")
-                    file.write(sander_run_command + "\n")
-                system = bss.IO.readMolecules([working_directory + "/" + name + ".prm7", working_directory + "/" + name + ".rst7"])
+        #         readme = working_directory + "/" + "README.txt"
+        #         with open(readme, "r") as file:
+        #             all_lines = file.readlines()
+        #             for line in all_lines:
+        #                 if "#" not in line:
+        #                     cuda_command = line
+        #         amber_command = " ".join(cuda_command.split()[1:])
+        #         sander_run_command = sander_mpi + " " + amber_command
+        #         code_dir = os.getcwd()
+        #         os.chdir(working_directory) 
+        #         os.system(f"mpirun {sander_run_command}")
+        #         os.chdir(code_dir)
+        #         with open(readme, "a") as file:
+        #             file.write(f"# Process {name} was run with the below command for {working_directory}:\n")
+        #             file.write(sander_run_command + "\n")
+        #         system = bss.IO.readMolecules([working_directory + "/" + name + ".prm7", working_directory + "/" + name + ".rst7"])
 
-            except argparse.ArgumentTypeError:
+        #     except argparse.ArgumentTypeError:
 
-                print("No sander.MPI detected, running with regular sander.")
-                sander_mpi = functions.file_exists(f"{amberhome}/bin/sander")
-                readme = working_directory + "README.txt"
-                with open(readme, "r") as file:
-                    all_lines = file.readlines()
-                    for line in all_lines:
-                        if "#" not in line:
-                            cuda_command = line
-                amber_command = " ".join(cuda_command.split()[1:])
-                sander_run_command = sander_mpi + " " + amber_command
-                code_dir = os.getcwd()
-                os.chdir(working_directory) 
-                os.system(sander_run_command)
-                os.chdir(code_dir)
-                system = bss.IO.readMolecules([working_directory + "/" + name + ".prm7", working_directory + "/" + name + ".rst7"])                    
-                with open(readme, "a") as file:
-                    file.write("\n")
-                    file.write(f"# Step {name} was rerun using sander.MPI for {working_directory}:\n")
-                    file.write(f"{sander_run_command}\n")
-        else:
-            system = process.getSystem()
+        #         print("No sander.MPI detected, running with regular sander.")
+        #         sander_mpi = functions.file_exists(f"{amberhome}/bin/sander")
+        #         readme = working_directory + "README.txt"
+        #         with open(readme, "r") as file:
+        #             all_lines = file.readlines()
+        #             for line in all_lines:
+        #                 if "#" not in line:
+        #                     cuda_command = line
+        #         amber_command = " ".join(cuda_command.split()[1:])
+        #         sander_run_command = sander_mpi + " " + amber_command
+        #         code_dir = os.getcwd()
+        #         os.chdir(working_directory) 
+        #         os.system(sander_run_command)
+        #         os.chdir(code_dir)
+        #         system = bss.IO.readMolecules([working_directory + "/" + name + ".prm7", working_directory + "/" + name + ".rst7"])                    
+        #         with open(readme, "a") as file:
+        #             file.write("\n")
+        #             file.write(f"# Step {name} was rerun using sander.MPI for {working_directory}:\n")
+        #             file.write(f"{sander_run_command}\n")
+        # else:
+        #     system = process.getSystem()
+        system = process.getSystem()
         return system
 
 
@@ -219,7 +220,7 @@ class coldMeze(meze.Meze):
         """
         Run NVT or NPT equilibration
 
-        Parameters:
+        Parameters:ß
         -----------
         system: bss.System
             system to be equilibrated
@@ -237,6 +238,16 @@ class coldMeze(meze.Meze):
         """
         if type(timestep) != bss.Types._time.Time:
             timestep = functions.convert_to_units(timestep, FEMTOSECOND)
+        if type(time) != bss.Types._time.Time:
+            time = functions.convert_to_units(time, PICOSECOND)
+        if temperature and type(temperature) != bss.Types._temperature.Temperature:
+            temperature = functions.convert_to_units(temperature, KELVIN)
+        if start_t and type(start_t) != bss.Types._temperature.Temperature:
+            start_t = functions.convert_to_units(start_t, KELVIN)
+        if end_t and type(end_t) != bss.Types._temperature.Temperature:
+            end_t = functions.convert_to_units(end_t, KELVIN)
+        if pressure and type(pressure) != bss.Types._pressure.Pressure:
+            pressure = functions.convert_to_units(pressure, ATM)
         protocol = bss.Protocol.Equilibration(timestep=timestep, 
                                               runtime=time,
                                               temperature_start=start_t,
@@ -246,7 +257,7 @@ class coldMeze(meze.Meze):
                                               restraint=position_restraints,
                                               force_constant=self.restraint_weight,
                                               restart_interval=self.restart_write_steps,
-                                              report_interval=self.coordinate_write_steps)
+                                              report_interval=self.restart_write_steps)
         equilibrated_system = self.run(system, protocol, process_name, working_directory, configuration, checkpoint, restraints_file) 
         return equilibrated_system
 
@@ -273,7 +284,7 @@ class coldMeze(meze.Meze):
         r_npt_directory = directories("r_npt")
         npt_directory = directories("npt")
 
-        minimised_ligand = self.minimise(system=solvated_ligand, working_directory=min_directory)
+        minimised_ligand = self.minimise(system=solvated_ligand, working_directory=min_directory, position_restraints="all")
         start_temp = functions.convert_to_units(0, KELVIN)
         restrained_nvt = self.heat(system=minimised_ligand,
                                    process_name="r_nvt",
@@ -337,7 +348,7 @@ class coldMeze(meze.Meze):
         elif not self.is_metal:
             configuration = {"emstep": self.min_dt, "emtol": self.min_tol}
     
-        minimised_system = self.minimise(system=solvated_system, working_directory=min_dir, configuration=configuration)
+        minimised_system = self.minimise(system=solvated_system, working_directory=min_dir, configuration=configuration, position_restraints="all")
 
         restrained_nvt = self.heat(system=minimised_system,
                                    working_directory=r_nvt_dir,
@@ -411,80 +422,83 @@ class coldMeze(meze.Meze):
         continue_07_dir = directories("07_continue")
         relax_08_dir = directories("08_relax")   
 
-        if self.is_metal and self.restraints:
-            restraints_file = self.write_restraints_file_0(workdir=directory)
+        # if self.is_metal and self.restraints:
+        #     restraints_file = self.write_restraints_file_0(workdir=directory)
 
-        minimised_system = self.minimise(system=solvated_system, 
-                                         process_name="01_min", 
-                                         working_directory=min_dir, 
-                                         position_restraints="heavy")
+        # minimised_system = self.minimise(system=solvated_system, 
+        #                                  process_name="01_min", 
+        #                                  working_directory=min_dir, 
+        #                                  position_restraints="heavy")
         
-        heat_02_system = self.heat(system=minimised_system,
-                                   working_directory=heat_02_dir,
-                                   process_name="02_heat",
-                                   time=self.nvt,
-                                   start_t=start_temp, end_t=self.temperature,
-                                   position_restraints="heavy",
-                                   timestep=self.short_timestep) 
+        # heat_02_system = self.heat(system=minimised_system,
+        #                            working_directory=heat_02_dir,
+        #                            process_name="02_heat",
+        #                            time=self.nvt,
+        #                            start_t=start_temp, end_t=self.temperature,
+        #                            position_restraints="heavy",
+        #                            timestep=self.short_timestep) 
         
-        relax_03_system = self.heat(system=heat_02_system,
-                                    working_directory=relax_03_dir,
-                                    process_name="03_relax",
-                                    time=self.nvt,
-                                    temperature=self.temperature,
-                                    position_restraints="heavy",
-                                    timestep=self.short_timestep,
-                                    checkpoint=heat_02_dir + "/02_heat")
+        # relax_03_system = self.heat(system=heat_02_system,
+        #                             working_directory=relax_03_dir,
+        #                             process_name="03_relax",
+        #                             time=self.nvt,
+        #                             temperature=self.temperature,
+        #                             position_restraints="heavy",
+        #                             timestep=self.short_timestep,
+        #                             checkpoint=heat_02_dir + "/02_heat")
         
-        self.restraint_weight = self.restraint_weight / 10
+        # self.restraint_weight = self.restraint_weight / 10
 
-        lower_04_system = self.heat(system=relax_03_system,
-                                    working_directory=lower_04_dir,
-                                    process_name="04_lower",
-                                    time=self.nvt,
-                                    temperature=self.temperature,
-                                    position_restraints="heavy",
-                                    timestep=self.short_timestep,
-                                    checkpoint=relax_03_dir + "/03_relax")
+        # lower_04_system = self.heat(system=relax_03_system,
+        #                             working_directory=lower_04_dir,
+        #                             process_name="04_lower",
+        #                             time=self.nvt,
+        #                             temperature=self.temperature,
+        #                             position_restraints="heavy",
+        #                             timestep=self.short_timestep,
+        #                             checkpoint=relax_03_dir + "/03_relax")
 
-        relax_05_system = self.heat(system=lower_04_system,
-                                    working_directory=relax_05_dir,
-                                    process_name="05_relax",
-                                    time=self.nvt,
-                                    temperature=self.temperature,
-                                    position_restraints="backbone",
-                                    timestep=self.short_timestep,
-                                    checkpoint=lower_04_dir + "/04_lower")
+        # relax_05_system = self.heat(system=lower_04_system,
+        #                             working_directory=relax_05_dir,
+        #                             process_name="05_relax",
+        #                             time=self.nvt,
+        #                             temperature=self.temperature,
+        #                             position_restraints="backbone",
+        #                             timestep=self.short_timestep,
+        #                             checkpoint=lower_04_dir + "/04_lower")
         
-        self.restraint_weight = self.restraint_weight / 10
+        # self.restraint_weight = self.restraint_weight / 10
 
-        reduce_06_system = self.heat(system=relax_05_system,
-                                     working_directory=reduce_06_dir,
-                                     process_name="06_reduce",
-                                     time=self.nvt,
-                                     temperature=self.temperature,
-                                     position_restraints="backbone",
-                                     timestep=self.short_timestep,
-                                     checkpoint=relax_05_dir + "/05_relax")
+        # reduce_06_system = self.heat(system=relax_05_system,
+        #                              working_directory=reduce_06_dir,
+        #                              process_name="06_reduce",
+        #                              time=self.nvt,
+        #                              temperature=self.temperature,
+        #                              position_restraints="backbone",
+        #                              timestep=self.short_timestep,
+        #                              checkpoint=relax_05_dir + "/05_relax")
         
-        self.restraint_weight = self.restraint_weight / 10
+        # self.restraint_weight = self.restraint_weight / 10
 
-        continue_07_system = self.heat(system=reduce_06_system,
-                                       working_directory=continue_07_dir,
-                                       process_name="07_continue",
-                                       time=self.nvt,
-                                       temperature=self.temperature,
-                                       position_restraints="backbone",
-                                       timestep=self.short_timestep,
-                                       checkpoint=reduce_06_dir + "/06_reduce")
+        # continue_07_system = self.heat(system=reduce_06_system,
+        #                                working_directory=continue_07_dir,
+        #                                process_name="07_continue",
+        #                                time=self.nvt,
+        #                                temperature=self.temperature,
+        #                                position_restraints="backbone",
+        #                                timestep=self.short_timestep,
+        #                                checkpoint=reduce_06_dir + "/06_reduce")
         
+        # Debugging:
+        continue_07_system = bss.IO.readMolecules([f"{continue_07_dir}/07_continue.prm7", 
+                                                   f"{continue_07_dir}/07_continue.crd"])
+
         relax_08_system = self.heat(system=continue_07_system,
                                     working_directory=relax_08_dir,
                                     process_name="08_relax",
                                     time=self.nvt,
                                     temperature=self.temperature,
                                     timestep=self.short_timestep,
-                                    restraints_file=restraints_file,
                                     checkpoint=continue_07_dir + "/07_continue")
         
         savename = relax_08_dir + f"/bound_{self.ligand_name}"
@@ -532,7 +546,7 @@ def main():
                          outputs=protocol["outputs"],
                          log_directory=protocol["log directory"],
                          equilibration_directory=protocol["equilibration directory"],
-                         input_protein_file=protocol["protein input file"],
+                         input_protein_file=protocol["prepared protein file"],
                          protein_directory=protocol["protein directory"],
                          ligand_directory=protocol["ligand directory"],
                          min_steps=protocol["minimisation steps"],

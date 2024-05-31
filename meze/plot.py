@@ -78,37 +78,37 @@ def output_statistics(experimental_free_energy, computational, absolute=False):
     # rmse = sklearn.metrics.root_mean_squared_error(experimental_values, calculated_values)
     stats = bootstrap_statistics(experimental=experimental_values, n_samples=1000, calculated=calculated_values, absolute=absolute)
 
-    mue = f"{stats['mue']['mean_value']:.2f}"
+    mue = f"{stats['mue']['mean_value']:.3f}"
 
-    mue_text = f"MUE:"
-    mue_value = f"{mue}" + r"$^{{{upper:.2f}}}_{{{lower:.2f}}}$ kcal mol$^{{-1}}$".format(upper = stats["mue"]["upper_bound"],
+    mue_text = f"MAE:"
+    mue_value = f"MAE: {mue}" + r"$^{{{upper:.3f}}}_{{{lower:.3f}}}$ kcal mol$^{{-1}}$".format(upper = stats["mue"]["upper_bound"],
                                                                                           lower = stats["mue"]["lower_bound"])
     
-    rmse = f"{stats['rmse']['mean_value']:.2f}"
+    rmse = f"{stats['rmse']['mean_value']:.3f}"
     rmse_text = f"RMSE:" 
-    rmse_value = f"{rmse}" + r"$^{{{upper:.2f}}}_{{{lower:.2f}}}$ kcal mol$^{{-1}}$".format(upper = stats["rmse"]["upper_bound"],
+    rmse_value = f"RMSE: {rmse}" + r"$^{{{upper:.3f}}}_{{{lower:.3f}}}$ kcal mol$^{{-1}}$".format(upper = stats["rmse"]["upper_bound"],
                                                                                             lower = stats["rmse"]["lower_bound"])
     
-    formatted_mue = mue_text + 10 * " " + mue_value
-    formatted_rmse = rmse_text + 8 * " " + rmse_value 
+    # formatted_mue = mue_text + 10 * " " + mue_value
+    # formatted_rmse = rmse_text + 8 * " " + rmse_value 
 
-    text_string = "\n".join((formatted_mue, formatted_rmse))
+    text_string = "\n".join((mue_value, rmse_value))
 
    
     if absolute:
-        pearson = f"{stats['pearson_r2']['mean_value']:.2f}"
+        pearson = f"{stats['pearson_r2']['mean_value']:.3f}"
         pearson_text =  r"R$^2$:"
-        pearson_value =f"{pearson}" + r"$^{{{upper:.2f}}}_{{{lower:.2f}}}$".format(upper = stats["pearson_r2"]["upper_bound"],
+        pearson_value = r"R$^2$: " + f"{pearson}" + r"$^{{{upper:.3f}}}_{{{lower:.3f}}}$".format(upper = stats["pearson_r2"]["upper_bound"],
                                                                                    lower = stats["pearson_r2"]["lower_bound"])
         
-        pearson_formatted = pearson_text + 31 * " " + pearson_value
-        spearman = f"{stats['spearman_rho']['mean_value']:.2f}"
+        # pearson_formatted = pearson_text + 31 * " " + pearson_value
+        spearman = f"{stats['spearman_rho']['mean_value']:.3f}"
         spearman_text = r"$\rho$:"
-        spearman_value = f"{spearman}" + r"$^{{{upper:.2f}}}_{{{lower:.2f}}}$".format(upper = stats["spearman_rho"]["upper_bound"],
+        spearman_value = r"Spearman $\rho$: " + f"{spearman}" + r"$^{{{upper:.3f}}}_{{{lower:.3f}}}$".format(upper = stats["spearman_rho"]["upper_bound"],
                                                                                       lower = stats["spearman_rho"]["lower_bound"])
-        spearman_formatted = spearman_text + 33 * " " + spearman_value
+        # spearman_formatted = spearman_text + 33 * " " + spearman_value
         
-        text_string = "\n".join((text_string, pearson_formatted, spearman_formatted))
+        text_string = "\n".join((text_string, pearson_value, spearman_value))
     
     statistics_dataframe = pd.DataFrame.from_dict(stats).transpose()
     statistics_dataframe.rename(columns={0: "statistic"})
@@ -473,7 +473,7 @@ def plot_individual_runs(protocol, experimental_free_energies_with_nans, experim
     experimental_errors = experimental_errors_array[~np.isnan(experimental_errors_array)]
 
     fig, ax = plt.subplots(1, 1, figsize=(16, 20))
-    sns.set_theme(context="notebook", palette="colorblind", style="ticks")
+    sns.set_theme(context="notebook", palette="colorblind", style="white", font_scale=2)
     outputs = protocol["outputs"]
     plots = protocol["plots directory"]
     repeats = functions.check_int(protocol["repeats"])
@@ -517,8 +517,8 @@ def plot_individual_runs(protocol, experimental_free_energies_with_nans, experim
     max_y = max(max_calculated, max_experimental)
 
     ax.plot([-max_y, max_y], [-max_y, max_y], color="#0099AB", linestyle=":", zorder=-1)
-    ax.set_xlabel("$\Delta \Delta$ G$_\mathrm{EXP}$ (kcal mol⁻¹)", fontsize=14)
-    ax.set_ylabel("$\Delta \Delta$ G$_\mathrm{AFE}$ (kcal mol⁻¹)", fontsize=14)
+    ax.set_xlabel("$\Delta \Delta$ G$_\mathrm{EXP}$ (kcal mol⁻¹)")
+    ax.set_ylabel("$\Delta \Delta$ G$_\mathrm{AFE}$ (kcal mol⁻¹)")
     ax.vlines(0, -max_y, max_y, color = "silver", linestyle="--", zorder=-1)
     ax.hlines(0, -max_y, max_y, color = "silver", linestyle="--", zorder=-1)
     ax.set_xlim(-max_y, max_y)
@@ -590,7 +590,7 @@ def plot_correlation(plots_directory, results, experimental_free_energies_with_n
     experimental_errors = experimental_errors_array[~np.isnan(experimental_errors_array)]
 
     fig, ax = plt.subplots(1, 1, figsize=(10,10))
-    sns.set_theme(context="notebook", palette="colorblind", style="ticks", font_scale=2)
+    sns.set_theme(context="notebook", palette="colorblind", style="white", font_scale=2)
 
     ax.scatter(experimental_free_energies, 
                calculated_free_energies, 
@@ -677,7 +677,7 @@ def plot_bar(plots_directory, afe_df, exp_free_energy, exp_error):
     experimental_x = n_x_labels + (bar_width / 2)
 
     fig, ax = plt.subplots(1, 1, figsize=(10,10))
-    sns.set_theme(context="notebook", palette="colorblind", style="ticks", font_scale=2)
+    sns.set_theme(context="notebook", palette="colorblind", style="white", font_scale=2)
 
     ax.bar(x=calculated_x,
            height=means,
