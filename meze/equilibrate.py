@@ -422,76 +422,76 @@ class coldMeze(meze.Meze):
         continue_07_dir = directories("07_continue")
         relax_08_dir = directories("08_relax")   
 
-        # if self.is_metal and self.restraints:
-        #     restraints_file = self.write_restraints_file_0(workdir=directory)
+        if self.is_metal and self.restraints:
+            restraints_file = self.write_restraints_file_0(workdir=directory)
 
-        # minimised_system = self.minimise(system=solvated_system, 
-        #                                  process_name="01_min", 
-        #                                  working_directory=min_dir, 
-        #                                  position_restraints="heavy")
+        minimised_system = self.minimise(system=solvated_system, 
+                                         process_name="01_min", 
+                                         working_directory=min_dir, 
+                                         position_restraints="heavy")
         
-        # heat_02_system = self.heat(system=minimised_system,
-        #                            working_directory=heat_02_dir,
-        #                            process_name="02_heat",
-        #                            time=self.nvt,
-        #                            start_t=start_temp, end_t=self.temperature,
-        #                            position_restraints="heavy",
-        #                            timestep=self.short_timestep) 
+        heat_02_system = self.heat(system=minimised_system,
+                                   working_directory=heat_02_dir,
+                                   process_name="02_heat",
+                                   time=self.nvt,
+                                   start_t=start_temp, end_t=self.temperature,
+                                   position_restraints="heavy",
+                                   timestep=self.short_timestep) 
         
-        # relax_03_system = self.heat(system=heat_02_system,
-        #                             working_directory=relax_03_dir,
-        #                             process_name="03_relax",
-        #                             time=self.nvt,
-        #                             temperature=self.temperature,
-        #                             position_restraints="heavy",
-        #                             timestep=self.short_timestep,
-        #                             checkpoint=heat_02_dir + "/02_heat")
+        relax_03_system = self.heat(system=heat_02_system,
+                                    working_directory=relax_03_dir,
+                                    process_name="03_relax",
+                                    time=self.nvt,
+                                    temperature=self.temperature,
+                                    position_restraints="heavy",
+                                    timestep=self.short_timestep,
+                                    checkpoint=heat_02_dir + "/02_heat")
         
-        # self.restraint_weight = self.restraint_weight / 10
+        self.restraint_weight = self.restraint_weight / 10
 
-        # lower_04_system = self.heat(system=relax_03_system,
-        #                             working_directory=lower_04_dir,
-        #                             process_name="04_lower",
-        #                             time=self.nvt,
-        #                             temperature=self.temperature,
-        #                             position_restraints="heavy",
-        #                             timestep=self.short_timestep,
-        #                             checkpoint=relax_03_dir + "/03_relax")
+        lower_04_system = self.heat(system=relax_03_system,
+                                    working_directory=lower_04_dir,
+                                    process_name="04_lower",
+                                    time=self.nvt,
+                                    temperature=self.temperature,
+                                    position_restraints="heavy",
+                                    timestep=self.short_timestep,
+                                    checkpoint=relax_03_dir + "/03_relax")
 
-        # relax_05_system = self.heat(system=lower_04_system,
-        #                             working_directory=relax_05_dir,
-        #                             process_name="05_relax",
-        #                             time=self.nvt,
-        #                             temperature=self.temperature,
-        #                             position_restraints="backbone",
-        #                             timestep=self.short_timestep,
-        #                             checkpoint=lower_04_dir + "/04_lower")
+        relax_05_system = self.heat(system=lower_04_system,
+                                    working_directory=relax_05_dir,
+                                    process_name="05_relax",
+                                    time=self.nvt,
+                                    temperature=self.temperature,
+                                    position_restraints="backbone",
+                                    timestep=self.short_timestep,
+                                    checkpoint=lower_04_dir + "/04_lower")
         
-        # self.restraint_weight = self.restraint_weight / 10
+        self.restraint_weight = self.restraint_weight / 10
 
-        # reduce_06_system = self.heat(system=relax_05_system,
-        #                              working_directory=reduce_06_dir,
-        #                              process_name="06_reduce",
-        #                              time=self.nvt,
-        #                              temperature=self.temperature,
-        #                              position_restraints="backbone",
-        #                              timestep=self.short_timestep,
-        #                              checkpoint=relax_05_dir + "/05_relax")
+        reduce_06_system = self.heat(system=relax_05_system,
+                                     working_directory=reduce_06_dir,
+                                     process_name="06_reduce",
+                                     time=self.nvt,
+                                     temperature=self.temperature,
+                                     position_restraints="backbone",
+                                     timestep=self.short_timestep,
+                                     checkpoint=relax_05_dir + "/05_relax")
         
-        # self.restraint_weight = self.restraint_weight / 10
+        self.restraint_weight = self.restraint_weight / 10
 
-        # continue_07_system = self.heat(system=reduce_06_system,
-        #                                working_directory=continue_07_dir,
-        #                                process_name="07_continue",
-        #                                time=self.nvt,
-        #                                temperature=self.temperature,
-        #                                position_restraints="backbone",
-        #                                timestep=self.short_timestep,
-        #                                checkpoint=reduce_06_dir + "/06_reduce")
+        continue_07_system = self.heat(system=reduce_06_system,
+                                       working_directory=continue_07_dir,
+                                       process_name="07_continue",
+                                       time=self.nvt,
+                                       temperature=self.temperature,
+                                       position_restraints="backbone",
+                                       timestep=self.short_timestep,
+                                       checkpoint=reduce_06_dir + "/06_reduce")
         
-        # Debugging:
-        continue_07_system = bss.IO.readMolecules([f"{continue_07_dir}/07_continue.prm7", 
-                                                   f"{continue_07_dir}/07_continue.crd"])
+        # # Debugging:
+        # continue_07_system = bss.IO.readMolecules([f"{continue_07_dir}/07_continue.prm7", 
+        #                                            f"{continue_07_dir}/07_continue.crd"])
 
         relax_08_system = self.heat(system=continue_07_system,
                                     working_directory=relax_08_dir,
