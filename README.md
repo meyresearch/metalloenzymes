@@ -43,6 +43,12 @@ python $MEZEHOME/prepare.py --input-file inputs/protein/kpc2.input.pdb --ligand-
 
 Note, that for proteins not containing metals it is important to define the `--non-metal` flag!
 
+For VIM-2:
+
+```
+python $MEZEHOME/prepare.py --input-file inputs/protein/vim2.input.pdb --ligand-charge -2 --group-name vim2 
+```
+
 
 Example output:
 ```
