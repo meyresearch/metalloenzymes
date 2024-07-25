@@ -78,15 +78,15 @@ def output_statistics(experimental_free_energy, computational, absolute=False):
     # rmse = sklearn.metrics.root_mean_squared_error(experimental_values, calculated_values)
     stats = bootstrap_statistics(experimental=experimental_values, n_samples=1000, calculated=calculated_values, absolute=absolute)
 
-    mue = f"{stats['mue']['mean_value']:.3f}"
+    mue = f"{stats['mue']['mean_value']:.2f}"
 
     mue_text = f"MAE:"
-    mue_value = f"MAE: {mue}" + r"$^{{{upper:.3f}}}_{{{lower:.3f}}}$ kcal mol$^{{-1}}$".format(upper = stats["mue"]["upper_bound"],
+    mue_value = f"MAE: {mue}" + r"$^{{{upper:.2f}}}_{{{lower:.2f}}}$ kcal mol$^{{-1}}$".format(upper = stats["mue"]["upper_bound"],
                                                                                           lower = stats["mue"]["lower_bound"])
     
-    rmse = f"{stats['rmse']['mean_value']:.3f}"
+    rmse = f"{stats['rmse']['mean_value']:.2f}"
     rmse_text = f"RMSE:" 
-    rmse_value = f"RMSE: {rmse}" + r"$^{{{upper:.3f}}}_{{{lower:.3f}}}$ kcal mol$^{{-1}}$".format(upper = stats["rmse"]["upper_bound"],
+    rmse_value = f"RMSE: {rmse}" + r"$^{{{upper:.2f}}}_{{{lower:.2f}}}$ kcal mol$^{{-1}}$".format(upper = stats["rmse"]["upper_bound"],
                                                                                             lower = stats["rmse"]["lower_bound"])
     
     # formatted_mue = mue_text + 10 * " " + mue_value
@@ -96,15 +96,15 @@ def output_statistics(experimental_free_energy, computational, absolute=False):
 
    
     if absolute:
-        pearson = f"{stats['pearson_r2']['mean_value']:.3f}"
+        pearson = f"{stats['pearson_r2']['mean_value']:.2f}"
         pearson_text =  r"R$^2$:"
-        pearson_value = r"R$^2$: " + f"{pearson}" + r"$^{{{upper:.3f}}}_{{{lower:.3f}}}$".format(upper = stats["pearson_r2"]["upper_bound"],
+        pearson_value = r"R$^2$: " + f"{pearson}" + r"$^{{{upper:.2f}}}_{{{lower:.2f}}}$".format(upper = stats["pearson_r2"]["upper_bound"],
                                                                                    lower = stats["pearson_r2"]["lower_bound"])
         
         # pearson_formatted = pearson_text + 31 * " " + pearson_value
-        spearman = f"{stats['spearman_rho']['mean_value']:.3f}"
+        spearman = f"{stats['spearman_rho']['mean_value']:.2f}"
         spearman_text = r"$\rho$:"
-        spearman_value = r"Spearman $\rho$: " + f"{spearman}" + r"$^{{{upper:.3f}}}_{{{lower:.3f}}}$".format(upper = stats["spearman_rho"]["upper_bound"],
+        spearman_value = r"Spearman $\rho$: " + f"{spearman}" + r"$^{{{upper:.2f}}}_{{{lower:.2f}}}$".format(upper = stats["spearman_rho"]["upper_bound"],
                                                                                       lower = stats["spearman_rho"]["lower_bound"])
         # spearman_formatted = spearman_text + 33 * " " + spearman_value
         
@@ -409,7 +409,7 @@ def bootstrap_statistics(experimental, calculated, n_samples = 10000, alpha_leve
         results["pearson_r2"] = {}
         results["spearman_rho"] = {}
     
-    lower_fraction = alpha_level/2.0
+    lower_fraction = (1 - alpha_level)/2.0
     upper_fraction = 1 - lower_fraction
 
     for statistic in statistics_dict.keys():
@@ -595,11 +595,11 @@ def plot_correlation(plots_directory, results, experimental_free_energies_with_n
     ax.scatter(experimental_free_energies, 
                calculated_free_energies, 
                s=50, 
-               color=COLOURS["PINK"])
+               color=COLOURS["PALATINATE"])
 
     ax.errorbar(experimental_free_energies,
                 calculated_free_energies,
-                color=COLOURS["PINK"],
+                color=COLOURS["PALATINATE"],
                 yerr=calculated_errors,
                 xerr=experimental_errors,
                 capsize=3,
@@ -611,7 +611,7 @@ def plot_correlation(plots_directory, results, experimental_free_energies_with_n
     max_y = max(max_calculated, max_experimental)
     if max_y > plot_threshold:
         max_y = plot_threshold
-    ax.plot([-max_y, max_y], [-max_y, max_y], color=COLOURS["BLUE"], linestyle=":", zorder=-1)
+    ax.plot([-max_y, max_y], [-max_y, max_y], color="gray", linestyle=":", zorder=-1)
     ax.vlines(0, -max_y, max_y, color="silver", linestyle="--", zorder=-1)
     ax.hlines(0, -max_y, max_y, color="silver", linestyle="--", zorder=-1)
 
@@ -619,7 +619,7 @@ def plot_correlation(plots_directory, results, experimental_free_energies_with_n
         top = np.arange(-max_y+0.5, max_y+1.5)
         bottom = np.arange(-max_y-0.5, max_y+0.5)
         x = np.arange(-max_y, max_y+1)
-        ax.fill_between(x, bottom, top, color=COLOURS["BLUE"], alpha=0.2, zorder=-1)
+        ax.fill_between(x, bottom, top, color="gray", alpha=0.2, zorder=-1)
 
     if text_box:
         box_properties = dict(boxstyle="square", facecolor="white")
@@ -684,7 +684,7 @@ def plot_bar(plots_directory, afe_df, exp_free_energy, exp_error):
            yerr=std,
            width=bar_width,
            label="AFE",
-           color=COLOURS["PINK"],
+           color=COLOURS["PALATINATE"],
            linewidth=0)
     
     (_, _, _) = ax.errorbar(x=calculated_x,
@@ -921,11 +921,11 @@ def plot_absolute_dGs(experimental_file, calculated_results, protocol, plots_dir
     ax.scatter(x_data, 
                y_data, 
                s=50, 
-               color=COLOURS["PINK"])
+               color=COLOURS["PALATINATE"])
 
     ax.errorbar(x_data,
                 y_data,
-                color=COLOURS["PINK"],
+                color=COLOURS["PALATINATE"],
                 yerr=calculated_errors,
                 xerr=experimental_errors,
                 capsize=3,
@@ -941,7 +941,7 @@ def plot_absolute_dGs(experimental_file, calculated_results, protocol, plots_dir
     min_experimental = min(x_data) - 1
     min_value = min(min_calculated, min_experimental)
 
-    ax.plot([min_value, max_value], [min_value, max_value], color=COLOURS["BLUE"], linestyle=":", zorder=-1)
+    ax.plot([min_value, max_value], [min_value, max_value], color="gray", linestyle=":", zorder=-1)
     ax.vlines(0, min_value, max_value, color="silver", linestyle="--", zorder=-1)
     ax.hlines(0, min_value, max_value, color="silver", linestyle="--", zorder=-1)
 
@@ -949,15 +949,15 @@ def plot_absolute_dGs(experimental_file, calculated_results, protocol, plots_dir
         top = np.arange(min_value+0.5, max_value+1.5)
         bottom = np.arange(min_value-0.5, max_value+0.5)
         x = np.arange(min_value, max_value+1)
-        ax.fill_between(x, bottom, top, alpha=0.2, color=COLOURS["BLUE"], zorder=-1)
+        ax.fill_between(x, bottom, top, alpha=0.2, color="gray", zorder=-1)
     
     box_properties = dict(boxstyle="square", facecolor="white")
-    ax.text(0.05, 0.95, absolute_text_box, transform=ax.transAxes, fontsize=16, verticalalignment="top", bbox=box_properties)
+    ax.text(0.05, 0.95, absolute_text_box, transform=ax.transAxes, fontsize=20, verticalalignment="top", bbox=box_properties)
     
     ax.set_xlim(min_value, max_value)
     ax.set_ylim(min_value, max_value)
-    ax.set_xlabel("$\Delta$ G$_\mathrm{EXP}$ (kcal mol \u207B \u00B9)", fontsize=20)
-    ax.set_ylabel("$\Delta$ G$_\mathrm{AFE}$ (kcal mol \u207B \u00B9)", fontsize=20)
+    ax.set_xlabel("$\Delta$ G$_\mathrm{EXP}$ (kcal mol \u207B \u00B9)", fontsize=28)
+    ax.set_ylabel("$\Delta$ G$_\mathrm{AFE}$ (kcal mol \u207B \u00B9)", fontsize=28)
     fig.tight_layout()
     fig.savefig(f"{plots_directory}/meze_absolute_dG_correlation.png", dpi=1000)     
     
@@ -967,8 +967,8 @@ def plot_absolute_dGs(experimental_file, calculated_results, protocol, plots_dir
     
     ax.set_xlim(min_value, max_value)
     ax.set_ylim(min_value, max_value)
-    ax.set_xlabel("$\Delta$ G$_\mathrm{EXP}$ (kcal mol \u207B \u00B9)", fontsize=20)
-    ax.set_ylabel("$\Delta$ G$_\mathrm{AFE}$ (kcal mol \u207B \u00B9)", fontsize=20)
+    ax.set_xlabel("$\Delta$ G$_\mathrm{EXP}$ (kcal mol \u207B \u00B9)", fontsize=28)
+    ax.set_ylabel("$\Delta$ G$_\mathrm{AFE}$ (kcal mol \u207B \u00B9)", fontsize=28)
     fig.tight_layout()
     fig.savefig(f"{plots_directory}/meze_absolute_dG_correlation_labeled.png", dpi=1000)    
 
@@ -1172,7 +1172,7 @@ def main():
 
     # plot_rmsd_box_plot(protocol)
     # plot_pairwise_lambda_rmsd(protocol)
-    # plot_overlap_matrix(protocol)
+    plot_overlap_matrix(protocol)
 
     transformations, free_energies, errors = read_results(protocol) 
     results = combine_results(protocol, transformations, free_energies, errors)
