@@ -4,6 +4,7 @@ import numpy as np
 import scipy.stats 
 import sklearn.metrics
 import cinnabar
+from cinnabar.stats import bootstrap_statistic
 import cinnabar.plotting
 import pandas as pd
 from definitions import BOLTZMANN_CONSTANT, AVOGADROS_NUMBER, COLOURS
@@ -50,7 +51,7 @@ def read_results(protocol):
     return transformations, np.array(free_energies).T, np.array(errors).T
 
 
-def output_statistics(experimental_free_energy, computational, absolute=False):
+def output_statistics(experimental_free_energy, computational, experimental_errors, computational_errors, absolute=False):
     """
     Output statistics in a nice way and show bootstrapped statistics.
 
@@ -73,45 +74,81 @@ def output_statistics(experimental_free_energy, computational, absolute=False):
     
     experimental_values = np.delete(experimental_free_energy, remove_indices)
     calculated_values = np.delete(computational, remove_indices)
+    
+    experimental_error = np.delete(experimental_errors, remove_indices)
+    computational_error = np.delete(computational_errors, remove_indices) 
 
     # mue = sklearn.metrics.mean_absolute_error(experimental_values, calculated_values)
     # rmse = sklearn.metrics.root_mean_squared_error(experimental_values, calculated_values)
-    stats = bootstrap_statistics(experimental=experimental_values, n_samples=1000, calculated=calculated_values, absolute=absolute)
-
-    mue = f"{stats['mue']['mean_value']:.2f}"
-
-    mue_text = f"MAE:"
-    mue_value = f"MAE: {mue}" + r"$^{{{upper:.2f}}}_{{{lower:.2f}}}$ kcal mol$^{{-1}}$".format(upper = stats["mue"]["upper_bound"],
-                                                                                          lower = stats["mue"]["lower_bound"])
+    # stats = bootstrap_statistics(experimental=experimental_values, n_samples=1000, calculated=calculated_values, absolute=absolute)
     
-    rmse = f"{stats['rmse']['mean_value']:.2f}"
-    rmse_text = f"RMSE:" 
-    rmse_value = f"RMSE: {rmse}" + r"$^{{{upper:.2f}}}_{{{lower:.2f}}}$ kcal mol$^{{-1}}$".format(upper = stats["rmse"]["upper_bound"],
-                                                                                            lower = stats["rmse"]["lower_bound"])
+
+    mue_dict = bootstrap_statistic(y_true=experimental_values,
+                                   y_pred=calculated_values,
+                                   dy_true=experimental_error,
+                                   dy_pred=computational_error,
+                                   statistic="MUE",
+                                   nbootstrap=10000)
+
+    mue = f"{mue_dict['mean']:.2f}"
+
+
+    mue_value = f"MAE: {mue}" + r"$^{{{upper:.2f}}}_{{{lower:.2f}}}$ kcal mol$^{{-1}}$".format(upper = mue_dict["high"],
+                                                                                               lower = mue_dict["low"])
     
-    # formatted_mue = mue_text + 10 * " " + mue_value
-    # formatted_rmse = rmse_text + 8 * " " + rmse_value 
+    rmse_dict = bootstrap_statistic(y_true=experimental_values,
+                                y_pred=calculated_values,
+                                dy_true=experimental_error,
+                                dy_pred=computational_error,
+                                statistic="RMSE",
+                                nbootstrap=10000)
+    rmse = f"{rmse_dict['mean']:.2f}"
+
+    rmse_value = f"RMSE: {rmse}" + r"$^{{{upper:.2f}}}_{{{lower:.2f}}}$ kcal mol$^{{-1}}$".format(upper = rmse_dict["high"],
+                                                                                                  lower = rmse_dict["low"])
+    
 
     text_string = "\n".join((mue_value, rmse_value))
 
-   
+    stats_dict = {"mue": mue_dict, "rmse": rmse_dict}
     if absolute:
-        pearson = f"{stats['pearson_r2']['mean_value']:.2f}"
-        pearson_text =  r"R$^2$:"
-        pearson_value = r"R$^2$: " + f"{pearson}" + r"$^{{{upper:.2f}}}_{{{lower:.2f}}}$".format(upper = stats["pearson_r2"]["upper_bound"],
-                                                                                   lower = stats["pearson_r2"]["lower_bound"])
+        r2_dict = bootstrap_statistic(y_true=experimental_values,
+                                y_pred=calculated_values,
+                                dy_true=experimental_error,
+                                dy_pred=computational_error,
+                                statistic="R2",
+                                nbootstrap=10000)
+        pearson = f"{r2_dict['mean']:.2f}"
+        pearson_value = r"R$^2$: " + f"{pearson}" + r"$^{{{upper:.2f}}}_{{{lower:.2f}}}$".format(upper = r2_dict["high"],
+                                                                                                 lower = r2_dict["low"])
         
-        # pearson_formatted = pearson_text + 31 * " " + pearson_value
-        spearman = f"{stats['spearman_rho']['mean_value']:.2f}"
-        spearman_text = r"$\rho$:"
-        spearman_value = r"Spearman $\rho$: " + f"{spearman}" + r"$^{{{upper:.2f}}}_{{{lower:.2f}}}$".format(upper = stats["spearman_rho"]["upper_bound"],
-                                                                                      lower = stats["spearman_rho"]["lower_bound"])
-        # spearman_formatted = spearman_text + 33 * " " + spearman_value
+        spearman_dict = bootstrap_statistic(y_true=experimental_values,
+                                y_pred=calculated_values,
+                                dy_true=experimental_error,
+                                dy_pred=computational_error,
+                                statistic="rho",
+                                nbootstrap=10000)
+
+        spearman = f"{spearman_dict['mean']:.2f}"
+        spearman_value = r"Spearman $\rho$: " + f"{spearman}" + r"$^{{{upper:.2f}}}_{{{lower:.2f}}}$".format(upper = spearman_dict["high"],
+                                                                                                             lower = spearman_dict["low"])
+
         
         text_string = "\n".join((text_string, pearson_value, spearman_value))
     
-    statistics_dataframe = pd.DataFrame.from_dict(stats).transpose()
-    statistics_dataframe.rename(columns={0: "statistic"})
+        stats_dict["r2"] = r2_dict
+        stats_dict["rho"] = spearman_dict
+
+    dataframes = []
+    for statistic, data in stats_dict.items():
+        df = pd.DataFrame([data])
+        df["statistic"] = statistic
+        dataframes.append(df)
+
+    results_dataframe = pd.concat(dataframes, ignore_index=True)
+    results_dataframe.set_index("statistic", inplace=True)
+
+    statistics_dataframe = results_dataframe.T
     return statistics_dataframe, text_string
 
 
@@ -911,6 +948,8 @@ def plot_absolute_dGs(name, experimental_file, calculated_results, protocol, plo
 
     absolute_statistics, absolute_text_box = output_statistics(experimental_free_energy=x_data, 
                                                                computational=y_data, 
+                                                               experimental_errors=experimental_errors,
+                                                               computational_errors=calculated_errors,
                                                                absolute=True)
     save_statistics_to_file(protocol["outputs"], absolute_statistics, filename="absolute_statistics") 
 
@@ -1179,7 +1218,7 @@ def main():
     average_free_energies = results["average_ddg"].to_numpy()
     experimental_file = arguments.experimental_file
     experimental_free_energy, experimental_error = get_experimental_data(experimental_file, transformations)
-    statistics, text_box = output_statistics(experimental_free_energy, average_free_energies) 
+    statistics, text_box = output_statistics(experimental_free_energy, average_free_energies, experimental_error, results["standard_deviation"].to_numpy()) 
     save_statistics_to_file(protocol["outputs"], statistics) 
     
     plot_absolute_dGs(name=protocol["group name"],
