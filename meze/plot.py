@@ -387,7 +387,7 @@ def bootstrap_statistics(experimental, calculated, n_samples = 10000, alpha_leve
             experimental_samples = experimental
             calculated_samples = calculated
         else:
-            bootstrap_sample = np.random.choice(range(n_data_samples), size = n_samples)
+            bootstrap_sample = np.random.choice(range(n_data_samples), size = n_data_samples)
             experimental_samples = [experimental[i] for i in bootstrap_sample]
             calculated_samples = [calculated[i] for i in bootstrap_sample]
 
@@ -424,7 +424,7 @@ def bootstrap_statistics(experimental, calculated, n_samples = 10000, alpha_leve
 
 def plot_individual_runs(protocol, experimental_free_energies_with_nans, experimental_errors_with_nans, results):
     """
-    Plot correlation of individual AFE runs against experimental values
+    Plot correlation of individual RBFE runs against experimental values
 
     Parameters:
     -----------
@@ -518,7 +518,7 @@ def plot_individual_runs(protocol, experimental_free_energies_with_nans, experim
 
     ax.plot([-max_y, max_y], [-max_y, max_y], color="#0099AB", linestyle=":", zorder=-1)
     ax.set_xlabel("$\Delta \Delta$ G$_\mathrm{EXP}$ (kcal mol⁻¹)")
-    ax.set_ylabel("$\Delta \Delta$ G$_\mathrm{AFE}$ (kcal mol⁻¹)")
+    ax.set_ylabel("$\Delta \Delta$ G$_\mathrm{RBFE}$ (kcal mol⁻¹)")
     ax.vlines(0, -max_y, max_y, color = "silver", linestyle="--", zorder=-1)
     ax.hlines(0, -max_y, max_y, color = "silver", linestyle="--", zorder=-1)
     ax.set_xlim(-max_y, max_y)
@@ -538,7 +538,7 @@ def plot_individual_runs(protocol, experimental_free_energies_with_nans, experim
     fig.savefig(f"{plots}/individual_correlation.png", dpi=1000)
 
 
-def plot_correlation(plots_directory, results, experimental_free_energies_with_nans, experimental_errors_with_nans, region=True, text_box=None, plot_threshold=10):
+def plot_correlation(name, plots_directory, results, experimental_free_energies_with_nans, experimental_errors_with_nans, region=True, text_box=None, plot_threshold=10):
     """
     Plot the correlation plot of experimental binding free energies vs calculated free energies
 
@@ -634,18 +634,18 @@ def plot_correlation(plots_directory, results, experimental_free_energies_with_n
     ax.set_xlim(-max_y, max_y)
     ax.set_ylim(-max_y, max_y)
     ax.set_xlabel("$\Delta \Delta$ G$_\mathrm{EXP}$ (kcal mol \u207B \u00B9)")
-    ax.set_ylabel("$\Delta \Delta$ G$_\mathrm{AFE}$ (kcal mol \u207B \u00B9)")
+    ax.set_ylabel("$\Delta \Delta$ G$_\mathrm{RBFE}$ (kcal mol \u207B \u00B9)")
     fig.tight_layout()
-    fig.savefig(f"{plots_directory}/meze_AFE_correlation.png", dpi=1000)
+    fig.savefig(f"{plots_directory}/{name}_RBFE_correlation.png", dpi=1000)
 
     labels = [value for value in labels if str(value).lower() != "nan"]
     for i in range(len(labels)):
         ax.annotate(labels[i], (experimental_free_energies[i] + 0.07, calculated_free_energies[i] + 0.07), fontsize=9)
 
     ax.set_xlabel("$\Delta \Delta$ G$_\mathrm{EXP}$ (kcal mol \u207B \u00B9)")
-    ax.set_ylabel("$\Delta \Delta$ G$_\mathrm{AFE}$ (kcal mol \u207B \u00B9)")
+    ax.set_ylabel("$\Delta \Delta$ G$_\mathrm{RBFE}$ (kcal mol \u207B \u00B9)")
     fig.tight_layout()
-    fig.savefig(f"{plots_directory}/meze_AFE_correlation_labeled.png", dpi=1000)
+    fig.savefig(f"{plots_directory}/{name}_RBFE_correlation_labeled.png", dpi=1000)
     
 
 def plot_bar(plots_directory, afe_df, exp_free_energy, exp_error):
@@ -683,7 +683,7 @@ def plot_bar(plots_directory, afe_df, exp_free_energy, exp_error):
            height=means,
            yerr=std,
            width=bar_width,
-           label="AFE",
+           label="RBFE",
            color=COLOURS["PALATINATE"],
            linewidth=0)
     
@@ -719,7 +719,7 @@ def plot_bar(plots_directory, afe_df, exp_free_energy, exp_error):
     ax.set_xlabel("Transformation")
     ax.set_ylabel("$\Delta \Delta$ G (kcal mol \u207B \u00B9)")
     fig.tight_layout()
-    fig.savefig(f"{plots_directory}/meze_AFE_barplot.png", dpi=1000) 
+    fig.savefig(f"{plots_directory}/meze_RBFE_barplot.png", dpi=1000) 
 
 
 def plot_rmsd_box_plot(protocol):
@@ -894,7 +894,7 @@ def plot_overlap_matrix(protocol):
                         print(f"transformation {transformation_directory.split('/')[-2]} at repeat {i} raised error: {e}")
 
 
-def plot_absolute_dGs(experimental_file, calculated_results, protocol, plots_directory, region=True):
+def plot_absolute_dGs(name, experimental_file, calculated_results, protocol, plots_directory, region=True):
 
     absolute_dG_dataframe = get_absolute_dGs(experimental_file, calculated_results, protocol)
     experimental_free_energies = absolute_dG_dataframe.iloc[:, 1].to_numpy()
@@ -957,9 +957,9 @@ def plot_absolute_dGs(experimental_file, calculated_results, protocol, plots_dir
     ax.set_xlim(min_value, max_value)
     ax.set_ylim(min_value, max_value)
     ax.set_xlabel("$\Delta$ G$_\mathrm{EXP}$ (kcal mol \u207B \u00B9)", fontsize=28)
-    ax.set_ylabel("$\Delta$ G$_\mathrm{AFE}$ (kcal mol \u207B \u00B9)", fontsize=28)
+    ax.set_ylabel("$\Delta$ G$_\mathrm{RBFE}$ (kcal mol \u207B \u00B9)", fontsize=28)
     fig.tight_layout()
-    fig.savefig(f"{plots_directory}/meze_absolute_dG_correlation.png", dpi=1000)     
+    fig.savefig(f"{plots_directory}/{name}_absolute_dG_correlation.png", dpi=1000)     
     
     labels = [name.replace("ligand_", "") for name in ligand_names]
     for i in range(len(labels)):
@@ -968,9 +968,9 @@ def plot_absolute_dGs(experimental_file, calculated_results, protocol, plots_dir
     ax.set_xlim(min_value, max_value)
     ax.set_ylim(min_value, max_value)
     ax.set_xlabel("$\Delta$ G$_\mathrm{EXP}$ (kcal mol \u207B \u00B9)", fontsize=28)
-    ax.set_ylabel("$\Delta$ G$_\mathrm{AFE}$ (kcal mol \u207B \u00B9)", fontsize=28)
+    ax.set_ylabel("$\Delta$ G$_\mathrm{RBFE}$ (kcal mol \u207B \u00B9)", fontsize=28)
     fig.tight_layout()
-    fig.savefig(f"{plots_directory}/meze_absolute_dG_correlation_labeled.png", dpi=1000)    
+    fig.savefig(f"{plots_directory}/{name}_absolute_dG_correlation_labeled.png", dpi=1000)    
 
 
 def get_absolute_dGs(experimental_file, calculated_dataframe, protocol):
@@ -1182,13 +1182,14 @@ def main():
     statistics, text_box = output_statistics(experimental_free_energy, average_free_energies) 
     save_statistics_to_file(protocol["outputs"], statistics) 
     
-    plot_absolute_dGs(experimental_file=experimental_file, 
+    plot_absolute_dGs(name=protocol["group name"],
+                      experimental_file=experimental_file, 
                       calculated_results=results,
                       protocol=protocol,
                       plots_directory=protocol["plots directory"])
    
     plot_bar(protocol["plots directory"], results, experimental_free_energy, experimental_error)
-    plot_correlation(protocol["plots directory"], results, experimental_free_energy, experimental_error, text_box=text_box)
+    plot_correlation(protocol["group name"], protocol["plots directory"], results, experimental_free_energy, experimental_error, text_box=text_box)
     plot_individual_runs(protocol, experimental_free_energy, experimental_error, results)
 
 
