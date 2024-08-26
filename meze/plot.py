@@ -78,6 +78,8 @@ def output_statistics(experimental_free_energy, computational, experimental_erro
     experimental_error = np.delete(experimental_errors, remove_indices)
     computational_error = np.delete(computational_errors, remove_indices) 
 
+
+
     # mue = sklearn.metrics.mean_absolute_error(experimental_values, calculated_values)
     # rmse = sklearn.metrics.root_mean_squared_error(experimental_values, calculated_values)
     # stats = bootstrap_statistics(experimental=experimental_values, n_samples=1000, calculated=calculated_values, absolute=absolute)
@@ -90,7 +92,7 @@ def output_statistics(experimental_free_energy, computational, experimental_erro
                                    statistic="MUE",
                                    nbootstrap=10000)
 
-    mue = f"{mue_dict['mean']:.2f}"
+    mue = f"{np.round(mue_dict['mean'], decimals=2)}"
 
 
     mue_value = f"MAE: {mue}" + r"$^{{{upper:.2f}}}_{{{lower:.2f}}}$ kcal mol$^{{-1}}$".format(upper = mue_dict["high"],
@@ -102,7 +104,7 @@ def output_statistics(experimental_free_energy, computational, experimental_erro
                                 dy_pred=computational_error,
                                 statistic="RMSE",
                                 nbootstrap=10000)
-    rmse = f"{rmse_dict['mean']:.2f}"
+    rmse = f"{np.round(rmse_dict['mean'], decimals=2)}"
 
     rmse_value = f"RMSE: {rmse}" + r"$^{{{upper:.2f}}}_{{{lower:.2f}}}$ kcal mol$^{{-1}}$".format(upper = rmse_dict["high"],
                                                                                                   lower = rmse_dict["low"])
@@ -118,7 +120,7 @@ def output_statistics(experimental_free_energy, computational, experimental_erro
                                 dy_pred=computational_error,
                                 statistic="R2",
                                 nbootstrap=10000)
-        pearson = f"{r2_dict['mean']:.2f}"
+        pearson = f"{np.round(r2_dict['mean'], decimals=2)}"
         pearson_value = r"R$^2$: " + f"{pearson}" + r"$^{{{upper:.2f}}}_{{{lower:.2f}}}$".format(upper = r2_dict["high"],
                                                                                                  lower = r2_dict["low"])
         
@@ -129,7 +131,7 @@ def output_statistics(experimental_free_energy, computational, experimental_erro
                                 statistic="rho",
                                 nbootstrap=10000)
 
-        spearman = f"{spearman_dict['mean']:.2f}"
+        spearman = f"{np.round(spearman_dict['mean'], decimals=2)}"
         spearman_value = r"Spearman $\rho$: " + f"{spearman}" + r"$^{{{upper:.2f}}}_{{{lower:.2f}}}$".format(upper = spearman_dict["high"],
                                                                                                              lower = spearman_dict["low"])
 
