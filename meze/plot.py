@@ -2,9 +2,7 @@ import warnings
 import matplotlib
 import numpy as np
 import scipy.stats 
-import sklearn.metrics
 import cinnabar
-from cinnabar.stats import bootstrap_statistic
 import cinnabar.plotting
 import pandas as pd
 from definitions import BOLTZMANN_CONSTANT, AVOGADROS_NUMBER, COLOURS
@@ -16,7 +14,17 @@ import meze
 import functions
 import matplotlib
 matplotlib.rcParams["font.size"] = 16
-
+from scipy.stats import (
+    spearmanr,
+    pearsonr, 
+    bootstrap,
+    mannwhitneyu,
+)
+from sklearn.metrics import (
+    r2_score,
+    mean_absolute_error,
+    root_mean_squared_error
+)
 
 def read_results(protocol):
     """
@@ -27,7 +35,7 @@ def read_results(protocol):
     protocol: dict
         protocol file as a dictionary
 
-    Return:
+    Return: 
     -------
     free_energies, errors: tuple(np.array, np.array)
         free energies and errors from all repeats: [[repeat_1, repeat_2, repeat_3]...]
@@ -49,6 +57,22 @@ def read_results(protocol):
         errors.append(error)
     
     return transformations, np.array(free_energies).T, np.array(errors).T
+
+
+def compute_rmse(true, predicted):
+    return root_mean_squared_error(true, predicted)
+
+def compute_mae(true, predicted):
+    return mean_absolute_error(true, predicted)
+
+def compute_r2_score(true, predicted):
+    return r2_score(true, predicted)
+
+def compute_pearsonr(true, predicted):
+    return pearsonr(true, predicted)[0]
+
+def compute_spearmanrho(true, predicted):
+    return spearmanr(true, predicted)[0]
 
 
 def output_statistics(experimental_free_energy, computational, experimental_errors, computational_errors, absolute=False):
@@ -85,60 +109,79 @@ def output_statistics(experimental_free_energy, computational, experimental_erro
     # stats = bootstrap_statistics(experimental=experimental_values, n_samples=1000, calculated=calculated_values, absolute=absolute)
     
 
-    mue_dict = bootstrap_statistic(y_true=experimental_values,
-                                   y_pred=calculated_values,
-                                   dy_true=experimental_error,
-                                   dy_pred=computational_error,
-                                   statistic="MUE",
-                                   nbootstrap=10000)
+    mue_results = bootstrap(data=(experimental_values, calculated_values),
+                            statistic=compute_mae,
+                            method="percentile",
+                            confidence_level=0.95,
+                            paired=True,
+                            n_resamples=1000)
+    mue_distribution = mue_results.bootstrap_distribution
+    mue = f"{np.round(np.mean(mue_distribution), decimals=2)}"
 
-    mue = f"{np.round(mue_dict['mean'], decimals=2)}"
-
-
-    mue_value = f"MAE: {mue}" + r"$^{{{upper:.2f}}}_{{{lower:.2f}}}$ kcal mol$^{{-1}}$".format(upper = mue_dict["high"],
-                                                                                               lower = mue_dict["low"])
+    mue_confidence_interval = mue_results.confidence_interval
+    mue_value = f"MAE: {mue}" + r"$^{{{upper:.2f}}}_{{{lower:.2f}}}$ kcal mol$^{{-1}}$".format(upper = np.round(mue_confidence_interval.high, decimals=2),
+                                                                                               lower = np.round(mue_confidence_interval.low, decimals=2))
     
-    rmse_dict = bootstrap_statistic(y_true=experimental_values,
-                                y_pred=calculated_values,
-                                dy_true=experimental_error,
-                                dy_pred=computational_error,
-                                statistic="RMSE",
-                                nbootstrap=10000)
-    rmse = f"{np.round(rmse_dict['mean'], decimals=2)}"
-
-    rmse_value = f"RMSE: {rmse}" + r"$^{{{upper:.2f}}}_{{{lower:.2f}}}$ kcal mol$^{{-1}}$".format(upper = rmse_dict["high"],
-                                                                                                  lower = rmse_dict["low"])
+    rmse_results = bootstrap(data=(experimental_values, calculated_values),
+                             statistic=compute_rmse,
+                             method="percentile",
+                             confidence_level=0.95,
+                             paired=True,
+                             n_resamples=1000)
+    rmse_distribution = rmse_results.bootstrap_distribution
+    rmse = f"{np.round(np.mean(rmse_distribution), decimals=2)}"
+    rmse_confidence_interval = rmse_results.confidence_interval
+    rmse_value = f"RMSE: {rmse}" + r"$^{{{upper:.2f}}}_{{{lower:.2f}}}$ kcal mol$^{{-1}}$".format(upper = np.round(rmse_confidence_interval.high, decimals=2),
+                                                                                                  lower = np.round(rmse_confidence_interval.low, decimals=2))
     
 
     text_string = "\n".join((mue_value, rmse_value))
 
+    mue_dict = {"mean": np.mean(mue_distribution),
+                "high": mue_confidence_interval.high,
+                "low": mue_confidence_interval.low}
+    rmse_dict = {"mean": np.mean(rmse_distribution),
+                 "high": rmse_confidence_interval.high,
+                 "low": rmse_confidence_interval.low}
+
     stats_dict = {"mue": mue_dict, "rmse": rmse_dict}
     if absolute:
-        r2_dict = bootstrap_statistic(y_true=experimental_values,
-                                y_pred=calculated_values,
-                                dy_true=experimental_error,
-                                dy_pred=computational_error,
-                                statistic="R2",
-                                nbootstrap=10000)
-        pearson = f"{np.round(r2_dict['mean'], decimals=2)}"
-        pearson_value = r"R$^2$: " + f"{pearson}" + r"$^{{{upper:.2f}}}_{{{lower:.2f}}}$".format(upper = r2_dict["high"],
-                                                                                                 lower = r2_dict["low"])
+        pearson_results = bootstrap(data=(experimental_values, calculated_values),
+                                    statistic=compute_pearsonr,
+                                    method="percentile",
+                                    n_resamples=1000,
+                                    confidence_level=0.95,
+                                    paired=True)
+        pearson_distribution = pearson_results.bootstrap_distribution
+        pearson = f"{np.round(np.mean(pearson_distribution), decimals=2)}"
+        pearson_confidence_interval = pearson_results.confidence_interval
+        pearson_value = r"Pearson R: " + f"{pearson}" + r"$^{{{upper:.2f}}}_{{{lower:.2f}}}$".format(upper = np.round(pearson_confidence_interval.high, decimals=2),
+                                                                                                     lower = np.round(pearson_confidence_interval.low, decimals=2))
         
-        spearman_dict = bootstrap_statistic(y_true=experimental_values,
-                                y_pred=calculated_values,
-                                dy_true=experimental_error,
-                                dy_pred=computational_error,
-                                statistic="rho",
-                                nbootstrap=10000)
-
-        spearman = f"{np.round(spearman_dict['mean'], decimals=2)}"
-        spearman_value = r"Spearman $\rho$: " + f"{spearman}" + r"$^{{{upper:.2f}}}_{{{lower:.2f}}}$".format(upper = spearman_dict["high"],
-                                                                                                             lower = spearman_dict["low"])
+        spearman_results = bootstrap(data=(experimental_values, calculated_values),
+                                     statistic=compute_spearmanrho,
+                                     method="percentile",
+                                     n_resamples=1000,
+                                     confidence_level=0.95,
+                                     paired=True)
+        spearman_distribution = spearman_results.bootstrap_distribution
+        spearman = f"{np.round(np.mean(spearman_distribution), decimals=2)}"
+        spearman_confidence_interval = spearman_results.confidence_interval
+        spearman_value = r"Spearman $\rho$: " + f"{spearman}" + r"$^{{{upper:.2f}}}_{{{lower:.2f}}}$".format(upper = np.round(spearman_confidence_interval.high, decimals=2),
+                                                                                                             lower = np.round(spearman_confidence_interval.low, decimals=2))
 
         
         text_string = "\n".join((text_string, pearson_value, spearman_value))
-    
-        stats_dict["r2"] = r2_dict
+     
+        pearson_dict = {"mean": np.mean(pearson_distribution),
+                       "high": pearson_confidence_interval.high,
+                       "low": pearson_confidence_interval.low}
+        spearman_dict = {"mean": np.mean(spearman_distribution),
+                         "high": spearman_confidence_interval.high,
+                         "low": spearman_confidence_interval.low}
+
+
+        stats_dict["r2"] = pearson_dict
         stats_dict["rho"] = spearman_dict
 
     dataframes = []
@@ -430,8 +473,8 @@ def bootstrap_statistics(experimental, calculated, n_samples = 10000, alpha_leve
             experimental_samples = [experimental[i] for i in bootstrap_sample]
             calculated_samples = [calculated[i] for i in bootstrap_sample]
 
-        rmse = sklearn.metrics.root_mean_squared_error(experimental_samples, calculated_samples)
-        mue = sklearn.metrics.mean_absolute_error(experimental_samples, calculated_samples)
+        rmse = root_mean_squared_error(experimental_samples, calculated_samples)
+        mue = mean_absolute_error(experimental_samples, calculated_samples)
         
         statistics_dict["rmse"].append(rmse)
         statistics_dict["mue"].append(mue)
@@ -982,6 +1025,9 @@ def plot_absolute_dGs(name, experimental_file, calculated_results, protocol, plo
     min_experimental = min(x_data) - 1
     min_value = min(min_calculated, min_experimental)
 
+    max_value = -5
+    min_value = -13
+
     ax.plot([min_value, max_value], [min_value, max_value], color="gray", linestyle=":", zorder=-1)
     ax.vlines(0, min_value, max_value, color="silver", linestyle="--", zorder=-1)
     ax.hlines(0, min_value, max_value, color="silver", linestyle="--", zorder=-1)
@@ -1213,7 +1259,7 @@ def main():
 
     # plot_rmsd_box_plot(protocol)
     # plot_pairwise_lambda_rmsd(protocol)
-    plot_overlap_matrix(protocol)
+    # plot_overlap_matrix(protocol)
 
     transformations, free_energies, errors = read_results(protocol) 
     results = combine_results(protocol, transformations, free_energies, errors)
